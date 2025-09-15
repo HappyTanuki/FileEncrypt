@@ -10,8 +10,9 @@
 namespace file_encrypt::util::NISTTestVectorParser {
 
 struct NISTTestVector {
-  std::vector<std::byte> input;
-  std::vector<std::byte> expected_output;
+  std::vector<std::byte> Msg = {};
+  std::uint64_t Len = 0;
+  std::vector<std::byte> MD = {};
 };
 
 struct NISTTestMonteSample {
