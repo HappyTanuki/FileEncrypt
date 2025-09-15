@@ -39,7 +39,7 @@ constexpr std::vector<std::array<std::uint32_t, 16>> SHA256::Padding(
                                     << 8 * (3 - (i % 4));
   }
 
-  padded[(data.bit_length / 32 + 15) / 16][(data.bit_length / 32) % 16] |=
+  padded[data.bit_length / 512][(data.bit_length / 32) % 16] |=
       (1u << (31 - (data.bit_length % 32)));
 
   padded.back()[14] = static_cast<uint32_t>(data.bit_length >> 32);

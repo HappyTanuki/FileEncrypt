@@ -1,5 +1,4 @@
 #include "algorithm/sha256.h"
-
 #include "precomp.h"
 #include "util/nist_testvector_parser.h"
 
@@ -8,9 +7,8 @@ namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 int main() {
   file_encrypt::algorithm::SHA256 sha256;
 
-  std::vector<NISTTestVectorParser::NISTTestVector>
-      test_vectors = NISTTestVectorParser::ParseMsg(
-          "./shabytetestvectors/SHA256ShortMsg.rsp");
+  std::vector<NISTTestVectorParser::NISTTestVector> test_vectors =
+      NISTTestVectorParser::ParseMsg("./shabytetestvectors/SHA256LongMsg.rsp");
   if (test_vectors.back().Len == 0 && test_vectors.back().Msg.size() == 0) {
     std::string err_string(
         reinterpret_cast<const char*>(test_vectors.back().MD.data()),
@@ -19,9 +17,9 @@ int main() {
     return -1;
   }
 
-  std::cout << "SHA-256 ShortMsg test: " << std::endl;
+  std::cout << "SHA-256 LongMsg test: " << std::endl;
   for (NISTTestVectorParser::NISTTestVector item : test_vectors) {
-    std::cout << "Len: " << item.Len << "\n";
+    std::cout << "Len: " << std::dec << item.Len << "\n";
     std::cout << "Msg: 0x";
     for (auto byte : item.Msg) {
       std::cout << std::hex << std::to_integer<int>(byte);

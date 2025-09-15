@@ -35,13 +35,11 @@ std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
   std::string line;
 
   std::regex comment("^(.*?)#.*$");
-  std::regex block_size("\\[\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex word_size("\\[\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
   std::regex variable("\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
 
   if (!file.is_open()) {
-    NISTTestVector error_message = {{},
-        0,
-        StrToBytes("Error opening file.")};
+    NISTTestVector error_message = {{}, 0, StrToBytes("Error opening file.")};
     test_vectors.push_back(error_message);
     return test_vectors;
   }
@@ -51,7 +49,7 @@ std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
       line = matches[1];
     }
 
-    if (std::regex_match(line, block_size)) {
+    if (std::regex_match(line, word_size)) {
       continue;
     }
 
@@ -69,12 +67,18 @@ std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
       MD.push_back(HexStringToBytes(var_value));
     }
   }
-  
+
+  if (Len.size() != Msg.size() || Len.size() != MD.size()) {
+    NISTTestVector error_message = {{}, 0, StrToBytes("Error parsing file.")};
+    test_vectors.push_back(error_message);
+    return test_vectors;
+  }
+
   test_vectors.reserve(Len.size());
+
   for (int i = 0; i < Len.size(); i++) {
     NISTTestVector item = {Msg[i], Len[i], MD[i]};
     test_vectors.push_back(item);
-    
   }
 
   return test_vectors;
@@ -83,7 +87,76 @@ std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
 NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
   NISTTestMonteVector monte_vector;
 
-  // Implement your parsing logic here
+  std::ifstream file(file_path);
+  std::string line;
+
+  std::regex comment("^(.*?)#.*$");
+  std::regex word_size("\\[\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex variable_indented("\\s+([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
+
+  NISTTestMonteSample sample;
+  std::queue<NISTTestMonteSample> samples = {};
+  std::uint32_t count = 0;
+
+  if (!file.is_open()) {
+    monte_vector.return_code =
+        file_encrypt::algorithm::ReturnStatusCode::kError;
+    monte_vector.seed = StrToBytes("Error opening file.");
+    return monte_vector;
+  }
+
+  while (std::getline(file, line)) {
+    std::smatch matches;
+    if (std::regex_match(line, matches, comment)) {
+      line = matches[1];
+    }
+
+    if (std::regex_match(line, word_size)) {
+      continue;
+    }
+
+    if (std::regex_match(line, matches, variable_indented)) {
+      std::string var_name = matches[1];
+      std::string var_value = matches[2];
+
+      if (var_name == "i") {
+        sample.i = std::stoul(var_value, nullptr, 10);
+      } else if (var_name == "M") {
+        sample.M = HexStringToBytes(var_value);
+      } else if (var_name == "MDi") {
+        sample.MDi = HexStringToBytes(var_value);
+      }
+      if (sample.i != 0 && !sample.M.empty() && !sample.MDi.empty()) {
+        samples.push(sample);
+        sample = NISTTestMonteSample();
+      }
+      continue;
+    }
+
+    if (!std::regex_match(line, matches, variable)) {
+      continue;
+    }
+    std::string var_name = matches[1];
+    std::string var_value = matches[2];
+
+    if (var_name == "Seed") {
+      monte_vector.seed = HexStringToBytes(var_value);
+    } else if (var_name == "COUNT") {
+      count = std::stoul(var_value, nullptr, 10);
+    } else if (var_name == "MD") {
+      NISTTestMonteStage stage;
+      stage.count = count;
+      stage.samples = samples;
+      monte_vector.MD.push_back(HexStringToBytes(var_value));
+      monte_vector.stage.push_back(stage);
+      samples = {};
+      count = 0;
+    }
+  }
+
+  monte_vector.return_code =
+      file_encrypt::algorithm::ReturnStatusCode::kSuccess;
 
   return monte_vector;
 }

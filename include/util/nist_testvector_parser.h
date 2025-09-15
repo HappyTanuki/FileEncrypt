@@ -4,8 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <queue>
 #include <string>
 #include <vector>
+
+#include "algorithm/algorithm.h"
 
 namespace file_encrypt::util::NISTTestVectorParser {
 
@@ -18,17 +21,20 @@ struct NISTTestVector {
 struct NISTTestMonteSample {
   std::uint32_t i = 0;
   std::vector<std::byte> M = {};
-  std::vector<std::byte> Mdi = {};
+  std::vector<std::byte> MDi = {};
 };
 
 struct NISTTestMonteStage {
-  std::vector<NISTTestMonteSample> sample = {};
-  std::vector<std::byte> MD = {};
+  std::uint32_t count = 0;
+  std::queue<NISTTestMonteSample> samples = {};
 };
 
 struct NISTTestMonteVector {
   std::vector<std::byte> seed = {};
   std::vector<NISTTestMonteStage> stage = {};
+  std::vector<std::vector<std::byte>> MD = {};
+  file_encrypt::algorithm::ReturnStatusCode return_code =
+      file_encrypt::algorithm::ReturnStatusCode::kError;
 };
 
 std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path);
