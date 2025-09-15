@@ -25,7 +25,7 @@ int main() {
   file_encrypt::algorithm::SHA256 sha256;
 
   NISTTestVectorParser::NISTTestMonteVector test_vectors =
-      NISTTestVectorParser::ParseMonte("./shabytetestvectors/SHA256Monte.rsp");
+      NISTTestVectorParser::ParseMonte("./shabittestvectors/SHA256Monte.txt");
   if (test_vectors.return_code !=
       file_encrypt::algorithm::ReturnStatusCode::kSuccess) {
     std::string err_string(
@@ -37,7 +37,7 @@ int main() {
 
   std::vector<std::byte> seed = test_vectors.seed;
 
-  std::cout << "SHA-256 Monte-Carlo simple test: " << std::endl;
+  std::cout << "SHA-256 Monte-Carlo Bit-Oriented complex test: " << std::endl;
   for (NISTTestVectorParser::NISTTestMonteStage item : test_vectors.stage) {
     std::cout << "COUNT: " << std::dec << item.count << "\n";
 

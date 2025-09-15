@@ -8,7 +8,7 @@ int main() {
   file_encrypt::algorithm::SHA256 sha256;
 
   std::vector<NISTTestVectorParser::NISTTestVector> test_vectors =
-      NISTTestVectorParser::ParseMsg("./shabytetestvectors/SHA256LongMsg.rsp");
+      NISTTestVectorParser::ParseMsg("./shabytetestvectors/SHA256ShortMsg.rsp");
   if (test_vectors.back().Len == 0 && test_vectors.back().Msg.size() == 0) {
     std::string err_string(
         reinterpret_cast<const char*>(test_vectors.back().MD.data()),
@@ -17,7 +17,7 @@ int main() {
     return -1;
   }
 
-  std::cout << "SHA-256 LongMsg test: " << std::endl;
+  std::cout << "SHA-256 Byte-Oriented ShortMsg test: " << std::endl;
   for (NISTTestVectorParser::NISTTestVector item : test_vectors) {
     std::cout << "Len: " << std::dec << item.Len << "\n";
     std::cout << "Msg: 0x";
