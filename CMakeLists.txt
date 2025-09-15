@@ -36,8 +36,6 @@ endif()
 
 add_executable(${BOT_NAME} ${SOURCES})
 
-set_property(TARGET ${BOT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
 target_link_libraries(${BOT_NAME} PUBLIC ${BOT_NAME}_lib)
 
 add_subdirectory(tests)
