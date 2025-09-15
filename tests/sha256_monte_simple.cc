@@ -55,7 +55,7 @@ int main() {
       auto ret_value = sha256.Digest(message_input_data);
       MD[i] = ret_value.digest;
 
-      if (item.samples.front().i == i) {
+      if (!item.samples.empty() && item.samples.front().i == i) {
         file_encrypt::util::NISTTestVectorParser::NISTTestMonteSample sample =
             item.samples.front();
         item.samples.pop();

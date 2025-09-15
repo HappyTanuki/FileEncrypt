@@ -10,7 +10,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
       },
       "condition": {
         "type": "equals",
@@ -27,7 +28,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
       },
       "condition": {
         "type": "equals",
@@ -44,7 +46,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
       },
       "condition": {
         "type": "equals",
@@ -61,7 +64,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
       },
       "condition": {
         "type": "equals",
