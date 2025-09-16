@@ -8,7 +8,7 @@ int main() {
   file_encrypt::algorithm::SHA256 sha256;
 
   std::vector<NISTTestVectorParser::NISTTestVector> test_vectors =
-      NISTTestVectorParser::ParseMsg("./shabytetestvectors/SHA256ShortMsg.rsp");
+      NISTTestVectorParser::ParseMsg("./shabittestvectors/SHA256ShortMsg.rsp");
   if (test_vectors.back().Len == 0 && test_vectors.back().Msg.size() == 0) {
     std::string err_string(
         reinterpret_cast<const char*>(test_vectors.back().MD.data()),
@@ -17,7 +17,7 @@ int main() {
     return -1;
   }
 
-  std::cout << "SHA-256 Byte-Oriented ShortMsg Stream test: " << std::endl;
+  std::cout << "SHA-256 Bit-Oriented ShortMsg stream test: " << std::endl;
   for (NISTTestVectorParser::NISTTestVector item : test_vectors) {
     std::cout << "Len: " << std::dec << item.Len << "\n";
     std::cout << "Msg: 0x";
@@ -26,9 +26,13 @@ int main() {
     }
     std::cout << "\n";
 
+    if (item.Len == 505) {
+      std::cout << "test vector (Len=505)" << std::endl;
+    }
+
     file_encrypt::algorithm::HashAlgorithmInputData input_data;
-    input_data.bit_length = item.Len;  // 비트 단위
-    input_data.message = item.Msg;     // std::vector<std::byte>
+    input_data.bit_length = item.Len;
+    input_data.message = item.Msg;
 
     // 메시지를 절반으로 나누기
     size_t mid_bytes = item.Len / 16;
