@@ -6,34 +6,42 @@
 
 namespace file_encrypt::algorithm {
 
-enum class ReturnStatusCode { kSuccess = 0, kError = -1 };
-
 struct HashAlgorithmInputData {
   std::vector<std::byte> message = {};
   std::uint64_t bit_length = 0;
 };
 struct HashAlgorithmReturnData {
   std::vector<std::byte> digest = {};
-  ReturnStatusCode return_code = ReturnStatusCode::kError;
 };
 
+struct CipherAlgorithmInputData {
+  std::vector<std::byte> data = {};
+};
 struct CipherAlgorithmReturnData {
   std::vector<std::byte> data = {};
-  ReturnStatusCode return_code = ReturnStatusCode::kError;
 };
 
 class CipherAlgorithm {
  public:
   virtual CipherAlgorithmReturnData Encrypt(
-      const std::vector<std::byte>& data) const = 0;
+      const CipherAlgorithmInputData& data) const = 0;
   virtual CipherAlgorithmReturnData Decrypt(
-      const std::vector<std::byte>& data) const = 0;
+      const CipherAlgorithmInputData& data) const = 0;
+
+  virtual void UpdateInput(const CipherAlgorithmInputData& data) = 0;
+  virtual void UpdateOutput(const CipherAlgorithmInputData& data) = 0;
+  virtual CipherAlgorithmReturnData Encrypt() = 0;
+  virtual CipherAlgorithmReturnData Decrypt() = 0;
 };
 
 class HashAlgorithm {
  public:
   virtual HashAlgorithmReturnData Digest(
       const HashAlgorithmInputData& data) const = 0;
+
+  virtual void Update(
+      const HashAlgorithmInputData& data) = 0;
+  virtual HashAlgorithmReturnData Digest() = 0;
 };
 }  // namespace file_encrypt::algorithm
 

@@ -1,8 +1,16 @@
 #include "algorithm/sha256.h"
 
 #include "precomp.h"
+#include <cassert>
 
 namespace file_encrypt::algorithm {
+
+SHA256::SHA256() { Reset(); }
+
+constexpr void SHA256::Reset() {
+  std::copy(std::begin(H0), std::end(H0), H.begin());
+  data_length = 0;
+}
 
 constexpr std::uint32_t SHA256::ROTR(std::uint32_t x, std::uint32_t n) const {
   return (x >> n) | (x << (32 - n));
@@ -48,6 +56,18 @@ constexpr std::vector<std::array<std::uint32_t, 16>> SHA256::Padding(
   return padded;
 }
 
+constexpr std::array<std::uint32_t, 16> SHA256::MakeMessage(
+    const std::array<std::byte, 64>& data, std::uint64_t data_bit_length) {
+  std::array<std::uint32_t, 16> M = {};
+
+  for (int i = 0; i < 64 && i < (data_bit_length + 7) / 8; i++) {
+    M[i / 4] |= std::to_integer<uint32_t>(data[i])
+                                    << 8 * (3 - (i % 4));
+  }
+
+  return M;
+}
+
 constexpr std::array<std::uint32_t, 8> SHA256::ProcessMessageBlock(
     const std::array<std::uint32_t, 16>& M,
     const std::array<std::uint32_t, 8>& H) const {
@@ -78,7 +98,7 @@ constexpr std::array<std::uint32_t, 8> SHA256::ProcessMessageBlock(
           H[4] + e, H[5] + f, H[6] + g, H[7] + h};
 }
 
-struct HashAlgorithmReturnData SHA256::Digest(
+HashAlgorithmReturnData SHA256::Digest(
     const HashAlgorithmInputData& data) const {
   std::vector<std::array<std::uint32_t, 16>> M = Padding(data);
 
@@ -96,7 +116,92 @@ struct HashAlgorithmReturnData SHA256::Digest(
     ret.digest[i * 4 + 2] = static_cast<std::byte>((H[i] >> 8) & 0xFF);
     ret.digest[i * 4 + 3] = static_cast<std::byte>(H[i] & 0xFF);
   }
-  ret.return_code = ReturnStatusCode::kSuccess;
   return ret;
 }
+
+//void SHA256::Update(const HashAlgorithmInputData& data) { //아마 정확한 구현일텐데 성능 최적화가 그닥일거라 주석,,
+//  std::vector<std::byte>::const_iterator data_iterator = data.message.begin();
+//
+//  data_length += data.bit_length;
+//  while (data_iterator != data.message.end()) {
+//    while (data_buffer_bit_length < 512 &&
+//           data_iterator != data.message.end()) {
+//      data_buffer[(data_buffer_bit_length + 7) / 8] = *data_iterator++;
+//      data_buffer_bit_length += 8;
+//    }
+//    if (data_buffer_bit_length == 512) {
+//      H = ProcessMessageBlock(MakeMessage(data_buffer, 512), H);
+//      data_buffer_bit_length = 0;
+//    }
+//  }
+//}
+
+void SHA256::Update(const HashAlgorithmInputData& data) {
+  const uint8_t* input = reinterpret_cast<const uint8_t*>(data.message.data());
+  size_t input_bytes = (data.bit_length + 7) / 8;
+  size_t buffer_bytes = data_buffer_bit_length / 8;
+
+  data_length += data.bit_length;
+
+  if (buffer_bytes > 0) {
+    size_t fill = 64 - buffer_bytes;
+    if (input_bytes >= fill) {
+      std::memcpy(data_buffer.data() + buffer_bytes, input, fill);
+      H = ProcessMessageBlock(MakeMessage(data_buffer, 512), H);
+      input += fill;
+      input_bytes -= fill;
+      data_buffer_bit_length = 0;
+      buffer_bytes = 0;
+    } else {
+      std::memcpy(data_buffer.data() + buffer_bytes, input, input_bytes);
+      data_buffer_bit_length += data.bit_length;
+      return;
+    }
+  }
+
+  while (input_bytes >= 64) {
+    std::memcpy(data_buffer.data(), input, 64);
+    H = ProcessMessageBlock(MakeMessage(data_buffer, 512), H);
+    input += 64;
+    input_bytes -= 64;
+    data_buffer_bit_length = 0;
+  }
+
+  if (input_bytes > 0) {
+    std::memcpy(data_buffer.data(), input, input_bytes);
+    data_buffer_bit_length = data.bit_length % 512;
+  }
+}
+
+HashAlgorithmReturnData SHA256::Digest() {
+  std::array<std::uint32_t, 16> M = {};
+
+  M = MakeMessage(data_buffer, data_buffer_bit_length);
+  M[(data_buffer_bit_length / 32) % 16] |=
+      (1u << (31 - (data_buffer_bit_length % 32)));
+
+  if (data_buffer_bit_length + 1 + 64 > 512) {
+    H = ProcessMessageBlock(M, H);
+    M = {};
+    M[14] = static_cast<uint32_t>(data_length >> 32);
+    M[15] = static_cast<uint32_t>(data_length & 0xFFFFFFFF);
+    H = ProcessMessageBlock(M, H);
+  } else {
+    M[14] = static_cast<uint32_t>(data_length >> 32);
+    M[15] = static_cast<uint32_t>(data_length & 0xFFFFFFFF);
+    H = ProcessMessageBlock(M, H);
+  }
+  data_buffer_bit_length = 0;
+
+  HashAlgorithmReturnData ret;
+  ret.digest.resize(32);
+  for (int i = 0; i < 8; i++) {
+    ret.digest[i * 4] = static_cast<std::byte>((H[i] >> 24) & 0xFF);
+    ret.digest[i * 4 + 1] = static_cast<std::byte>((H[i] >> 16) & 0xFF);
+    ret.digest[i * 4 + 2] = static_cast<std::byte>((H[i] >> 8) & 0xFF);
+    ret.digest[i * 4 + 3] = static_cast<std::byte>(H[i] & 0xFF);
+  }
+  return ret;
+}
+
 };  // namespace file_encrypt::algorithm

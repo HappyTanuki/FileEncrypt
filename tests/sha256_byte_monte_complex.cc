@@ -27,7 +27,7 @@ int main() {
   NISTTestVectorParser::NISTTestMonteVector test_vectors =
       NISTTestVectorParser::ParseMonte("./shabytetestvectors/SHA256Monte.txt");
   if (test_vectors.return_code !=
-      file_encrypt::algorithm::ReturnStatusCode::kSuccess) {
+      NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string(
         reinterpret_cast<const char*>(test_vectors.seed.data()),
         test_vectors.seed.size());

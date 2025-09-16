@@ -100,8 +100,7 @@ NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
   std::uint32_t count = 0;
 
   if (!file.is_open()) {
-    monte_vector.return_code =
-        file_encrypt::algorithm::ReturnStatusCode::kError;
+    monte_vector.return_code = ReturnStatusCode::kError;
     monte_vector.seed = StrToBytes("Error opening file.");
     return monte_vector;
   }
@@ -155,8 +154,7 @@ NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
     }
   }
 
-  monte_vector.return_code =
-      file_encrypt::algorithm::ReturnStatusCode::kSuccess;
+  monte_vector.return_code = ReturnStatusCode::kSuccess;
 
   return monte_vector;
 }

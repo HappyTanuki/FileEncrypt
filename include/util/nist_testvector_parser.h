@@ -12,6 +12,8 @@
 
 namespace file_encrypt::util::NISTTestVectorParser {
 
+enum class ReturnStatusCode { kSuccess = 0, kError = -1 };
+
 struct NISTTestVector {
   std::vector<std::byte> Msg = {};
   std::uint64_t Len = 0;
@@ -33,8 +35,7 @@ struct NISTTestMonteVector {
   std::vector<std::byte> seed = {};
   std::vector<NISTTestMonteStage> stage = {};
   std::vector<std::vector<std::byte>> MD = {};
-  file_encrypt::algorithm::ReturnStatusCode return_code =
-      file_encrypt::algorithm::ReturnStatusCode::kError;
+  ReturnStatusCode return_code = ReturnStatusCode::kError;
 };
 
 std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path);
