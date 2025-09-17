@@ -1,9 +1,9 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
 
-#include "algorithm.h"
-
 #include <queue>
+
+#include "algorithm.h"
 
 namespace file_encrypt::algorithm {
 
@@ -15,7 +15,7 @@ class SHA256 : public HashAlgorithm {
 
   void Update(const HashAlgorithmInputData& data) final override;
   HashAlgorithmReturnData Digest() final override;
-  constexpr void Reset();
+  void Reset();
 
  private:
   constexpr std::vector<std::array<std::uint32_t, 16>> Padding(

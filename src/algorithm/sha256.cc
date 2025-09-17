@@ -9,9 +9,10 @@ namespace file_encrypt::algorithm {
 
 SHA256::SHA256() { Reset(); }
 
-constexpr void SHA256::Reset() {
+void SHA256::Reset() {
   std::copy(std::begin(H0), std::end(H0), H.begin());
   data_length = 0;
+  data_buffer_bit_length = 0;
 }
 
 constexpr std::uint32_t SHA256::ROTR(std::uint32_t x, std::uint32_t n) const {
@@ -73,6 +74,7 @@ constexpr std::array<std::uint32_t, 8> SHA256::ProcessMessageBlock(
     const std::array<std::uint32_t, 16>& M,
     const std::array<std::uint32_t, 8>& H) const {
   std::array<std::uint32_t, 64> W = {};
+
   for (int t = 0; t < 16; t++) {
     W[t] = M[t];
   }
@@ -112,58 +114,46 @@ HashAlgorithmReturnData SHA256::Digest(
   HashAlgorithmReturnData ret;
   ret.digest.resize(32);
   for (int i = 0; i < 8; i++) {
-    ret.digest[i * 4] = static_cast<std::byte>((H[i] >> 24) & 0xFF);
-    ret.digest[i * 4 + 1] = static_cast<std::byte>((H[i] >> 16) & 0xFF);
-    ret.digest[i * 4 + 2] = static_cast<std::byte>((H[i] >> 8) & 0xFF);
-    ret.digest[i * 4 + 3] = static_cast<std::byte>(H[i] & 0xFF);
+    std::uint32_t v = ::htonl(H[i]);
+    std::memcpy(ret.digest.data() + i * 4, &v, 4);
   }
   return ret;
 }
 
 void SHA256::Update(const HashAlgorithmInputData& data) {
-  const uint8_t* input = reinterpret_cast<const uint8_t*>(data.message.data());
+  const uint8_t* input_ptr =
+      reinterpret_cast<const uint8_t*>(data.message.data());
   size_t input_bits = data.bit_length;
-  size_t input_bytes = (data.bit_length + 7) / 8;
-  size_t buffer_bytes = data_buffer_bit_length / 8;
 
-  data_length += data.bit_length;
+  data_length += input_bits;
 
-  if (buffer_bytes > 0) {
-    size_t fill = 64 - buffer_bytes;
-    if (input_bytes >= fill) {
-      std::memcpy(data_buffer.data() + buffer_bytes, input, fill);
+  if (data_buffer_bit_length > 0) {
+    size_t bits_to_copy = std::min(512 - data_buffer_bit_length, input_bits);
+    size_t bytes_to_copy = (bits_to_copy + 7) / 8;
+
+    std::memcpy(data_buffer.data() + (data_buffer_bit_length / 8), input_ptr,
+                bytes_to_copy);
+    data_buffer_bit_length += bits_to_copy;
+
+    input_ptr += bytes_to_copy;
+    input_bits -= bits_to_copy;
+
+    if (data_buffer_bit_length == 512) {
       H = ProcessMessageBlock(MakeMessage(data_buffer, 512), H);
-      input += fill;
-      input_bytes -= fill;
-      if (input_bits < fill * 8) {
-        data_buffer_bit_length = 512 - (fill * 8 - input_bits);
-        input_bits = 0;
-      } else {
-        input_bits -= fill * 8;
-        data_buffer_bit_length = 0;
-      }
-
-      buffer_bytes = 0;
-    } else {
-      std::memcpy(data_buffer.data() + buffer_bytes, input, input_bytes);
-      data_buffer_bit_length += data.bit_length;
-      return;
+      data_buffer_bit_length = 0;
     }
   }
 
-  while (input_bytes >= 64) {
-    std::memcpy(data_buffer.data(), input, 64);
+  while (input_bits >= 512) {
+    std::memcpy(data_buffer.data(), input_ptr, 64);
     H = ProcessMessageBlock(MakeMessage(data_buffer, 512), H);
-    input += 64;
-    input_bytes -= 64;
+    input_ptr += 64;
     input_bits -= 512;
-    data_buffer_bit_length = 0;
   }
 
-  if (input_bytes > 0) {
-    std::memcpy(data_buffer.data(), input, input_bytes);
-    // data_buffer_bit_length = (buffer_bytes + input_bytes) * 8;
-    // data_buffer_bit_length = data.bit_length % 512;
+  if (input_bits > 0) {
+    size_t bytes_remaining = (input_bits + 7) / 8;
+    std::memcpy(data_buffer.data(), input_ptr, bytes_remaining);
     data_buffer_bit_length = input_bits;
   }
 }
@@ -175,9 +165,9 @@ HashAlgorithmReturnData SHA256::Digest() {
   M[(data_buffer_bit_length / 32) % 16] |=
       (1u << (31 - (data_buffer_bit_length % 32)));
 
-  if (data_buffer_bit_length + 1 + 64 >= 512) {
+  if (data_buffer_bit_length % 512 > 447) {
     H = ProcessMessageBlock(M, H);
-    M = {};
+    M.fill(0);
   }
   M[14] = static_cast<uint32_t>(data_length >> 32);
   M[15] = static_cast<uint32_t>(data_length & 0xFFFFFFFF);
@@ -187,10 +177,8 @@ HashAlgorithmReturnData SHA256::Digest() {
   HashAlgorithmReturnData ret;
   ret.digest.resize(32);
   for (int i = 0; i < 8; i++) {
-    ret.digest[i * 4] = static_cast<std::byte>((H[i] >> 24) & 0xFF);
-    ret.digest[i * 4 + 1] = static_cast<std::byte>((H[i] >> 16) & 0xFF);
-    ret.digest[i * 4 + 2] = static_cast<std::byte>((H[i] >> 8) & 0xFF);
-    ret.digest[i * 4 + 3] = static_cast<std::byte>(H[i] & 0xFF);
+    std::uint32_t v = ::htonl(H[i]);
+    std::memcpy(ret.digest.data() + i * 4, &v, 4);
   }
   return ret;
 }

@@ -39,8 +39,7 @@ class HashAlgorithm {
   virtual HashAlgorithmReturnData Digest(
       const HashAlgorithmInputData& data) const = 0;
 
-  virtual void Update(
-      const HashAlgorithmInputData& data) = 0;
+  virtual void Update(const HashAlgorithmInputData& data) = 0;
   virtual HashAlgorithmReturnData Digest() = 0;
 };
 }  // namespace file_encrypt::algorithm
