@@ -35,7 +35,7 @@ int main() {
     input_data.message = item.Msg;
 
     // 메시지를 절반으로 나누기
-    size_t mid_bytes = item.Len / 16;
+    size_t mid_bytes = (item.Len / 8) / 2;
 
     file_encrypt::algorithm::HashAlgorithmInputData part1;
     part1.bit_length = mid_bytes * 8;
