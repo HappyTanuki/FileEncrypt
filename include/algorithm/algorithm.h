@@ -28,8 +28,8 @@ class CipherAlgorithm {
   virtual CipherAlgorithmReturnData Decrypt(
       const CipherAlgorithmInputData& data) const = 0;
 
-  virtual void UpdateInput(const CipherAlgorithmInputData& data) = 0;
-  virtual void UpdateOutput(const CipherAlgorithmInputData& data) = 0;
+  virtual void UpdateEncrypt(const CipherAlgorithmInputData& data) = 0;
+  virtual void UpdateDecrypt(const CipherAlgorithmInputData& data) = 0;
   virtual CipherAlgorithmReturnData Encrypt() = 0;
   virtual CipherAlgorithmReturnData Decrypt() = 0;
 };

@@ -9,3 +9,4 @@ foreach(test_src ${TEST_SOURCES})
 endforeach()
 
 add_subdirectory(sha256)
+add_subdirectory(aes256)
