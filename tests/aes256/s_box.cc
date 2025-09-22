@@ -1,0 +1,15 @@
+#include <iostream>
+
+#include "algorithm/aes256.h"
+
+int main() {
+  file_encrypt::algorithm::AES<256> aes;
+  file_encrypt::algorithm::AESByte byte = 0x53;
+
+  const std::uint8_t* S_box = aes._Debug_get_S_box();
+
+  if (S_box[byte] == 0xed) {
+    return 0;
+  }
+  return -1;
+}

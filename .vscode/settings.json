@@ -86,7 +86,9 @@
         "regex": "cpp",
         "numbers": "cpp",
         "cinttypes": "cpp",
-        "execution": "cpp"
+        "execution": "cpp",
+        "*.inc": "cpp",
+        "fstream": "cpp"
     },
     "files.exclude": {
         "**/*.rpyc": true,

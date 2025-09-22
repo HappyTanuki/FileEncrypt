@@ -21,7 +21,7 @@ class EncodingStream {
   EncodingStream(
       std::unique_ptr<file_encrypt::algorithm::HashAlgorithm>&& encoder);
   EncodingStream(
-      std::unique_ptr<file_encrypt::algorithm::CipherAlgorithm>&& encoder);
+      std::unique_ptr<file_encrypt::algorithm::BlockCipherAlgorithm>&& encoder);
 
   EncodingStream& operator<<(const BitlengthModifier& length);
   EncodingStream& operator<<(const std::vector<std::byte>& data);
@@ -35,7 +35,7 @@ class EncodingStream {
   BitlengthModifier bitlength = {};
 
   std::unique_ptr<file_encrypt::algorithm::HashAlgorithm> hash_encoder;
-  std::unique_ptr<file_encrypt::algorithm::CipherAlgorithm> cipher_encoder;
+  std::unique_ptr<file_encrypt::algorithm::BlockCipherAlgorithm> cipher_encoder;
 
   std::vector<std::byte> result;
 };

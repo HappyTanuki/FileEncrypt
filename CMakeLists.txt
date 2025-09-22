@@ -33,6 +33,9 @@ if(UNIX AND NOT APPLE)
         BUILD_RPATH "$ORIGIN"
     )
 endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-D_DEBUG)
+endif()
 
 add_executable(${BOT_NAME} ${SOURCES})
 

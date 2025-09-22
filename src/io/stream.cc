@@ -9,7 +9,7 @@ EncodingStream::EncodingStream(
   hash_encoder = std::move(encoder);
 }
 EncodingStream::EncodingStream(
-    std::unique_ptr<file_encrypt::algorithm::CipherAlgorithm>&& encoder) {
+    std::unique_ptr<file_encrypt::algorithm::BlockCipherAlgorithm>&& encoder) {
   cipher_encoder = std::move(encoder);
 }
 constexpr void EncodingStream::ClearEncoder() {
