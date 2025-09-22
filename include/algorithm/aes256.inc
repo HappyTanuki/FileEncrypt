@@ -176,6 +176,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   AddRoundKey(state, expanded_key, Nr);
 
   CipherAlgorithmReturnData return_data;
+  return_data.data.resize(16);
   auto return_data_iter = return_data.data.begin();
 
   for (int i = 0; i < 4; i++) {
