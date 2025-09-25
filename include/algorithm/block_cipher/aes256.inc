@@ -1,4 +1,4 @@
-#include "aes256.h"
+#include "aes.h"
 
 namespace file_encrypt::algorithm {
 
@@ -151,13 +151,13 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   std::array<AESByte, 4 * Nk> key;
   std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
 
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
       state[i][j] = *data_iter++;
     }
   }
 
-  for (int i = 0; i < Nk; i++) {
+  for (int i = 0; i < 4 * Nk; i++) {
     key[i] = *key_iter++;
   }
 
@@ -179,8 +179,8 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   return_data.data.resize(16);
   auto return_data_iter = return_data.data.begin();
 
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
       *return_data_iter++ = state[i][j];
     }
   }

@@ -1,9 +1,9 @@
-#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_AES256_H_
-#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_AES256_H_
+#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_AES_H_
+#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_AES_H_
 
 #include <array>
 
-#include "algorithm.h"
+#include "algorithm/algorithm.h"
 
 namespace file_encrypt::algorithm {
 

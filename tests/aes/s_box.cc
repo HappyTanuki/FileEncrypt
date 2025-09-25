@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "algorithm/aes256.h"
+#include "algorithm/block_cipher/aes.h"
 
 int main() {
   file_encrypt::algorithm::AES<256> aes;
