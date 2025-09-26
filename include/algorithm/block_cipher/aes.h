@@ -114,6 +114,6 @@ class AES : public BlockCipherAlgorithm {
 
 // Implementation details only below here.
 
-#include "aes256.inc"
+#include "aes.inc"
 
 #endif
