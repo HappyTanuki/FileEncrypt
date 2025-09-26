@@ -1,13 +1,20 @@
+#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_MODE_ECB_H_
+#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_MODE_ECB_H_
+
 #include "operation.h"
 
 namespace file_encrypt::algorithm::op_mode {
 
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
-class ECB : public OperationMode {
+class ECB : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
  public:
-  constexpr ECB& operator<<(const std::vector<std::byte>& data) final;
-  constexpr ECB& operator>>(const std::vector<std::byte>& data) final;
+  constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
+      const std::vector<std::byte>& data) override;
+  constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
+      OperationModeOutputData<BlockSizeBits>& data) override;
 };
 
 };  // namespace file_encrypt::algorithm::op_mode
+
+#endif

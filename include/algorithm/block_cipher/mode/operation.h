@@ -17,13 +17,22 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
 class OperationMode {
  public:
   OperationMode(std::unique_ptr<BlockCipherAlgorithm> algorithm,
-                std::array<std::byte, KeyBits / 8> cipher_key,
+                std::array<std::byte, KeyBits / 8> cipher_key = {},
                 std::array<std::byte, BlockSizeBits / 8> initial_vector = {})
       : cipher(std::move(algorithm)), key(cipher_key), IV(initial_vector) {}
   virtual ~OperationMode() = default;
 
-  OperationMode& operator<<(const std::vector<std::byte>& data) = 0;
-  OperationMode& operator>>(OperationModeOutputData<BlockSizeBits>& data) = 0;
+  virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
+      const std::vector<std::byte>& data) = 0;
+  virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
+      OperationModeOutputData<BlockSizeBits>& data) = 0;
+
+  constexpr void SetKey(const std::array<std::byte, KeyBits / 8>& cipher_key) {
+    this->key = cipher_key;
+  }
+  constexpr void SetIV(std::array<std::byte, BlockSizeBits / 8> initial_vector) {
+    this->IV = initial_vector;
+  }
 
  protected:
   std::array<std::byte, BlockSizeBits / 8> IV;
