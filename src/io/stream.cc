@@ -12,7 +12,7 @@ EncodingStream::EncodingStream(
     std::unique_ptr<file_encrypt::algorithm::BlockCipherAlgorithm>&& encoder) {
   cipher_encoder = std::move(encoder);
 }
-constexpr void EncodingStream::ClearEncoder() {
+void EncodingStream::ClearEncoder() {
   hash_encoder = nullptr;
   cipher_encoder = nullptr;
 }

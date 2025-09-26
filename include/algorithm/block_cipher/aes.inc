@@ -59,7 +59,7 @@ constexpr AESByte AESByte::operator*(const AESByte& byte) const {
   AESByte result = 0, state = *this;
 
   for (int i = 0; i < 8; i++) {
-    if ((byte >> i) & 0b1) {
+    if ((static_cast<std::uint8_t>(byte) >> i) & 0b1) {
       result += state;
     }
     state = xtime(state);
@@ -69,7 +69,7 @@ constexpr AESByte AESByte::operator*(const AESByte& byte) const {
 }
 constexpr AESByte AESByte::xtime(const AESByte& byte) const {
   AESByte result = byte << 1;
-  if (byte & 0x80) {
+  if (static_cast<std::uint8_t>(byte) & 0x80) {
     result -= 0x1b;
   }
   return result;

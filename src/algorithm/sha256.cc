@@ -128,7 +128,9 @@ void SHA256::Update(const HashAlgorithmInputData& data) {
   data_length += input_bits;
 
   if (data_buffer_bit_length > 0) {
-    size_t bits_to_copy = std::min(512 - data_buffer_bit_length, input_bits);
+    size_t bits_to_copy = (512 - data_buffer_bit_length) < input_bits
+                              ? 512 - data_buffer_bit_length
+                              : input_bits;
     size_t bytes_to_copy = (bits_to_copy + 7) / 8;
 
     std::memcpy(data_buffer.data() + (data_buffer_bit_length / 8), input_ptr,

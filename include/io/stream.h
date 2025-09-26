@@ -30,7 +30,7 @@ class EncodingStream {
   EncodingStream& operator>>(std::vector<std::byte>& data);
 
  private:
-  constexpr void ClearEncoder();
+  void ClearEncoder();
 
   BitlengthModifier bitlength = {};
 
