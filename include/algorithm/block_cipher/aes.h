@@ -105,7 +105,7 @@ class AES : public BlockCipherAlgorithm {
   constexpr std::array<AESByte, 4> Rcon(const std::uint32_t& i) const;
 
   static const std::uint8_t S_box[256];
-  static const std::uint8_t Inverse_S_box[256];
+  static const std::uint8_t Inv_S_box[256];
   static std::array<std::array<AESByte, 4>, 14> Rcon_memo;
   static int Rcon_memo_index;
 };

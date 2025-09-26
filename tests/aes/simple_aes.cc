@@ -42,5 +42,19 @@ int main() {
     return -1;
   }
 
+  input.data.clear();
+  input.data = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
+  input.key.clear();
+  input.key = HexStringToBytes(
+      "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
+
+  result = aes.Decrypt(input);
+
+  expected_result = HexStringToBytes("00000000000000000000000000000000");
+
+  if (result.data != expected_result) {
+    return -1;
+  }
+
   return 0;
 }

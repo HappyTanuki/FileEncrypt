@@ -190,7 +190,51 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
 template <std::uint32_t KeyBits>
 CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
     const CipherAlgorithmInputData& data) const {
-  return CipherAlgorithmReturnData();
+  if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
+    return CipherAlgorithmReturnData();
+  }
+
+  auto data_iter = data.data.begin();
+  auto key_iter = data.key.begin();
+  AESMatrix state;
+  std::array<AESByte, 4 * Nk> key;
+  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
+      state[i][j] = *data_iter++;
+    }
+  }
+
+  for (int i = 0; i < 4 * Nk; i++) {
+    key[i] = *key_iter++;
+  }
+
+  KeyExpansion(key, expanded_key);
+
+  AddRoundKey(state, expanded_key, Nr);
+
+  for (int round = Nr - 1; round > 0; round--) {
+    InvShiftRows(state);
+    InvSubBytes(state);
+    AddRoundKey(state, expanded_key, round);
+    InvMixColumns(state);
+  }
+  InvShiftRows(state);
+  InvSubBytes(state);
+  AddRoundKey(state, expanded_key, 0);
+
+  CipherAlgorithmReturnData return_data;
+  return_data.data.resize(16);
+  auto return_data_iter = return_data.data.begin();
+
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
+      *return_data_iter++ = state[i][j];
+    }
+  }
+
+  return return_data;
 }
 
 template <std::uint32_t KeyBits>
@@ -247,11 +291,46 @@ constexpr void AES<KeyBits>::AddRoundKey(
   }
 }
 template <std::uint32_t KeyBits>
-constexpr void AES<KeyBits>::InvMixColumns(AESMatrix& state) const {}
+constexpr void AES<KeyBits>::InvMixColumns(AESMatrix& state) const {
+  AESMatrix a = {{0x0e, 0x0b, 0x0d, 0x09},
+                 {0x09, 0x0e, 0x0b, 0x0d},
+                 {0x0d, 0x09, 0x0e, 0x0b},
+                 {0x0b, 0x0d, 0x09, 0x0e}};
+  AESMatrix column;
+  column.cols = 1;
+
+  for (int col = 0; col < 4; col++) {
+    for (int row = 0; row < 4; row++) {
+      column[row][0] = state[row][col];
+    }
+
+    column = a * column;
+
+    for (int row = 0; row < 4; row++) {
+      state[row][col] = column[row][0];
+    }
+  }
+}
 template <std::uint32_t KeyBits>
-constexpr void AES<KeyBits>::InvShiftRows(AESMatrix& state) const {}
+constexpr void AES<KeyBits>::InvShiftRows(AESMatrix& state) const {
+  AESMatrix shifted;
+
+  for (int row = 0; row < 4; row++) {
+    for (int col = 0; col < 4; col++) {
+      shifted[row][(col + row) % 4] = state[row][col];
+    }
+  }
+
+  state = shifted;
+}
 template <std::uint32_t KeyBits>
-constexpr void AES<KeyBits>::InvSubBytes(AESMatrix& state) const {}
+constexpr void AES<KeyBits>::InvSubBytes(AESMatrix& state) const {
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      state[i][j] = Inv_S_box[state[i][j]];
+    }
+  }
+}
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::MixColumns(AESMatrix& state) const {
   AESMatrix a = {{0x02, 0x03, 0x01, 0x01},
@@ -357,7 +436,7 @@ const std::uint8_t AES<KeyBits>::S_box[256] = {
     0xb0, 0x54, 0xbb, 0x16};
 
 template <std::uint32_t KeyBits>
-const std::uint8_t AES<KeyBits>::Inverse_S_box[256] = {
+const std::uint8_t AES<KeyBits>::Inv_S_box[256] = {
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e,
     0x81, 0xf3, 0xd7, 0xfb, 0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87,
     0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 0x54, 0x7b, 0x94, 0x32,

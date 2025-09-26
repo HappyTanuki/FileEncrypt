@@ -32,7 +32,7 @@ struct EncodingAlgorithmReturnData {
 class BlockCipherAlgorithm {
  public:
   BlockCipherAlgorithm() = default;
-  ~BlockCipherAlgorithm() = default;
+  virtual ~BlockCipherAlgorithm() = default;
   virtual CipherAlgorithmReturnData Encrypt(
       const CipherAlgorithmInputData& data) const = 0;
   virtual CipherAlgorithmReturnData Decrypt(
@@ -42,7 +42,7 @@ class BlockCipherAlgorithm {
 class HashAlgorithm {
  public:
   HashAlgorithm() = default;
-  ~HashAlgorithm() = default;
+  virtual ~HashAlgorithm() = default;
   virtual HashAlgorithmReturnData Digest(
       const HashAlgorithmInputData& data) const = 0;
 
@@ -53,7 +53,7 @@ class HashAlgorithm {
 class EncodingAlgorithm {
  public:
   EncodingAlgorithm() = default;
-  ~EncodingAlgorithm() = default;
+  virtual ~EncodingAlgorithm() = default;
   virtual EncodingAlgorithmReturnData Encoding(
       const EncodingAlgorithmInputData& data) const = 0;
   virtual EncodingAlgorithmReturnData Decoding(
