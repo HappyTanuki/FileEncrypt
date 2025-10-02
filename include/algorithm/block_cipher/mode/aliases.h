@@ -1,8 +1,9 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_MODE_ALIASES_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_MODE_ALIASES_H_
-#include "ecb.h"
-#include "algorithm/block_cipher/aes.h"
 #include <memory>
+
+#include "algorithm/block_cipher/aes.h"
+#include "ecb.h"
 
 namespace file_encrypt::algorithm {
 
@@ -31,11 +32,11 @@ class AES256_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize> {
  public:
   AES256_ECB(const std::array<std::byte, 32>& key,
-                   const std::array<std::byte, 16>& iv = {})
+             const std::array<std::byte, 16>& iv = {})
       : file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };
 
-}
+}  // namespace file_encrypt::algorithm
 
 #endif

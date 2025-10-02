@@ -7,24 +7,29 @@
 
 namespace file_encrypt::util::NISTTestVectorParser {
 
-std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
-  std::vector<NISTTestVector> test_vectors = {};
-  std::vector<std::uint64_t> Len = {};
-  std::vector<std::vector<std::byte>> Msg = {};
-  std::vector<std::vector<std::byte>> MD = {};
-
+ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
+                                 std::vector<NISTTestVariables>& test_vectors) {
   std::ifstream file(file_path);
   std::string line;
 
   std::regex comment("^(.*?)#.*$");
-  std::regex word_size("\\[\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex word_size(
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
 
   if (!file.is_open()) {
-    NISTTestVector error_message = {{}, 0, StrToBytes("Error opening file.")};
-    test_vectors.push_back(error_message);
-    return test_vectors;
+    NISTTestVariables error_object;
+    error_object.binary["error_msg"] = StrToBytes("Error opening file.");
+    test_vectors.push_back(error_object);
+    return ReturnStatusCode::kError;
   }
+
+  int count = 0;
+
+  if (test_vectors.size() <= count) {
+    test_vectors.push_back(NISTTestVariables());
+  }
+
   while (std::getline(file, line)) {
     std::smatch matches;
     if (std::regex_match(line, matches, comment)) {
@@ -41,50 +46,55 @@ std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path) {
     std::string var_name = matches[1];
     std::string var_value = matches[2];
 
-    if (var_name == "Len") {
-      Len.push_back(std::stoul(var_value, nullptr, 10));
-    } else if (var_name == "Msg") {
-      Msg.push_back(HexStringToBytes(var_value));
-    } else if (var_name == "MD") {
-      MD.push_back(HexStringToBytes(var_value));
+    if (var_name == "Len" ||
+        std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+      if (test_vectors[count].intager.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestVariables());
+      }
+      test_vectors[count].intager[var_name] =
+          std::stoul(var_value, nullptr, 10);
+    } else {
+      if (test_vectors[count].binary.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestVariables());
+      }
+      test_vectors[count].binary[var_name] = HexStringToBytes(var_value);
     }
   }
 
-  if (Len.size() != Msg.size() || Len.size() != MD.size()) {
-    NISTTestVector error_message = {{}, 0, StrToBytes("Error parsing file.")};
-    test_vectors.push_back(error_message);
-    return test_vectors;
-  }
-
-  test_vectors.reserve(Len.size());
-
-  for (int i = 0; i < Len.size(); i++) {
-    NISTTestVector item = {Msg[i], Len[i], MD[i]};
-    test_vectors.push_back(item);
-  }
-
-  return test_vectors;
+  return ReturnStatusCode::kSuccess;
 }
 
-NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
-  NISTTestMonteVector monte_vector;
-
+ReturnStatusCode ParseHashMonteVector(
+    const std::filesystem::path& file_path,
+    std::vector<NISTTestMonteData>& test_vectors) {
   std::ifstream file(file_path);
   std::string line;
 
   std::regex comment("^(.*?)#.*$");
-  std::regex word_size("\\[\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
-  std::regex variable_indented("\\s+([a-zA-Z0-9]+)\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex word_size(
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex variable_indented(
+      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
 
   NISTTestMonteSample sample;
   std::queue<NISTTestMonteSample> samples = {};
   std::uint32_t count = 0;
+  bool indented = false;
+  bool pre_indented = false;
 
   if (!file.is_open()) {
-    monte_vector.return_code = ReturnStatusCode::kError;
-    monte_vector.seed = StrToBytes("Error opening file.");
-    return monte_vector;
+    NISTTestMonteData error_object;
+    error_object.variable.binary["error_msg"] =
+        StrToBytes("Error opening file.");
+    test_vectors.push_back(error_object);
+    return ReturnStatusCode::kError;
+  }
+
+  if (test_vectors.size() <= count) {
+    test_vectors.push_back(NISTTestMonteData());
   }
 
   while (std::getline(file, line)) {
@@ -98,20 +108,111 @@ NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
     }
 
     if (std::regex_match(line, matches, variable_indented)) {
-      std::string var_name = matches[1];
-      std::string var_value = matches[2];
+      indented = true;
+    } else if (std::regex_match(line, matches, variable)) {
+      indented = false;
+    } else {
+      continue;
+    }
+    std::string var_name = matches[1];
+    std::string var_value = matches[2];
 
-      if (var_name == "i") {
-        sample.i = std::stoul(var_value, nullptr, 10);
-      } else if (var_name == "M") {
-        sample.M = HexStringToBytes(var_value);
-      } else if (var_name == "MDi") {
-        sample.MDi = HexStringToBytes(var_value);
+    if (indented) {
+      if (var_name == "i" ||
+          std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+        if (sample.variable.intager.contains(var_name)) {
+          test_vectors[count].samples.push(sample);
+          sample.variable.intager.clear();
+          sample.variable.binary.clear();
+        }
+        sample.variable.intager[var_name] = std::stoul(var_value, nullptr, 10);
+      } else {
+        if (sample.variable.binary.contains(var_name)) {
+          test_vectors[count].samples.push(sample);
+          sample.variable.intager.clear();
+          sample.variable.binary.clear();
+        }
+        sample.variable.binary[var_name] = HexStringToBytes(var_value);
       }
-      if (sample.i != 0 && !sample.M.empty() && !sample.MDi.empty()) {
-        samples.push(sample);
-        sample = NISTTestMonteSample();
+    } else {
+      if (pre_indented) {
+        test_vectors[count].samples.push(sample);
+        sample.variable.intager.clear();
+        sample.variable.binary.clear();
       }
+
+      if (test_vectors[count].variable.intager.contains(var_name) ||
+          test_vectors[count].variable.binary.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestMonteData());
+      }
+      if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+        test_vectors[count].variable.intager[var_name] =
+            std::stoul(var_value, nullptr, 10);
+      } else {
+        test_vectors[count].variable.binary[var_name] =
+            HexStringToBytes(var_value);
+      }
+    }
+
+    pre_indented = indented;
+  }
+
+  return ReturnStatusCode::kSuccess;
+}
+
+ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
+                                   std::vector<NISTTestVariables>& test_vectors,
+                                   VectorCategory category) {
+  std::ifstream file(file_path);
+  std::string line;
+
+  std::regex comment("^(.*?)#.*$");
+  std::regex word_size(
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex encrypt("\\[ENCRYPT\\]");
+  std::regex decrypt("\\[DECRYPT\\]");
+  bool reading = false;
+
+  if (!file.is_open()) {
+    NISTTestVariables error_object;
+    error_object.binary["error_msg"] = StrToBytes("Error opening file.");
+    test_vectors.push_back(error_object);
+    return ReturnStatusCode::kError;
+  }
+
+  int count = 0;
+
+  if (test_vectors.size() <= count) {
+    test_vectors.push_back(NISTTestVariables());
+  }
+
+  while (std::getline(file, line)) {
+    if (category == VectorCategory::kEncrypt &&
+        std::regex_search(line, encrypt)) {
+      reading = true;
+    } else if (category == VectorCategory::kDecrypt &&
+               std::regex_search(line, decrypt)) {
+      reading = true;
+    } else if (category == VectorCategory::kEncrypt &&
+               std::regex_search(line, decrypt)) {
+      reading = false;
+    } else if (category == VectorCategory::kDecrypt &&
+               std::regex_search(line, encrypt)) {
+      reading = false;
+    }
+
+    if (!reading) {
+      continue;
+    }
+
+    std::smatch matches;
+    if (std::regex_match(line, matches, comment)) {
+      line = matches[1];
+    }
+
+    if (std::regex_match(line, word_size)) {
       continue;
     }
 
@@ -121,24 +222,140 @@ NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path) {
     std::string var_name = matches[1];
     std::string var_value = matches[2];
 
-    if (var_name == "Seed") {
-      monte_vector.seed = HexStringToBytes(var_value);
-    } else if (var_name == "COUNT") {
-      count = std::stoul(var_value, nullptr, 10);
-    } else if (var_name == "MD") {
-      NISTTestMonteStage stage;
-      stage.count = count;
-      stage.samples = samples;
-      monte_vector.MD.push_back(HexStringToBytes(var_value));
-      monte_vector.stage.push_back(stage);
-      samples = {};
-      count = 0;
+    if (var_name == "Len" ||
+        std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+      if (test_vectors[count].intager.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestVariables());
+      }
+      test_vectors[count].intager[var_name] =
+          std::stoul(var_value, nullptr, 10);
+    } else {
+      if (test_vectors[count].binary.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestVariables());
+      }
+      test_vectors[count].binary[var_name] = HexStringToBytes(var_value);
     }
   }
 
-  monte_vector.return_code = ReturnStatusCode::kSuccess;
+  return ReturnStatusCode::kSuccess;
+}
 
-  return monte_vector;
+ReturnStatusCode ParseCipherMonteVector(
+    const std::filesystem::path& file_path,
+    std::vector<NISTTestMonteData>& test_vectors, VectorCategory category) {
+  std::ifstream file(file_path);
+  std::string line;
+
+  std::regex comment("^(.*?)#.*$");
+  std::regex word_size(
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex variable_indented(
+      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex encrypt("\\[ENCRYPT\\]");
+  std::regex decrypt("\\[DECRYPT\\]");
+  bool reading = false;
+
+  NISTTestMonteSample sample;
+  std::queue<NISTTestMonteSample> samples = {};
+  std::uint32_t count = 0;
+  bool indented = false;
+  bool pre_indented = false;
+
+  if (!file.is_open()) {
+    NISTTestMonteData error_object;
+    error_object.variable.binary["error_msg"] =
+        StrToBytes("Error opening file.");
+    test_vectors.push_back(error_object);
+    return ReturnStatusCode::kError;
+  }
+
+  if (test_vectors.size() <= count) {
+    test_vectors.push_back(NISTTestMonteData());
+  }
+
+  while (std::getline(file, line)) {
+    if (category == VectorCategory::kEncrypt &&
+        std::regex_search(line, encrypt)) {
+      reading = true;
+    } else if (category == VectorCategory::kDecrypt &&
+               std::regex_search(line, decrypt)) {
+      reading = true;
+    } else if (category == VectorCategory::kEncrypt &&
+               std::regex_search(line, decrypt)) {
+      reading = false;
+    } else if (category == VectorCategory::kDecrypt &&
+               std::regex_search(line, encrypt)) {
+      reading = false;
+    }
+
+    if (!reading) {
+      continue;
+    }
+
+    std::smatch matches;
+    if (std::regex_match(line, matches, comment)) {
+      line = matches[1];
+    }
+
+    if (std::regex_match(line, word_size)) {
+      continue;
+    }
+
+    if (std::regex_match(line, matches, variable_indented)) {
+      indented = true;
+    } else if (std::regex_match(line, matches, variable)) {
+      indented = false;
+    } else {
+      continue;
+    }
+    std::string var_name = matches[1];
+    std::string var_value = matches[2];
+
+    if (indented) {
+      if (var_name == "i" ||
+          std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+        if (sample.variable.intager.contains(var_name)) {
+          test_vectors[count].samples.push(sample);
+          sample.variable.intager.clear();
+          sample.variable.binary.clear();
+        }
+        sample.variable.intager[var_name] = std::stoul(var_value, nullptr, 10);
+      } else {
+        if (sample.variable.binary.contains(var_name)) {
+          test_vectors[count].samples.push(sample);
+          sample.variable.intager.clear();
+          sample.variable.binary.clear();
+        }
+        sample.variable.binary[var_name] = HexStringToBytes(var_value);
+      }
+    } else {
+      if (pre_indented) {
+        test_vectors[count].samples.push(sample);
+        sample.variable.intager.clear();
+        sample.variable.binary.clear();
+      }
+
+      if (test_vectors[count].variable.intager.contains(var_name) ||
+          test_vectors[count].variable.binary.contains(var_name)) {
+        count++;
+        test_vectors.push_back(NISTTestMonteData());
+      }
+      if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
+        test_vectors[count].variable.intager[var_name] =
+            std::stoul(var_value, nullptr, 10);
+      } else {
+        test_vectors[count].variable.binary[var_name] =
+            HexStringToBytes(var_value);
+      }
+    }
+
+    pre_indented = indented;
+  }
+
+  return ReturnStatusCode::kSuccess;
 }
 
 }  // namespace file_encrypt::util::NISTTestVectorParser

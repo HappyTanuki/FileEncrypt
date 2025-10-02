@@ -8,7 +8,7 @@
     "editor.formatOnSave": true,
     "cmake.generator": "Ninja",
     "cmake.debugConfig": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${command:cmake.buildDirectory}"
     },
     "files.associations": {
         "cctype": "cpp",

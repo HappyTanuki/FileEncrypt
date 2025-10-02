@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <queue>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "algorithm/algorithm.h"
@@ -13,33 +14,34 @@
 namespace file_encrypt::util::NISTTestVectorParser {
 
 enum class ReturnStatusCode { kSuccess = 0, kError = -1 };
+enum class VectorCategory { kEncrypt = 0, kDecrypt = 1 };
 
-struct NISTTestVector {
-  std::vector<std::byte> Msg = {};
-  std::uint64_t Len = 0;
-  std::vector<std::byte> MD = {};
+struct NISTTestVariables {
+  std::unordered_map<std::string, std::int32_t> intager = {};
+  std::unordered_map<std::string, std::vector<std::byte>> binary = {};
 };
 
 struct NISTTestMonteSample {
-  std::uint32_t i = 0;
-  std::vector<std::byte> M = {};
-  std::vector<std::byte> MDi = {};
+  NISTTestVariables variable = {};
 };
 
-struct NISTTestMonteStage {
-  std::uint32_t count = 0;
+struct NISTTestMonteData {
   std::queue<NISTTestMonteSample> samples = {};
+  NISTTestVariables variable = {};
 };
 
-struct NISTTestMonteVector {
-  std::vector<std::byte> seed = {};
-  std::vector<NISTTestMonteStage> stage = {};
-  std::vector<std::vector<std::byte>> MD = {};
-  ReturnStatusCode return_code = ReturnStatusCode::kError;
-};
+ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
+                                 std::vector<NISTTestVariables>& test_vectors);
+ReturnStatusCode ParseHashMonteVector(
+    const std::filesystem::path& file_path,
+    std::vector<NISTTestMonteData>& test_vectors);
 
-std::vector<NISTTestVector> ParseMsg(const std::filesystem::path& file_path);
-NISTTestMonteVector ParseMonte(const std::filesystem::path& file_path);
+ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
+                                   std::vector<NISTTestVariables>& test_vectors,
+                                   VectorCategory category);
+ReturnStatusCode ParseCipherMonteVector(
+    const std::filesystem::path& file_path,
+    std::vector<NISTTestMonteData>& test_vectors, VectorCategory category);
 
 }  // namespace file_encrypt::util::NISTTestVectorParser
 

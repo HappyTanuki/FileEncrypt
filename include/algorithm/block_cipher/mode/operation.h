@@ -12,6 +12,8 @@ struct OperationModeOutputData {
   std::array<std::byte, BlockSizeBits / 8> data = {};
 };
 
+enum class CipherMode { Encrypt, Decrypt };
+
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 class OperationMode {
@@ -24,13 +26,19 @@ class OperationMode {
 
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
       const std::vector<std::byte>& data) = 0;
+  OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
+      const CipherMode& mode) {
+    this->mode = mode;
+    return *this;
+  }
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
       OperationModeOutputData<BlockSizeBits>& data) = 0;
 
   constexpr void SetKey(const std::array<std::byte, KeyBits / 8>& cipher_key) {
     this->key = cipher_key;
   }
-  constexpr void SetIV(std::array<std::byte, BlockSizeBits / 8> initial_vector) {
+  constexpr void SetIV(
+      std::array<std::byte, BlockSizeBits / 8> initial_vector) {
     this->IV = initial_vector;
   }
 
@@ -49,6 +57,8 @@ class OperationMode {
 
   // To block input when output buffer is full
   bool output_buffer_full = false;
+
+  CipherMode mode = CipherMode::Encrypt;
 };
 
 };  // namespace file_encrypt::algorithm::op_mode
