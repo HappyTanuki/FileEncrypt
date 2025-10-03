@@ -14,8 +14,8 @@ ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
 
   std::regex comment("^(.*?)#.*$");
   std::regex word_size(
-      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
 
   if (!file.is_open()) {
     NISTTestVariables error_object;
@@ -68,16 +68,16 @@ ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
 
 ReturnStatusCode ParseHashMonteVector(
     const std::filesystem::path& file_path,
-    std::vector<NISTTestMonteData>& test_vectors) {
+    std::vector<NISTTestMonteStage>& test_vectors) {
   std::ifstream file(file_path);
   std::string line;
 
   std::regex comment("^(.*?)#.*$");
   std::regex word_size(
-      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
   std::regex variable_indented(
-      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
 
   NISTTestMonteSample sample;
   std::queue<NISTTestMonteSample> samples = {};
@@ -86,7 +86,7 @@ ReturnStatusCode ParseHashMonteVector(
   bool pre_indented = false;
 
   if (!file.is_open()) {
-    NISTTestMonteData error_object;
+    NISTTestMonteStage error_object;
     error_object.variable.binary["error_msg"] =
         StrToBytes("Error opening file.");
     test_vectors.push_back(error_object);
@@ -94,7 +94,7 @@ ReturnStatusCode ParseHashMonteVector(
   }
 
   if (test_vectors.size() <= count) {
-    test_vectors.push_back(NISTTestMonteData());
+    test_vectors.push_back(NISTTestMonteStage());
   }
 
   while (std::getline(file, line)) {
@@ -144,7 +144,7 @@ ReturnStatusCode ParseHashMonteVector(
       if (test_vectors[count].variable.intager.contains(var_name) ||
           test_vectors[count].variable.binary.contains(var_name)) {
         count++;
-        test_vectors.push_back(NISTTestMonteData());
+        test_vectors.push_back(NISTTestMonteStage());
       }
       if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
         test_vectors[count].variable.intager[var_name] =
@@ -169,8 +169,8 @@ ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
 
   std::regex comment("^(.*?)#.*$");
   std::regex word_size(
-      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+      "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*\\]");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
   std::regex encrypt("\\[ENCRYPT\\]");
   std::regex decrypt("\\[DECRYPT\\]");
   bool reading = false;
@@ -244,16 +244,16 @@ ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
 
 ReturnStatusCode ParseCipherMonteVector(
     const std::filesystem::path& file_path,
-    std::vector<NISTTestMonteData>& test_vectors, VectorCategory category) {
+    std::vector<NISTTestMonteStage>& test_vectors, VectorCategory category) {
   std::ifstream file(file_path);
   std::string line;
 
   std::regex comment("^(.*?)#.*$");
   std::regex word_size(
       "\\[\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*\\]");
-  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
   std::regex variable_indented(
-      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9]+)\\s*");
+      "\\s+([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-fA-F0-9\\.]+)\\s*");
   std::regex encrypt("\\[ENCRYPT\\]");
   std::regex decrypt("\\[DECRYPT\\]");
   bool reading = false;
@@ -265,7 +265,7 @@ ReturnStatusCode ParseCipherMonteVector(
   bool pre_indented = false;
 
   if (!file.is_open()) {
-    NISTTestMonteData error_object;
+    NISTTestMonteStage error_object;
     error_object.variable.binary["error_msg"] =
         StrToBytes("Error opening file.");
     test_vectors.push_back(error_object);
@@ -273,7 +273,7 @@ ReturnStatusCode ParseCipherMonteVector(
   }
 
   if (test_vectors.size() <= count) {
-    test_vectors.push_back(NISTTestMonteData());
+    test_vectors.push_back(NISTTestMonteStage());
   }
 
   while (std::getline(file, line)) {
@@ -341,7 +341,7 @@ ReturnStatusCode ParseCipherMonteVector(
       if (test_vectors[count].variable.intager.contains(var_name) ||
           test_vectors[count].variable.binary.contains(var_name)) {
         count++;
-        test_vectors.push_back(NISTTestMonteData());
+        test_vectors.push_back(NISTTestMonteStage());
       }
       if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
         test_vectors[count].variable.intager[var_name] =

@@ -25,7 +25,7 @@ struct NISTTestMonteSample {
   NISTTestVariables variable = {};
 };
 
-struct NISTTestMonteData {
+struct NISTTestMonteStage {
   std::queue<NISTTestMonteSample> samples = {};
   NISTTestVariables variable = {};
 };
@@ -34,14 +34,14 @@ ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
                                  std::vector<NISTTestVariables>& test_vectors);
 ReturnStatusCode ParseHashMonteVector(
     const std::filesystem::path& file_path,
-    std::vector<NISTTestMonteData>& test_vectors);
+    std::vector<NISTTestMonteStage>& test_vectors);
 
 ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
                                    std::vector<NISTTestVariables>& test_vectors,
                                    VectorCategory category);
 ReturnStatusCode ParseCipherMonteVector(
     const std::filesystem::path& file_path,
-    std::vector<NISTTestMonteData>& test_vectors, VectorCategory category);
+    std::vector<NISTTestMonteStage>& test_vectors, VectorCategory category);
 
 }  // namespace file_encrypt::util::NISTTestVectorParser
 

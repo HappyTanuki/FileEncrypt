@@ -24,7 +24,7 @@ static std::vector<std::byte> ByteStitch(const std::vector<std::byte>& a,
 int main() {
   file_encrypt::algorithm::SHA256 sha256;
 
-  std::vector<NISTTestVectorParser::NISTTestMonteData> test_vectors;
+  std::vector<NISTTestVectorParser::NISTTestMonteStage> test_vectors;
   if (NISTTestVectorParser::ParseHashMonteVector(
           "./tests/test_vector/shabytetestvectors/SHA256Monte.txt",
           test_vectors) != NISTTestVectorParser::ReturnStatusCode::kSuccess) {
@@ -40,7 +40,7 @@ int main() {
 
   std::cout << "SHA-256 Monte-Carlo Byte-Oriented stream complex test: "
             << std::endl;
-  for (NISTTestVectorParser::NISTTestMonteData item : test_vectors) {
+  for (NISTTestVectorParser::NISTTestMonteStage item : test_vectors) {
     std::cout << "COUNT: " << std::dec << item.variable.intager["COUNT"]
               << "\n";
 

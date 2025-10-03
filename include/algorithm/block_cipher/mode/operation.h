@@ -34,6 +34,16 @@ class OperationMode {
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
       OperationModeOutputData<BlockSizeBits>& data) = 0;
 
+  constexpr std::uint32_t GetBufferCount() {
+    if (this->output_buffer_full) {
+      return BufferSize;
+    } else if (this->output_buffer_tail >= this->output_buffer_head) {
+      return this->output_buffer_tail - this->output_buffer_head;
+    } else {
+      return BufferSize - this->output_buffer_head + this->output_buffer_tail;
+    }
+  }
+
   constexpr void SetKey(const std::array<std::byte, KeyBits / 8>& cipher_key) {
     this->key = cipher_key;
   }
