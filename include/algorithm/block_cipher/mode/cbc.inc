@@ -1,0 +1,103 @@
+#include <cstring>
+
+#include "cbc.h"
+
+namespace file_encrypt::algorithm::op_mode {
+
+std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
+                                  const std::vector<std::byte>& b) {
+  std::vector<std::byte> result;
+  if (a.size() != b.size()) {
+    return result;
+  }
+  result.resize(a.size());
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    result[i] = static_cast<std::byte>(static_cast<unsigned char>(a[i]) ^
+                                       static_cast<unsigned char>(b[i]));
+  }
+  return result;
+}
+
+template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
+          std::uint32_t BufferSize>
+constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
+CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
+    const std::vector<std::byte>& data) {
+  if (this->output_buffer_full) {
+    return *this;
+  }
+
+  std::uint32_t remaining_input_bytes = data.size();
+  std::uint32_t input_data_offset = 0;
+
+  CipherAlgorithmInputData cipher_input_data;
+  cipher_input_data.data.resize(BlockSizeBits / 8);
+  cipher_input_data.key.resize(KeyBits / 8);
+
+  std::memcpy(cipher_input_data.key.data(), this->key.data(), this->key.size());
+
+  while (remaining_input_bytes > 0) {
+    std::uint32_t bytes_to_copy =
+        ((BlockSizeBits / 8) - this->input_buffer_size) < remaining_input_bytes
+            ? (BlockSizeBits / 8) - this->input_buffer_size
+            : remaining_input_bytes;
+
+    std::memcpy(this->input_buffer.data() + this->input_buffer_size,
+                data.data() + input_data_offset, bytes_to_copy);
+    remaining_input_bytes -= bytes_to_copy;
+    this->input_buffer_size += bytes_to_copy;
+    input_data_offset += bytes_to_copy;
+
+    if (this->input_buffer_size == BlockSizeBits / 8) {
+      std::memcpy(cipher_input_data.data.data(), this->input_buffer.data(),
+                  this->input_buffer.size());
+      CipherAlgorithmReturnData result;
+      if (this->mode == CipherMode::Encrypt) {
+        cipher_input_data.data = XorVectors(
+            cipher_input_data.data,
+            std::vector<std::byte>(this->IV.begin(), this->IV.end()));
+        result = this->cipher->Encrypt(cipher_input_data);
+        std::memcpy(this->IV.data(), result.data.data(), this->IV.size());
+      } else {
+        result = this->cipher->Decrypt(cipher_input_data);
+        result.data =
+            XorVectors(std::vector<std::byte>(this->IV.begin(), this->IV.end()),
+                       result.data);
+        std::memcpy(this->IV.data(), result.data.data(), this->IV.size());
+      }
+      this->input_buffer_size = 0;
+
+      OperationModeOutputData<BlockSizeBits> temp_result;
+      std::memcpy(temp_result.data.data(), result.data.data(),
+                  result.data.size());
+
+      this->output_buffer[this->output_buffer_tail++] = temp_result;
+      this->output_buffer_tail %= BufferSize;
+
+      this->output_buffer_full =
+          (this->output_buffer_tail == this->output_buffer_head);
+    }
+  }
+
+  return *this;
+}
+
+template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
+          std::uint32_t BufferSize>
+constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
+CBC<BlockSizeBits, KeyBits, BufferSize>::operator>>(
+    OperationModeOutputData<BlockSizeBits>& data) {
+  std::memcpy(data.data.data(),
+              this->output_buffer[this->output_buffer_head].data.data(),
+              this->output_buffer[this->output_buffer_head].data.size());
+  this->output_buffer_head++;
+  this->output_buffer_head %= BufferSize;
+
+  if (this->output_buffer_full) {
+    this->output_buffer_full = false;
+  }
+
+  return *this;
+}
+
+};  // namespace file_encrypt::algorithm::op_mode

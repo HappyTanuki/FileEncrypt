@@ -7,12 +7,17 @@
 namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 
 #define _KEY_BIT 128
-#define _TEST_NAME "ECBMMT128"
+#define _ALGORITHM file_encrypt::algorithm::AES128_CBC<10>
+#define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
+#define _TESTDIRECTORY "aesmmt/"
+#define _TEST_NAME "CBCMMT128"
+#define _TESTFILEEXT ".rsp"
 
 int main() {
   std::vector<NISTTestVectorParser::NISTTestVariables> encrypt_test_vectors;
   if (NISTTestVectorParser::ParseCipherVector(
-          "./tests/test_vector/aesmmt/" _TEST_NAME ".rsp", encrypt_test_vectors,
+          _TESTDIRECTORY_PREFIX _TESTDIRECTORY _TEST_NAME _TESTFILEEXT,
+          encrypt_test_vectors,
           NISTTestVectorParser::VectorCategory::kEncrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string(
@@ -24,7 +29,8 @@ int main() {
   }
   std::vector<NISTTestVectorParser::NISTTestVariables> decrypt_test_vectors;
   if (NISTTestVectorParser::ParseCipherVector(
-          "./tests/test_vector/aesmmt/" _TEST_NAME ".rsp", decrypt_test_vectors,
+          _TESTDIRECTORY_PREFIX _TESTDIRECTORY _TEST_NAME _TESTFILEEXT,
+          decrypt_test_vectors,
           NISTTestVectorParser::VectorCategory::kDecrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string(
@@ -38,9 +44,11 @@ int main() {
   std::cout << _TEST_NAME " Encryption:" << std::endl;
   for (auto item : encrypt_test_vectors) {
     std::array<std::byte, _KEY_BIT / 8> key;
+    std::array<std::byte, 16> IV;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
+    std::memcpy(IV.data(), item.binary["IV"].data(), 16);
 
-    file_encrypt::algorithm::AES128_ECB<10> cipher(key);
+    _ALGORITHM cipher(key, IV);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> output_block;
     std::vector<std::byte> input_block;
     std::array<std::byte, 16> expected_block;
@@ -50,6 +58,8 @@ int main() {
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
 
     std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
+              << "\n";
+    std::cout << "IV: " << file_encrypt::util::BytesToStr(item.binary["IV"])
               << "\n";
     std::cout << "PLAINTEXT: "
               << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
@@ -126,9 +136,11 @@ int main() {
   std::cout << _TEST_NAME " Decryption:" << std::endl;
   for (auto item : decrypt_test_vectors) {
     std::array<std::byte, _KEY_BIT / 8> key;
+    std::array<std::byte, 16> IV;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
+    std::memcpy(IV.data(), item.binary["IV"].data(), 16);
 
-    file_encrypt::algorithm::AES128_ECB<10> cipher(key);
+    _ALGORITHM cipher(key, IV);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> output_block;
     std::vector<std::byte> input_block;
     std::array<std::byte, 16> expected_block;
@@ -138,6 +150,8 @@ int main() {
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Decrypt;
 
     std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
+              << "\n";
+    std::cout << "IV: " << file_encrypt::util::BytesToStr(item.binary["IV"])
               << "\n";
     std::cout << "CIPHERTEXT: "
               << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])

@@ -27,7 +27,7 @@ int main() {
   if (NISTTestVectorParser::ParseCipherVector(
           "./tests/test_vector/KAT_AES/" _TEST_NAME ".rsp",
           decrypt_test_vectors,
-          NISTTestVectorParser::VectorCategory::kEncrypt) !=
+          NISTTestVectorParser::VectorCategory::kDecrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string(
         reinterpret_cast<const char*>(

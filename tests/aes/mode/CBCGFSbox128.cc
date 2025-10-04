@@ -6,13 +6,17 @@
 
 namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 
-#define _KEY_BIT 192
-#define _TEST_NAME "ECBGFSbox192"
+#define _KEY_BIT 128
+#define _ALGORITHM file_encrypt::algorithm::AES128_CBC<10>
+#define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
+#define _TESTDIRECTORY "KAT_AES/"
+#define _TEST_NAME "CBCGFSbox128"
+#define _TESTFILEEXT ".rsp"
 
 int main() {
   std::vector<NISTTestVectorParser::NISTTestVariables> encrypt_test_vectors;
   if (NISTTestVectorParser::ParseCipherVector(
-          "./tests/test_vector/KAT_AES/" _TEST_NAME ".rsp",
+          _TESTDIRECTORY_PREFIX _TESTDIRECTORY _TEST_NAME _TESTFILEEXT,
           encrypt_test_vectors,
           NISTTestVectorParser::VectorCategory::kEncrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
@@ -23,9 +27,10 @@ int main() {
     std::cout << err_string << std::endl;
     return -1;
   }
+
   std::vector<NISTTestVectorParser::NISTTestVariables> decrypt_test_vectors;
   if (NISTTestVectorParser::ParseCipherVector(
-          "./tests/test_vector/KAT_AES/" _TEST_NAME ".rsp",
+          _TESTDIRECTORY_PREFIX _TESTDIRECTORY _TEST_NAME _TESTFILEEXT,
           decrypt_test_vectors,
           NISTTestVectorParser::VectorCategory::kDecrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
@@ -40,11 +45,13 @@ int main() {
   std::cout << _TEST_NAME " Encryption:" << std::endl;
   for (auto item : encrypt_test_vectors) {
     std::array<std::byte, _KEY_BIT / 8> key;
+    std::array<std::byte, 16> IV;
     std::array<std::byte, 16> expected;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
+    std::memcpy(IV.data(), item.binary["IV"].data(), 16);
     std::memcpy(expected.data(), item.binary["CIPHERTEXT"].data(), 16);
 
-    file_encrypt::algorithm::AES192_ECB<10> cipher(key);
+    _ALGORITHM cipher(key, IV);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
     cipher << item.binary["PLAINTEXT"];
@@ -69,11 +76,13 @@ int main() {
   std::cout << _TEST_NAME " Decryption:" << std::endl;
   for (auto item : decrypt_test_vectors) {
     std::array<std::byte, _KEY_BIT / 8> key;
+    std::array<std::byte, 16> IV;
     std::array<std::byte, 16> expected;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
+    std::memcpy(IV.data(), item.binary["IV"].data(), 16);
     std::memcpy(expected.data(), item.binary["PLAINTEXT"].data(), 16);
 
-    file_encrypt::algorithm::AES192_ECB<10> cipher(key);
+    _ALGORITHM cipher(key, IV);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Decrypt;
     cipher << item.binary["CIPHERTEXT"];

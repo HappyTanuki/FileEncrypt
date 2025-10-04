@@ -25,7 +25,7 @@ int main() {
   std::vector<NISTTestVectorParser::NISTTestVariables> decrypt_test_vectors;
   if (NISTTestVectorParser::ParseCipherVector(
           "./tests/test_vector/aesmmt/" _TEST_NAME ".rsp", decrypt_test_vectors,
-          NISTTestVectorParser::VectorCategory::kEncrypt) !=
+          NISTTestVectorParser::VectorCategory::kDecrypt) !=
       NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string(
         reinterpret_cast<const char*>(
