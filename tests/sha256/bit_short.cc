@@ -20,7 +20,7 @@ int main() {
 
   std::cout << "SHA-256 Bit-Oriented ShortMsg test: " << std::endl;
   for (NISTTestVectorParser::NISTTestVariables item : test_vectors) {
-    std::cout << "Len: " << std::dec << item.intager["Len"] << "\n";
+    std::cout << "Len: " << std::dec << item.integer["Len"] << "\n";
     std::cout << "Msg: 0x";
     for (auto byte : item.binary["Msg"]) {
       std::cout << std::hex << std::to_integer<int>(byte);
@@ -28,7 +28,7 @@ int main() {
     std::cout << "\n";
 
     file_encrypt::algorithm::HashAlgorithmInputData input_data;
-    input_data.bit_length = item.intager["Len"];
+    input_data.bit_length = item.integer["Len"];
     input_data.message = item.binary["Msg"];
 
     file_encrypt::algorithm::HashAlgorithmReturnData result =

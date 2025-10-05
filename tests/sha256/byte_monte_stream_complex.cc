@@ -41,7 +41,7 @@ int main() {
   std::cout << "SHA-256 Monte-Carlo Byte-Oriented stream complex test: "
             << std::endl;
   for (NISTTestVectorParser::NISTTestMonteStage item : test_vectors) {
-    std::cout << "COUNT: " << std::dec << item.variable.intager["COUNT"]
+    std::cout << "COUNT: " << std::dec << item.variable.integer["COUNT"]
               << "\n";
 
     std::array<std::vector<std::byte>, 1003> MD;
@@ -80,11 +80,11 @@ int main() {
       MD[i] = result.digest;
 
       if (!item.samples.empty() &&
-          item.samples.front().variable.intager["i"] == i) {
+          item.samples.front().variable.integer["i"] == i) {
         file_encrypt::util::NISTTestVectorParser::NISTTestMonteSample sample =
             item.samples.front();
         item.samples.pop();
-        std::cout << "  i: " << std::dec << sample.variable.intager["i"]
+        std::cout << "  i: " << std::dec << sample.variable.integer["i"]
                   << "\n";
         std::cout << "  M: 0x";
         for (auto byte : sample.variable.binary["M"]) {
@@ -118,7 +118,7 @@ int main() {
       }
     }
 
-    MD[item.variable.intager["COUNT"]] = MD[1002];
+    MD[item.variable.integer["COUNT"]] = MD[1002];
     seed = MD[1002];
 
     std::cout << "MD: 0x";

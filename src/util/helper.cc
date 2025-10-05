@@ -36,4 +36,18 @@ std::vector<std::byte> HexStringToBytes(const std::string& hex) {
   return bytes;
 }
 
+std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
+                                  const std::vector<std::byte>& b) {
+  std::vector<std::byte> result;
+  if (a.size() != b.size()) {
+    return result;
+  }
+  result.resize(a.size());
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    result[i] = static_cast<std::byte>(static_cast<unsigned char>(a[i]) ^
+                                       static_cast<unsigned char>(b[i]));
+  }
+  return result;
+}
+
 }  // namespace file_encrypt::util

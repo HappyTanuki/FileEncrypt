@@ -60,7 +60,7 @@ int main() {
     std::copy(item.variable.binary["PLAINTEXT"].begin(),
               item.variable.binary["PLAINTEXT"].end(), prev_result.begin());
 
-    std::uint32_t stage_number = item.variable.intager["COUNT"];
+    std::uint32_t stage_number = item.variable.integer["COUNT"];
 
     std::cout << stage_number + 1;
     if ((stage_number + 1) % 10 == 1 && (stage_number + 1) != 11) {
@@ -97,7 +97,7 @@ int main() {
                   std::back_inserter(result));
       }
       if (!item.samples.empty() &&
-          item.samples.front().variable.intager["INTERMEDIATE COUNT"] == i) {
+          item.samples.front().variable.integer["INTERMEDIATE COUNT"] == i) {
         NISTTestVectorParser::NISTTestMonteSample sample = item.samples.front();
         item.samples.pop();
 
@@ -142,7 +142,7 @@ int main() {
     std::copy(item.variable.binary["CIPHERTEXT"].begin(),
               item.variable.binary["CIPHERTEXT"].end(), prev_result.begin());
 
-    std::uint32_t stage_number = item.variable.intager["COUNT"];
+    std::uint32_t stage_number = item.variable.integer["COUNT"];
 
     std::cout << stage_number + 1;
     if ((stage_number + 1) % 10 == 1 && (stage_number + 1) != 11) {
@@ -179,7 +179,7 @@ int main() {
                   std::back_inserter(result));
       }
       if (!item.samples.empty() &&
-          item.samples.front().variable.intager["INTERMEDIATE COUNT"] == i) {
+          item.samples.front().variable.integer["INTERMEDIATE COUNT"] == i) {
         NISTTestVectorParser::NISTTestMonteSample sample = item.samples.front();
         item.samples.pop();
 

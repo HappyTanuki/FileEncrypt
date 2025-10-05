@@ -33,6 +33,9 @@ std::array<std::byte, Size> HexStringToBytes(const std::string& hex) {
 }
 std::vector<std::byte> HexStringToBytes(const std::string& hex);
 
+std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
+                                  const std::vector<std::byte>& b);
+
 }  // namespace file_encrypt::util
 
 #endif

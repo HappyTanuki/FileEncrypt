@@ -48,11 +48,11 @@ ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
 
     if (var_name == "Len" ||
         std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-      if (test_vectors[count].intager.contains(var_name)) {
+      if (test_vectors[count].integer.contains(var_name)) {
         count++;
         test_vectors.push_back(NISTTestVariables());
       }
-      test_vectors[count].intager[var_name] =
+      test_vectors[count].integer[var_name] =
           std::stoul(var_value, nullptr, 10);
     } else {
       if (test_vectors[count].binary.contains(var_name)) {
@@ -120,16 +120,16 @@ ReturnStatusCode ParseHashMonteVector(
     if (indented) {
       if (var_name == "i" ||
           std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-        if (sample.variable.intager.contains(var_name)) {
+        if (sample.variable.integer.contains(var_name)) {
           test_vectors[count].samples.push(sample);
-          sample.variable.intager.clear();
+          sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
-        sample.variable.intager[var_name] = std::stoul(var_value, nullptr, 10);
+        sample.variable.integer[var_name] = std::stoul(var_value, nullptr, 10);
       } else {
         if (sample.variable.binary.contains(var_name)) {
           test_vectors[count].samples.push(sample);
-          sample.variable.intager.clear();
+          sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
         sample.variable.binary[var_name] = HexStringToBytes(var_value);
@@ -137,17 +137,17 @@ ReturnStatusCode ParseHashMonteVector(
     } else {
       if (pre_indented) {
         test_vectors[count].samples.push(sample);
-        sample.variable.intager.clear();
+        sample.variable.integer.clear();
         sample.variable.binary.clear();
       }
 
-      if (test_vectors[count].variable.intager.contains(var_name) ||
+      if (test_vectors[count].variable.integer.contains(var_name) ||
           test_vectors[count].variable.binary.contains(var_name)) {
         count++;
         test_vectors.push_back(NISTTestMonteStage());
       }
       if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-        test_vectors[count].variable.intager[var_name] =
+        test_vectors[count].variable.integer[var_name] =
             std::stoul(var_value, nullptr, 10);
       } else {
         test_vectors[count].variable.binary[var_name] =
@@ -224,11 +224,11 @@ ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
 
     if (var_name == "Len" ||
         std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-      if (test_vectors[count].intager.contains(var_name)) {
+      if (test_vectors[count].integer.contains(var_name)) {
         count++;
         test_vectors.push_back(NISTTestVariables());
       }
-      test_vectors[count].intager[var_name] =
+      test_vectors[count].integer[var_name] =
           std::stoul(var_value, nullptr, 10);
     } else {
       if (test_vectors[count].binary.contains(var_name)) {
@@ -317,16 +317,16 @@ ReturnStatusCode ParseCipherMonteVector(
     if (indented) {
       if (var_name == "i" ||
           std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-        if (sample.variable.intager.contains(var_name)) {
+        if (sample.variable.integer.contains(var_name)) {
           test_vectors[count].samples.push(sample);
-          sample.variable.intager.clear();
+          sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
-        sample.variable.intager[var_name] = std::stoul(var_value, nullptr, 10);
+        sample.variable.integer[var_name] = std::stoul(var_value, nullptr, 10);
       } else {
         if (sample.variable.binary.contains(var_name)) {
           test_vectors[count].samples.push(sample);
-          sample.variable.intager.clear();
+          sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
         sample.variable.binary[var_name] = HexStringToBytes(var_value);
@@ -334,17 +334,17 @@ ReturnStatusCode ParseCipherMonteVector(
     } else {
       if (pre_indented) {
         test_vectors[count].samples.push(sample);
-        sample.variable.intager.clear();
+        sample.variable.integer.clear();
         sample.variable.binary.clear();
       }
 
-      if (test_vectors[count].variable.intager.contains(var_name) ||
+      if (test_vectors[count].variable.integer.contains(var_name) ||
           test_vectors[count].variable.binary.contains(var_name)) {
         count++;
         test_vectors.push_back(NISTTestMonteStage());
       }
       if (std::regex_match(var_name, std::regex(".*COUNT.*"))) {
-        test_vectors[count].variable.intager[var_name] =
+        test_vectors[count].variable.integer[var_name] =
             std::stoul(var_value, nullptr, 10);
       } else {
         test_vectors[count].variable.binary[var_name] =

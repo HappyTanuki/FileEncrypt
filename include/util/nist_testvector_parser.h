@@ -17,7 +17,7 @@ enum class ReturnStatusCode { kSuccess = 0, kError = -1 };
 enum class VectorCategory { kEncrypt = 0, kDecrypt = 1 };
 
 struct NISTTestVariables {
-  std::unordered_map<std::string, std::int32_t> intager = {};
+  std::unordered_map<std::string, std::int32_t> integer = {};
   std::unordered_map<std::string, std::vector<std::byte>> binary = {};
 };
 
