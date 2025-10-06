@@ -39,6 +39,29 @@ struct AESByte {
   std::uint8_t value = 0;
 
   constexpr AESByte xtime(const AESByte& byte) const;
+
+  static constexpr std::array<std::array<std::uint8_t, 256>, 256>
+  generate_LUT() {
+    std::array<std::array<std::uint8_t, 256>, 256> table = {};
+
+    for (int a = 0; a < 256; ++a) {
+      for (int b = 0; b < 256; ++b) {
+        std::uint8_t aa = a;
+        std::uint8_t bb = b;
+        std::uint8_t p = 0;
+        for (int i = 0; i < 8; ++i) {
+          if (bb & 1) p ^= aa;
+          bool hi_bit = (aa & 0x80);
+          aa <<= 1;
+          if (hi_bit) aa ^= 0x1B;  // AES irreducible polynomial
+          bb >>= 1;
+        }
+        table[a][b] = p;
+      }
+    }
+    return table;
+  }
+  static const std::array<std::array<std::uint8_t, 256>, 256> mul_table;
 };
 
 struct AESMatrix {

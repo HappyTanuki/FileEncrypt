@@ -55,17 +55,21 @@ constexpr AESByte AESByte::operator*(const int& byte) const {
 constexpr AESByte operator*(int lhs, const AESByte& byte) {
   return AESByte(lhs) * byte;
 }
+// naive implementation
+// constexpr AESByte AESByte::operator*(const AESByte& byte) const {
+//   AESByte result = 0, state = *this;
+
+//   for (int i = 0; i < 8; i++) {
+//     if ((static_cast<std::uint8_t>(byte) >> i) & 0b1) {
+//       result += state;
+//     }
+//     state = xtime(state);
+//   }
+
+//   return result;
+// }
 constexpr AESByte AESByte::operator*(const AESByte& byte) const {
-  AESByte result = 0, state = *this;
-
-  for (int i = 0; i < 8; i++) {
-    if ((static_cast<std::uint8_t>(byte) >> i) & 0b1) {
-      result += state;
-    }
-    state = xtime(state);
-  }
-
-  return result;
+  return AESByte(mul_table[this->value][byte.value]);
 }
 constexpr AESByte AESByte::xtime(const AESByte& byte) const {
   AESByte result = byte << 1;
@@ -468,5 +472,8 @@ std::array<std::array<AESByte, 4>, 14> AES<KeyBits>::Rcon_memo = {{
 
 template <std::uint32_t KeyBits>
 int AES<KeyBits>::Rcon_memo_index = 1;
+
+const std::array<std::array<std::uint8_t, 256>, 256> AESByte::mul_table =
+    AESByte::generate_LUT();
 
 };  // namespace file_encrypt::algorithm
