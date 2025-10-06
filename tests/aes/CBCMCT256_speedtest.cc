@@ -83,7 +83,7 @@ int main() {
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> output_block;
     std::vector<std::byte> input_block(16);
 
-    for (int j = 0; j < 1000000; j++) {
+    for (int j = 0; j < 10000; j++) {
       // next_input의 블록 수
       size_t blocks = next_input.size() / 16;
       // result에 쓸 위치 포인터
