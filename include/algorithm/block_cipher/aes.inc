@@ -280,34 +280,30 @@ constexpr void AES<KeyBits>::KeyExpansion(
       if (i % Nk == 0) {
         temp = SubWord(RotWord(temp));
 
-        __m128i temp2 =
-            _mm_loadu_si64(reinterpret_cast<const __m64*>(temp.data()));
-        __m128i temp3 =
-            _mm_loadu_si64(reinterpret_cast<const __m64*>(Rcon(i / Nk).data()));
-        __m128i temp4 = _mm_xor_si128(temp2, temp3);
-        _mm_storeu_si32(reinterpret_cast<__m128i*>(temp.data()), temp4);
+        // __m128i temp2 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
+        // __m128i temp3 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(Rcon(i / Nk).data()));
+        // __m128i temp4 = _mm_xor_si128(temp2, temp3);
+        // *reinterpret_cast<int*>(temp.data()) = _mm_cvtsi128_si32(temp4);
 
         // equivalent to:
-        // temp[0] += Rcon(i / Nk)[0];
-        // temp[1] += Rcon(i / Nk)[1];
-        // temp[2] += Rcon(i / Nk)[2];
-        // temp[3] += Rcon(i / Nk)[3];
+        temp[0] += Rcon(i / Nk)[0];
+        temp[1] += Rcon(i / Nk)[1];
+        temp[2] += Rcon(i / Nk)[2];
+        temp[3] += Rcon(i / Nk)[3];
       } else if (Nk > 6 && i % Nk == 4) {
         temp = SubWord(temp);
       }
-      __m128i temp2 =
-          _mm_loadu_si64(reinterpret_cast<const __m64*>(temp.data()));
-      __m128i temp3 = _mm_loadu_si64(
-          reinterpret_cast<const __m64*>(expanded_key[i - Nk].data()));
-      __m128i temp4 = _mm_xor_si128(temp2, temp3);
-      _mm_storeu_si32(reinterpret_cast<__m128i*>(expanded_key[i].data()),
-                      temp4);
+                      
+      // __m128i temp2 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
+      // __m128i temp3 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(expanded_key[i - Nk].data()));
+      // __m128i temp4 = _mm_xor_si128(temp2, temp3);
+      // *reinterpret_cast<int*>(expanded_key[i].data()) = _mm_cvtsi128_si32(temp4);
 
       // equivalent to:
-      // expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
-      // expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
-      // expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
-      // expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
+      expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
+      expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
+      expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
+      expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
 
       i++;
     }
