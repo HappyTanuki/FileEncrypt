@@ -53,3 +53,5 @@ add_custom_target(copy_test_vectors ALL
 add_dependencies(${BOT_NAME} copy_test_vectors)
 
 add_subdirectory(tests)
+
+target_compile_options(${BOT_NAME} PRIVATE -march=native)

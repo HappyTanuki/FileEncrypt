@@ -1,41 +1,41 @@
 {
     "version": 8,
-  "configurePresets": [
-    {
-      "name": "Debug Clang 18.1.3 x86_64-pc-linux-gnu",
-      "displayName": "Debug Clang 18.1.3 x86_64-pc-linux-gnu",
-      "generator": "Ninja",
-      "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "/usr/bin/clang",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "Release Clang 18.1.3 x86_64-pc-linux-gnu",
-      "displayName": "Release Clang 18.1.3 x86_64-pc-linux-gnu",
-      "generator": "Ninja",
-      "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "/usr/bin/clang",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "Debug Clang 18.1.3 x86_64-pc-linux-gnu",
+            "displayName": "Debug Clang 18.1.3 x86_64-pc-linux-gnu",
+            "generator": "Ninja",
+            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "Release Clang 18.1.3 x86_64-pc-linux-gnu",
+            "displayName": "Release Clang 18.1.3 x86_64-pc-linux-gnu",
+            "generator": "Ninja",
+            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_DEBUGGER_WORKING_DIRECTORY": "${sourceDir}"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        }
+    ]
 }

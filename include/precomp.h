@@ -5,6 +5,8 @@
 #else
 #include <arpa/inet.h>
 #endif
+#include <immintrin.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>

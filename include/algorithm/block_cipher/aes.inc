@@ -1,4 +1,7 @@
+#include <cstring>
+
 #include "aes.h"
+#include "util/cpu_detect.h"
 
 namespace file_encrypt::algorithm {
 
@@ -143,6 +146,13 @@ constexpr AESMatrix AESMatrix::operator+(const AESMatrix& matrix) const {
 }
 
 template <std::uint32_t KeyBits>
+AES<KeyBits>::AES() {
+  file_encrypt::util::EdxEcx features = file_encrypt::util::GetCPUFeatures();
+  cpu_aes_ni = features.ecx & file_encrypt::util::FeatureECXBits::kAESNI;
+  cpu_sse2 = features.edx & file_encrypt::util::FeatureEDXBits::kSSE2;
+}
+
+template <std::uint32_t KeyBits>
 CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
     const CipherAlgorithmInputData& data) const {
   if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
@@ -248,38 +258,59 @@ constexpr void AES<KeyBits>::KeyExpansion(
     const {
   std::array<AESByte, 4> temp;
 
-  int i = 0;
+  if (cpu_sse2 && cpu_aes_ni) {
+    //   __m128i round_keys[Nr + 1];
+    //   while (i < 4 * (Nr + 1)) {
+    //     __m128i temp = _mm_loadu_si128(
+    //         reinterpret_cast<const __m128i*>(expanded_key[i - 1].data()));
 
-  for (int i = 0; i < Nk; i++) {
-    expanded_key[i][0] = key[i * 4 + 0];
-    expanded_key[i][1] = key[i * 4 + 1];
-    expanded_key[i][2] = key[i * 4 + 2];
-    expanded_key[i][3] = key[i * 4 + 3];
-  }
+    //     temp = _mm_aeskeygenassist_si128(temp, 0x01 << ((i / Nk) - 1));
 
-  i = Nk;
+    //     i++;
+    //   }
+    // } else {
+    int i = 0;
 
-  while (i < 4 * (Nr + 1)) {
-    temp[0] = expanded_key[i - 1][0];
-    temp[1] = expanded_key[i - 1][1];
-    temp[2] = expanded_key[i - 1][2];
-    temp[3] = expanded_key[i - 1][3];
-
-    if (i % Nk == 0) {
-      temp = SubWord(RotWord(temp));
-      temp[0] += Rcon(i / Nk)[0];
-      temp[1] += Rcon(i / Nk)[1];
-      temp[2] += Rcon(i / Nk)[2];
-      temp[3] += Rcon(i / Nk)[3];
-    } else if (Nk > 6 && i % Nk == 4) {
-      temp = SubWord(temp);
+    for (i = 0; i < Nk; i++) {
+      std::memcpy(expanded_key[i].data(), key.data() + (i * 4), 4);
     }
-    expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
-    expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
-    expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
-    expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
+    while (i < 4 * (Nr + 1)) {
+      std::memcpy(temp.data(), expanded_key.data() + (i - 1), 4);
 
-    i++;
+      if (i % Nk == 0) {
+        temp = SubWord(RotWord(temp));
+
+        __m128i temp2 =
+            _mm_loadu_si64(reinterpret_cast<const __m64*>(temp.data()));
+        __m128i temp3 =
+            _mm_loadu_si64(reinterpret_cast<const __m64*>(Rcon(i / Nk).data()));
+        __m128i temp4 = _mm_xor_si128(temp2, temp3);
+        _mm_storeu_si32(reinterpret_cast<__m128i*>(temp.data()), temp4);
+
+        // equivalent to:
+        // temp[0] += Rcon(i / Nk)[0];
+        // temp[1] += Rcon(i / Nk)[1];
+        // temp[2] += Rcon(i / Nk)[2];
+        // temp[3] += Rcon(i / Nk)[3];
+      } else if (Nk > 6 && i % Nk == 4) {
+        temp = SubWord(temp);
+      }
+      __m128i temp2 =
+          _mm_loadu_si64(reinterpret_cast<const __m64*>(temp.data()));
+      __m128i temp3 = _mm_loadu_si64(
+          reinterpret_cast<const __m64*>(expanded_key[i - Nk].data()));
+      __m128i temp4 = _mm_xor_si128(temp2, temp3);
+      _mm_storeu_si32(reinterpret_cast<__m128i*>(expanded_key[i].data()),
+                      temp4);
+
+      // equivalent to:
+      // expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
+      // expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
+      // expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
+      // expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
+
+      i++;
+    }
   }
 }
 
@@ -327,6 +358,8 @@ constexpr void AES<KeyBits>::InvShiftRows(AESMatrix& state) const {
 
   state = shifted;
 }
+// 캐시 타이밍 공격에 취약함
+// 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::InvSubBytes(AESMatrix& state) const {
   for (int i = 0; i < 4; i++) {
@@ -380,6 +413,8 @@ constexpr void AES<KeyBits>::ShiftRows(AESMatrix& state) const {
 
   state = shifted;
 }
+// 캐시 타이밍 공격에 취약함
+// 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::SubBytes(AESMatrix& state) const {
   for (int i = 0; i < 4; i++) {
@@ -388,6 +423,8 @@ constexpr void AES<KeyBits>::SubBytes(AESMatrix& state) const {
     }
   }
 }
+// 캐시 타이밍 공격에 취약함
+// 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
 template <std::uint32_t KeyBits>
 constexpr std::array<AESByte, 4> AES<KeyBits>::SubWord(
     const std::array<AESByte, 4>& bytes) const {
@@ -475,5 +512,4 @@ int AES<KeyBits>::Rcon_memo_index = 1;
 
 const std::array<std::array<std::uint8_t, 256>, 256> AESByte::mul_table =
     AESByte::generate_LUT();
-
 };  // namespace file_encrypt::algorithm

@@ -92,6 +92,7 @@ class AES : public BlockCipherAlgorithm {
  public:
   static_assert(KeyBits == 128 || KeyBits == 192 || KeyBits == 256,
                 "AES key size must be 128, 192, or 256 bits");
+  AES();
 
   CipherAlgorithmReturnData Encrypt(
       const CipherAlgorithmInputData& data) const final override;
@@ -131,6 +132,8 @@ class AES : public BlockCipherAlgorithm {
   static const std::uint8_t Inv_S_box[256];
   static std::array<std::array<AESByte, 4>, 14> Rcon_memo;
   static int Rcon_memo_index;
+  bool cpu_aes_ni = false;
+  bool cpu_sse2 = false;
 };
 
 };  // namespace file_encrypt::algorithm
