@@ -54,6 +54,6 @@ add_dependencies(${BOT_NAME} copy_test_vectors)
 
 add_subdirectory(tests)
 
-if(!WIN32)
-target_compile_options(${BOT_NAME} PRIVATE -march=native)
+if(NOT WIN32)
+    target_compile_options(${BOT_NAME} PRIVATE -march=native)
 endif()

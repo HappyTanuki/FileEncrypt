@@ -126,11 +126,11 @@ class AES : public BlockCipherAlgorithm {
   constexpr void SubBytes(AESMatrix& state) const;
   constexpr std::array<AESByte, 4> SubWord(
       const std::array<AESByte, 4>& bytes) const;
-  constexpr std::array<AESByte, 4> Rcon(const std::uint32_t& i) const;
+  constexpr AESByte Rcon(const std::uint32_t& i) const;
 
   static const std::uint8_t S_box[256];
   static const std::uint8_t Inv_S_box[256];
-  static std::array<std::array<AESByte, 4>, 14> Rcon_memo;
+  static std::array<AESByte, 14> Rcon_memo;
   static int Rcon_memo_index;
   bool cpu_aes_ni = false;
   bool cpu_sse2 = false;

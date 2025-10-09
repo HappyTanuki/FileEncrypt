@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "aes.h"
+#include "precomp.h"
 #include "util/cpu_detect.h"
 
 namespace file_encrypt::algorithm {
@@ -251,6 +252,30 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
   return return_data;
 }
 
+static inline __m128i AESKeygenAssist(__m128i a, int imm) {
+  switch (imm) {
+    case 1:
+      return _mm_aeskeygenassist_si128(a, 0x01);
+    case 2:
+      return _mm_aeskeygenassist_si128(a, 0x02);
+    case 3:
+      return _mm_aeskeygenassist_si128(a, 0x04);
+    case 4:
+      return _mm_aeskeygenassist_si128(a, 0x08);
+    case 5:
+      return _mm_aeskeygenassist_si128(a, 0x10);
+    case 6:
+      return _mm_aeskeygenassist_si128(a, 0x20);
+    case 7:
+      return _mm_aeskeygenassist_si128(a, 0x40);
+    case 8:
+      return _mm_aeskeygenassist_si128(a, 0x80);
+    default:
+      return _mm_set_epi32(0x00, 0x00, 0x00, 0x00);
+  }
+  return _mm_set_epi32(0x00, 0x00, 0x00, 0x00);
+}
+
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::KeyExpansion(
     const typename std::array<AESByte, 4 * Nk>& key,
@@ -258,52 +283,89 @@ constexpr void AES<KeyBits>::KeyExpansion(
     const {
   std::array<AESByte, 4> temp;
 
-  if (cpu_sse2 && cpu_aes_ni) {
+  int i = 0;
+  for (i = 0; i < Nk; i++) {
+    std::memcpy(expanded_key[i].data(), key.data() + (i * 4), 4);
+  }
+  if (cpu_sse2 && cpu_aes_ni /**&& KeyBits != 192**/) {
     //   __m128i round_keys[Nr + 1];
-    //   while (i < 4 * (Nr + 1)) {
-    //     __m128i temp = _mm_loadu_si128(
-    //         reinterpret_cast<const __m128i*>(expanded_key[i - 1].data()));
+    //   if (KeyBits == 256) {
+    //     round_keys[0] =
+    //         _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data()));
+    //     round_keys[1] =
+    //         _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data() +
+    //         16));
 
-    //     temp = _mm_aeskeygenassist_si128(temp, 0x01 << ((i / Nk) - 1));
+    //     __m128i temp1 = round_keys[0];
+    //     __m128i temp2 = round_keys[1];
+    //     __m128i mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
 
-    //     i++;
+    //     i = Nk;
+    //     while (i < 4 * (Nr + 1)) {
+    //       __m128i temp = AESKeygenAssist(temp2, i / Nk);
+    //       temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
+
+    //       mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+    //       temp = _mm_xor_si128(temp, temp1);
+
+    //       mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+    //       temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+    //                            _mm_and_si128(temp, mask));
+    //       mask = _mm_set_epi32(0, 0, 0xFFFFFFFF, 0);
+    //       temp = _mm_xor_si128(
+    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
+    //           mask), _mm_and_si128(temp1, mask));
+    //       mask = _mm_set_epi32(0, 0xFFFFFFFF, 0, 0);
+    //       temp = _mm_xor_si128(
+    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
+    //           mask), _mm_and_si128(temp1, mask));
+    //       mask = _mm_set_epi32(0xFFFFFFFF, 0, 0, 0);
+    //       temp = _mm_xor_si128(
+    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
+    //           mask), _mm_and_si128(temp1, mask));
+
+    //       i++;
+    //     }
     //   }
     // } else {
-    int i = 0;
-
-    for (i = 0; i < Nk; i++) {
-      std::memcpy(expanded_key[i].data(), key.data() + (i * 4), 4);
-    }
     while (i < 4 * (Nr + 1)) {
       std::memcpy(temp.data(), expanded_key.data() + (i - 1), 4);
 
       if (i % Nk == 0) {
         temp = SubWord(RotWord(temp));
-
-        // __m128i temp2 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
-        // __m128i temp3 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(Rcon(i / Nk).data()));
-        // __m128i temp4 = _mm_xor_si128(temp2, temp3);
-        // *reinterpret_cast<int*>(temp.data()) = _mm_cvtsi128_si32(temp4);
-
-        // equivalent to:
-        temp[0] += Rcon(i / Nk)[0];
-        temp[1] += Rcon(i / Nk)[1];
-        temp[2] += Rcon(i / Nk)[2];
-        temp[3] += Rcon(i / Nk)[3];
+#ifndef _WIN32  // because microsoft smart app control blocks this
+        __m128i temp2 = _mm_cvtsi32_si128(
+            *reinterpret_cast<const std::uint32_t*>(temp.data()));
+        __m128i temp3 =
+            _mm_cvtsi32_si128(std::to_integer<std::uint32_t>(Rcon(i / Nk)));
+        __m128i temp4 = _mm_xor_si128(temp2, temp3);
+        *reinterpret_cast<int*>(temp.data()) = _mm_cvtsi128_si32(temp4);
+#else
+        // equivalent
+        temp[0] += Rcon(i / Nk);
+        temp[1] += 0;
+        temp[2] += 0;
+        temp[3] += 0;
+#endif
       } else if (Nk > 6 && i % Nk == 4) {
         temp = SubWord(temp);
       }
-                      
-      // __m128i temp2 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
-      // __m128i temp3 = _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(expanded_key[i - Nk].data()));
-      // __m128i temp4 = _mm_xor_si128(temp2, temp3);
-      // *reinterpret_cast<int*>(expanded_key[i].data()) = _mm_cvtsi128_si32(temp4);
 
-      // equivalent to:
+#ifndef _WIN32  // because microsoft smart app control blocks this
+      __m128i temp2 = _mm_cvtsi32_si128(
+          *reinterpret_cast<const std::uint32_t*>(temp.data()));
+      __m128i temp3 = _mm_cvtsi32_si128(
+          *reinterpret_cast<const std::uint32_t*>(expanded_key[i - Nk].data()));
+      __m128i temp4 = _mm_xor_si128(temp2, temp3);
+      *reinterpret_cast<int*>(expanded_key[i].data()) =
+          _mm_cvtsi128_si32(temp4);
+#else
+      // equivalent
       expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
       expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
       expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
       expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
+#endif
 
       i++;
     }
@@ -433,14 +495,13 @@ constexpr std::array<AESByte, 4> AES<KeyBits>::SubWord(
   return result;
 }
 template <std::uint32_t KeyBits>
-constexpr std::array<AESByte, 4> AES<KeyBits>::Rcon(
-    const std::uint32_t& i) const {
-  if (Rcon_memo[i][0] != 0x00) {
+constexpr AESByte AES<KeyBits>::Rcon(const std::uint32_t& i) const {
+  if (Rcon_memo[i] != 0x00) {
     return Rcon_memo[i];
   }
 
   for (int j = Rcon_memo_index + 1; j <= i; j++) {
-    Rcon_memo[j][0] = Rcon_memo[j - 1][0] * 0x02;
+    Rcon_memo[j] = Rcon_memo[j - 1] * 0x02;
   }
   Rcon_memo_index = i;
 
@@ -498,10 +559,9 @@ const std::uint8_t AES<KeyBits>::Inv_S_box[256] = {
     0x55, 0x21, 0x0c, 0x7d};
 
 template <std::uint32_t KeyBits>
-std::array<std::array<AESByte, 4>, 14> AES<KeyBits>::Rcon_memo = {{
-    {0x00, 0x00, 0x00, 0x00},
-    {0x01, 0x00, 0x00, 0x00},
-}};
+std::array<AESByte, 14> AES<KeyBits>::Rcon_memo = {
+    {0x00, 0x01, 0x00},
+};
 
 template <std::uint32_t KeyBits>
 int AES<KeyBits>::Rcon_memo_index = 1;
