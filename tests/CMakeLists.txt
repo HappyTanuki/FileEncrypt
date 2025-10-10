@@ -1,5 +1,15 @@
 file(GLOB TEST_SOURCES "*.cpp" "*.cxx" "*.cc")
 
+add_custom_target(copy_test_vectors ALL
+    COMMAND ${CMAKE_COMMAND} -E echo "Running post build test vector copy"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            ${CMAKE_CURRENT_BINARY_DIR}/tests/test_vector
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_vector
+            ${CMAKE_CURRENT_BINARY_DIR}/tests/test_vector
+    COMMENT "Copying test vector to output directory"
+)
+
 foreach(test_src ${TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
     add_executable(${test_name} ${test_src})

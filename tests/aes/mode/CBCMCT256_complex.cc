@@ -100,8 +100,14 @@ int main() {
               << " (" << std::to_integer<int>(item.variable.binary["KEY"][0])
               << ", " << std::to_integer<int>(item.variable.binary["KEY"][1])
               << " ... "
-              << std::to_integer<int>(item.variable.binary["KEY"][14]) << ", "
-              << std::to_integer<int>(item.variable.binary["KEY"][15]) << ") "
+              << std::to_integer<int>(
+                     item.variable
+                         .binary["KEY"][item.variable.binary["KEY"].size() - 2])
+              << ", "
+              << std::to_integer<int>(
+                     item.variable
+                         .binary["KEY"][item.variable.binary["KEY"].size() - 1])
+              << ") "
               << "\n";
     std::cout << "IV: "
               << file_encrypt::util::BytesToStr(item.variable.binary["IV"])

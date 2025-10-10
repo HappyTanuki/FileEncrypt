@@ -253,7 +253,10 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
 }
 
 static inline __m128i AESKeygenAssist(__m128i a, int imm) {
+  // because api needs const numbers, not variables even const variables
   switch (imm) {
+    case 0:
+      return _mm_aeskeygenassist_si128(a, 0x00);
     case 1:
       return _mm_aeskeygenassist_si128(a, 0x01);
     case 2:
@@ -281,94 +284,158 @@ constexpr void AES<KeyBits>::KeyExpansion(
     const typename std::array<AESByte, 4 * Nk>& key,
     typename std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key)
     const {
+  if (cpu_sse2 && cpu_aes_ni && KeyBits != 192) {
+    __m128i round_keys[Nr + 1];
+    if (KeyBits == 256) {
+      round_keys[0] =
+          _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data()));
+      round_keys[1] =
+          _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data() + 16));
+
+      __m128i temp1 = round_keys[0];
+      __m128i temp2 = round_keys[1];
+      __m128i mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+
+      int i = 2;
+      while (i < Nr - 1) {
+        __m128i temp = AESKeygenAssist(temp2, i / 2);
+        mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+        temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
+        temp = _mm_and_si128(temp, mask);
+
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+
+        round_keys[i++] = temp;
+
+        temp1 = temp2;
+        temp2 = temp;
+
+        temp = AESKeygenAssist(temp, 0);
+        mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+        temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(2, 2, 2, 2));
+        temp = _mm_and_si128(temp, mask);
+
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        mask = _mm_slli_si128(mask, 4);
+        temp = _mm_xor_si128(
+            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+            _mm_slli_si128(temp, 4));
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+
+        round_keys[i++] = temp;
+
+        temp1 = temp2;
+        temp2 = temp;
+      }
+
+      __m128i temp = AESKeygenAssist(temp2, i / 2);
+      mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+      temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
+      temp = _mm_and_si128(temp, mask);
+
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+      mask = _mm_slli_si128(mask, 4);
+      temp =
+          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+                        _mm_slli_si128(temp, 4));
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+      mask = _mm_slli_si128(mask, 4);
+      temp =
+          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+                        _mm_slli_si128(temp, 4));
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+      mask = _mm_slli_si128(mask, 4);
+      temp =
+          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
+                        _mm_slli_si128(temp, 4));
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+
+      round_keys[i] = temp;
+
+      for (int j = 0; j < Nr + 1; j++) {
+        std::uint32_t temp[4];
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), round_keys[j]);
+
+        for (int k = 0; k < 4; ++k) {
+          std::memcpy(expanded_key[j * 4 + k].data(), &temp[k], 4);
+        }
+      }
+      return;
+    }
+  }
+
+  // fallback
   std::array<AESByte, 4> temp;
 
   int i = 0;
   for (i = 0; i < Nk; i++) {
     std::memcpy(expanded_key[i].data(), key.data() + (i * 4), 4);
   }
-  if (cpu_sse2 && cpu_aes_ni /**&& KeyBits != 192**/) {
-    //   __m128i round_keys[Nr + 1];
-    //   if (KeyBits == 256) {
-    //     round_keys[0] =
-    //         _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data()));
-    //     round_keys[1] =
-    //         _mm_loadu_si128(reinterpret_cast<const __m128i*>(key.data() +
-    //         16));
 
-    //     __m128i temp1 = round_keys[0];
-    //     __m128i temp2 = round_keys[1];
-    //     __m128i mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
+  while (i < 4 * (Nr + 1)) {
+    std::memcpy(temp.data(), expanded_key.data() + (i - 1), 4);
 
-    //     i = Nk;
-    //     while (i < 4 * (Nr + 1)) {
-    //       __m128i temp = AESKeygenAssist(temp2, i / Nk);
-    //       temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
-
-    //       mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
-    //       temp = _mm_xor_si128(temp, temp1);
-
-    //       mask = _mm_set_epi32(0, 0, 0, 0xFFFFFFFF);
-    //       temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
-    //                            _mm_and_si128(temp, mask));
-    //       mask = _mm_set_epi32(0, 0, 0xFFFFFFFF, 0);
-    //       temp = _mm_xor_si128(
-    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
-    //           mask), _mm_and_si128(temp1, mask));
-    //       mask = _mm_set_epi32(0, 0xFFFFFFFF, 0, 0);
-    //       temp = _mm_xor_si128(
-    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
-    //           mask), _mm_and_si128(temp1, mask));
-    //       mask = _mm_set_epi32(0xFFFFFFFF, 0, 0, 0);
-    //       temp = _mm_xor_si128(
-    //           _mm_and_si128(_mm_xor_si128(temp, _mm_slli_si128(temp, 4)),
-    //           mask), _mm_and_si128(temp1, mask));
-
-    //       i++;
-    //     }
-    //   }
-    // } else {
-    while (i < 4 * (Nr + 1)) {
-      std::memcpy(temp.data(), expanded_key.data() + (i - 1), 4);
-
-      if (i % Nk == 0) {
-        temp = SubWord(RotWord(temp));
-#ifndef _WIN32  // because microsoft smart app control blocks this
-        __m128i temp2 = _mm_cvtsi32_si128(
-            *reinterpret_cast<const std::uint32_t*>(temp.data()));
-        __m128i temp3 =
-            _mm_cvtsi32_si128(std::to_integer<std::uint32_t>(Rcon(i / Nk)));
-        __m128i temp4 = _mm_xor_si128(temp2, temp3);
-        *reinterpret_cast<int*>(temp.data()) = _mm_cvtsi128_si32(temp4);
-#else
-        // equivalent
-        temp[0] += Rcon(i / Nk);
-        temp[1] += 0;
-        temp[2] += 0;
-        temp[3] += 0;
-#endif
-      } else if (Nk > 6 && i % Nk == 4) {
-        temp = SubWord(temp);
-      }
-
+    if (i % Nk == 0) {
+      temp = SubWord(RotWord(temp));
 #ifndef _WIN32  // because microsoft smart app control blocks this
       __m128i temp2 = _mm_cvtsi32_si128(
           *reinterpret_cast<const std::uint32_t*>(temp.data()));
-      __m128i temp3 = _mm_cvtsi32_si128(
-          *reinterpret_cast<const std::uint32_t*>(expanded_key[i - Nk].data()));
-      __m128i temp4 = _mm_xor_si128(temp2, temp3);
-      *reinterpret_cast<int*>(expanded_key[i].data()) =
-          _mm_cvtsi128_si32(temp4);
+      __m128i temp3 =
+          _mm_cvtsi32_si128(std::to_integer<std::uint32_t>(Rcon(i / Nk)));
+      _mm_storeu_si32(reinterpret_cast<std::uint32_t*>(temp.data()),
+                      _mm_xor_si128(temp2, temp3));
 #else
-      // equivalent
-      expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
-      expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
-      expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
-      expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
+      // equivalent fallback
+      temp[0] += Rcon(i / Nk);
+      temp[1] += 0;
+      temp[2] += 0;
+      temp[3] += 0;
+#endif
+    } else if (Nk > 6 && i % Nk == 4) {
+      temp = SubWord(temp);
+    }
+
+#ifndef _WIN32  // because microsoft smart app control blocks this
+    __m128i temp2 =
+        _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
+    __m128i temp3 = _mm_cvtsi32_si128(
+        *reinterpret_cast<const std::uint32_t*>(expanded_key[i - Nk].data()));
+    _mm_storeu_si32(reinterpret_cast<std::uint32_t*>(expanded_key[i].data()),
+                    _mm_xor_si128(temp2, temp3));
+#else
+    // equivalent fallback
+    expanded_key[i][0] = expanded_key[i - Nk][0] + temp[0];
+    expanded_key[i][1] = expanded_key[i - Nk][1] + temp[1];
+    expanded_key[i][2] = expanded_key[i - Nk][2] + temp[2];
+    expanded_key[i][3] = expanded_key[i - Nk][3] + temp[3];
 #endif
 
-      i++;
-    }
+    i++;
   }
 }
 
