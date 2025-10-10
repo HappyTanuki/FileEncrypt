@@ -284,7 +284,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
     const typename std::array<AESByte, 4 * Nk>& key,
     typename std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key)
     const {
-  if (cpu_sse2 && cpu_aes_ni && KeyBits != 192) {
+  if (_USE_SIMD_INTRINSIC && cpu_sse2 && cpu_aes_ni && KeyBits != 192) {
     __m128i round_keys[Nr + 1];
     if (KeyBits == 256) {
       round_keys[0] =
@@ -402,7 +402,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
 
     if (i % Nk == 0) {
       temp = SubWord(RotWord(temp));
-#ifndef _WIN32  // because microsoft smart app control blocks this
+#if(_USE_SIMD_INTRINSIC)
       __m128i temp2 = _mm_cvtsi32_si128(
           *reinterpret_cast<const std::uint32_t*>(temp.data()));
       __m128i temp3 =
@@ -420,7 +420,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
       temp = SubWord(temp);
     }
 
-#ifndef _WIN32  // because microsoft smart app control blocks this
+#if(_USE_SIMD_INTRINSIC)
     __m128i temp2 =
         _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
     __m128i temp3 = _mm_cvtsi32_si128(
