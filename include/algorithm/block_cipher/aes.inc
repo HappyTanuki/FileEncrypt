@@ -201,6 +201,34 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
 
   AddRoundKey(state, expanded_key, 0);
 
+#if (_USE_SIMD_INTRINSIC)
+  std::uint8_t buffer[16];
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      buffer[i * 4 + j] = static_cast<std::uint8_t>(state[j][i]);
+    }
+  }
+  __m128i state_128i =
+      _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+  __m128i round_keys[Nr + 1];
+  for (int j = 0; j < Nr + 1; j++) {
+    for (int i = 0; i < 4; ++i) {
+      std::memcpy(buffer + i * 4, expanded_key[j * 4 + i].data(), 4);
+    }
+    round_keys[j] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+  }
+  for (int round = 1; round < Nr; round++) {
+    state_128i = _mm_aesenc_si128(state_128i, round_keys[round]);
+  }
+  state_128i = _mm_aesenclast_si128(state_128i, round_keys[Nr]);
+
+  _mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), state_128i);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      state[j][i] = buffer[i * 4 + j];
+    }
+  }
+#else
   for (int round = 1; round < Nr; round++) {
     SubBytes(state);
     ShiftRows(state);
@@ -210,6 +238,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   SubBytes(state);
   ShiftRows(state);
   AddRoundKey(state, expanded_key, Nr);
+#endif
 
   CipherAlgorithmReturnData return_data;
   return_data.data.resize(16);
@@ -250,6 +279,41 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
 
   AddRoundKey(state, expanded_key, Nr);
 
+#if (_USE_SIMD_INTRINSIC)
+  std::uint8_t buffer[16];
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      buffer[i * 4 + j] = static_cast<std::uint8_t>(state[j][i]);
+    }
+  }
+  __m128i state_128i =
+      _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+
+  __m128i round_keys[Nr + 1];
+  for (int r = 1; r < Nr; ++r) {
+    for (int w = 0; w < 4; ++w) {
+      std::memcpy(buffer + w * 4, expanded_key[r * 4 + w].data(), 4);
+    }
+    round_keys[r] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+    round_keys[r] = _mm_aesimc_si128(round_keys[r]);
+  }
+  for (int w = 0; w < 4; ++w) {
+    std::memcpy(buffer + w * 4, expanded_key[w].data(), 4);
+  }
+  round_keys[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
+
+  for (int round = Nr - 1; round > 0; --round) {
+    state_128i = _mm_aesdec_si128(state_128i, round_keys[round]);
+  }
+  state_128i = _mm_aesdeclast_si128(state_128i, round_keys[0]);
+
+  _mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), state_128i);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      state[j][i] = buffer[i * 4 + j];
+    }
+  }
+#else
   for (int round = Nr - 1; round > 0; round--) {
     InvShiftRows(state);
     InvSubBytes(state);
@@ -259,6 +323,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
   InvShiftRows(state);
   InvSubBytes(state);
   AddRoundKey(state, expanded_key, 0);
+#endif
 
   CipherAlgorithmReturnData return_data;
   return_data.data.resize(16);
