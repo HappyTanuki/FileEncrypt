@@ -3,6 +3,7 @@
 #include "aes.h"
 #include "precomp.h"
 #include "util/cpu_detect.h"
+#include "util/helper.h"
 
 namespace file_encrypt::algorithm {
 
@@ -178,6 +179,26 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
 
   KeyExpansion(key, expanded_key);
 
+  // debugging code
+  // std::array<std::array<std::byte, 4>, 4 * (Nr + 1)> expanded_temp_key;
+  // for (int i = 0; i < 4 * (Nr + 1); i++) {
+  //   std::memcpy(expanded_temp_key[i].data(), expanded_key[i].data(), 4);
+  //   std::cout << "expanded_key[" << std::setw(2) << std::setfill('0') << i
+  //             << "]: "
+  //             << file_encrypt::util::BytesToStr<4>(expanded_temp_key[i]) << "
+  //             ("
+  //             << std::setw(3) << std::setfill('0')
+  //             << std::to_integer<int>(expanded_temp_key[i][0]) << ", "
+  //             << std::setw(3) << std::setfill('0')
+  //             << std::to_integer<int>(expanded_temp_key[i][1]) << ", "
+  //             << std::setw(3) << std::setfill('0')
+  //             << std::to_integer<int>(expanded_temp_key[i][2]) << ", "
+  //             << std::setw(3) << std::setfill('0')
+  //             << std::to_integer<int>(expanded_temp_key[i][3]) << ") "
+  //             << std::endl;
+  // }
+  // std::cout << "debug point" << std::endl;
+
   AddRoundKey(state, expanded_key, 0);
 
   for (int round = 1; round < Nr; round++) {
@@ -273,6 +294,16 @@ static inline __m128i AESKeygenAssist(__m128i a, int imm) {
       return _mm_aeskeygenassist_si128(a, 0x40);
     case 8:
       return _mm_aeskeygenassist_si128(a, 0x80);
+    case 9:
+      return _mm_aeskeygenassist_si128(a, 0x1b);
+    case 10:
+      return _mm_aeskeygenassist_si128(a, 0x36);
+    case 11:
+      return _mm_aeskeygenassist_si128(a, 0x6c);
+    case 12:
+      return _mm_aeskeygenassist_si128(a, 0xd8);
+    case 13:
+      return _mm_aeskeygenassist_si128(a, 0xab);
     default:
       return _mm_set_epi32(0x00, 0x00, 0x00, 0x00);
   }
@@ -284,7 +315,8 @@ constexpr void AES<KeyBits>::KeyExpansion(
     const typename std::array<AESByte, 4 * Nk>& key,
     typename std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key)
     const {
-  if (_USE_SIMD_INTRINSIC && cpu_sse2 && cpu_aes_ni && KeyBits != 192) {
+#if (_USE_SIMD_INTRINSIC)
+  if (cpu_sse2 && cpu_aes_ni && KeyBits != 192) {
     __m128i round_keys[Nr + 1];
     if (KeyBits == 256) {
       round_keys[0] =
@@ -303,22 +335,29 @@ constexpr void AES<KeyBits>::KeyExpansion(
         temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
         temp = _mm_and_si128(temp, mask);
 
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 첫번째 워드 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 두번째 워드까지 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 세번째 워드까지 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 마지막 워드까지 완성
 
         round_keys[i++] = temp;
 
@@ -330,22 +369,29 @@ constexpr void AES<KeyBits>::KeyExpansion(
         temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(2, 2, 2, 2));
         temp = _mm_and_si128(temp, mask);
 
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 첫번째 워드 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 두번째 워드까지 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 세번째 워드까지 완성
+
+        temp = _mm_xor_si128(temp,
+                             _mm_slli_si128(_mm_and_si128(temp, mask),
+                                            4));  // 이전 워드 다음 워드에 복사
         mask = _mm_slli_si128(mask, 4);
-        temp = _mm_xor_si128(
-            _mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-            _mm_slli_si128(temp, 4));
-        temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+        temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                             temp);  // 마지막 워드까지 완성
 
         round_keys[i++] = temp;
 
@@ -358,22 +404,29 @@ constexpr void AES<KeyBits>::KeyExpansion(
       temp = _mm_shuffle_epi32(temp, _MM_SHUFFLE(3, 3, 3, 3));
       temp = _mm_and_si128(temp, mask);
 
-      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
-      mask = _mm_slli_si128(mask, 4);
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                           temp);  // 첫번째 워드 완성
+
       temp =
-          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-                        _mm_slli_si128(temp, 4));
-      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+          _mm_xor_si128(temp, _mm_slli_si128(_mm_and_si128(temp, mask),
+                                             4));  // 이전 워드 다음 워드에 복사
       mask = _mm_slli_si128(mask, 4);
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                           temp);  // 두번째 워드까지 완성
+
       temp =
-          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-                        _mm_slli_si128(temp, 4));
-      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+          _mm_xor_si128(temp, _mm_slli_si128(_mm_and_si128(temp, mask),
+                                             4));  // 이전 워드 다음 워드에 복사
       mask = _mm_slli_si128(mask, 4);
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                           temp);  // 세번째 워드까지 완성
+
       temp =
-          _mm_xor_si128(_mm_and_si128(temp, _mm_set_epi32(0, 0, 0, 0xFFFFFFFF)),
-                        _mm_slli_si128(temp, 4));
-      temp = _mm_xor_si128(_mm_and_si128(temp1, mask), temp);
+          _mm_xor_si128(temp, _mm_slli_si128(_mm_and_si128(temp, mask),
+                                             4));  // 이전 워드 다음 워드에 복사
+      mask = _mm_slli_si128(mask, 4);
+      temp = _mm_xor_si128(_mm_and_si128(temp1, mask),
+                           temp);  // 마지막 워드까지 완성
 
       round_keys[i] = temp;
 
@@ -388,7 +441,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
       return;
     }
   }
-
+#endif
   // fallback
   std::array<AESByte, 4> temp;
 
@@ -402,7 +455,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
 
     if (i % Nk == 0) {
       temp = SubWord(RotWord(temp));
-#if(_USE_SIMD_INTRINSIC)
+#if (_USE_SIMD_INTRINSIC)
       __m128i temp2 = _mm_cvtsi32_si128(
           *reinterpret_cast<const std::uint32_t*>(temp.data()));
       __m128i temp3 =
@@ -420,7 +473,7 @@ constexpr void AES<KeyBits>::KeyExpansion(
       temp = SubWord(temp);
     }
 
-#if(_USE_SIMD_INTRINSIC)
+#if (_USE_SIMD_INTRINSIC)
     __m128i temp2 =
         _mm_cvtsi32_si128(*reinterpret_cast<const std::uint32_t*>(temp.data()));
     __m128i temp3 = _mm_cvtsi32_si128(

@@ -1,6 +1,7 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 
+#include <iomanip>
 #include <sstream>
 #include <string>
 
@@ -13,7 +14,8 @@ std::string BytesToStr(const std::array<std::byte, Size>& bytes) {
   std::ostringstream osstream;
 
   for (int i = 0; i < Size; i++) {
-    osstream << std::hex << std::to_integer<int>(bytes[i]);
+    osstream << std::uppercase << std::setw(2) << std::setfill('0') << std::hex
+             << std::to_integer<int>(bytes[i]);
   }
 
   return osstream.str();
