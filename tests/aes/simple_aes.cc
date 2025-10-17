@@ -17,7 +17,7 @@ std::vector<std::byte> HexStringToBytes(const std::string& hex) {
 
 int main() {
   file_encrypt::algorithm::AES<256> aes;
-  file_encrypt::algorithm::CipherAlgorithmInputData input;
+  file_encrypt::algorithm::CipherAlgorithmOnetimeInputData input;
   input.data = HexStringToBytes("014730f80ac625fe84f026c60bfd547d");
   input.key.resize(32);
 

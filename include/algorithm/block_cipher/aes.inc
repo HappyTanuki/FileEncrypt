@@ -149,6 +149,17 @@ constexpr AESMatrix AESMatrix::operator+(const AESMatrix& matrix) const {
 
 template <std::uint32_t KeyBits>
 AES<KeyBits>::AES() {
+  Init();
+}
+
+template <std::uint32_t KeyBits>
+AES<KeyBits>::AES(std::array<std::byte, KeyBits> key) {
+  Init();
+  SetKey(key);
+}
+
+template <std::uint32_t KeyBits>
+void AES<KeyBits>::Init() {
   file_encrypt::util::EdxEcx features = file_encrypt::util::GetCPUFeatures();
   cpu_aes_ni = features.ecx & file_encrypt::util::FeatureECXBits::kAESNI;
   cpu_sse2 = features.edx & file_encrypt::util::FeatureEDXBits::kSSE2;
@@ -156,28 +167,83 @@ AES<KeyBits>::AES() {
 
 template <std::uint32_t KeyBits>
 CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
-    const CipherAlgorithmInputData& data) const {
+    const CipherAlgorithmOnetimeInputData& data) const {
   if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
     return CipherAlgorithmReturnData();
   }
 
-  auto data_iter = data.data.begin();
   auto key_iter = data.key.begin();
-  AESMatrix state;
   std::array<AESByte, 4 * Nk> key;
+  std::array<std::byte, 16> data_array;
   std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+
+  for (int i = 0; i < 4 * Nk; i++) {
+    key[i] = *key_iter++;
+  }
+  std::memcpy(data_array.data(), data.data.data(), 16);
+
+  KeyExpansion(key, expanded_key);
+
+  _AESEssentialData essential_data = {};
+  essential_data.expanded_key = expanded_key;
+  essential_data.data = data_array;
+  return _Encrypt(essential_data);
+}
+template <std::uint32_t KeyBits>
+CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
+    const CipherAlgorithmOnetimeInputData& data) const {
+  if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
+    return CipherAlgorithmReturnData();
+  }
+
+  auto key_iter = data.key.begin();
+  std::array<AESByte, 4 * Nk> key;
+  std::array<std::byte, 16> data_array;
+  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+
+  for (int i = 0; i < 4 * Nk; i++) {
+    key[i] = *key_iter++;
+  }
+  std::memcpy(data_array.data(), data.data.data(), 16);
+
+  KeyExpansion(key, expanded_key);
+
+  _AESEssentialData essential_data = {};
+  essential_data.expanded_key = expanded_key;
+  essential_data.data = data_array;
+  return _Decrypt(essential_data);
+}
+template <std::uint32_t KeyBits>
+CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
+    const std::array<std::byte, 16>& data) {
+  _AESEssentialData essential_data = {};
+
+  essential_data.data = data;
+  essential_data.expanded_key = expanded_key;
+  return _Encrypt(essential_data);
+}
+template <std::uint32_t KeyBits>
+CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
+    const std::array<std::byte, 16>& data) {
+  _AESEssentialData essential_data = {};
+  essential_data.data = data;
+  essential_data.expanded_key = expanded_key;
+  return _Decrypt(essential_data);
+}
+
+template <std::uint32_t KeyBits>
+constexpr CipherAlgorithmReturnData AES<KeyBits>::_Encrypt(
+    _AESEssentialData data) const {
+  auto data_iter = data.data.begin();
+  AESMatrix state;
+  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key =
+      data.expanded_key;
 
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
       state[i][j] = *data_iter++;
     }
   }
-
-  for (int i = 0; i < 4 * Nk; i++) {
-    key[i] = *key_iter++;
-  }
-
-  KeyExpansion(key, expanded_key);
 
   // debugging code
   // std::array<std::array<std::byte, 4>, 4 * (Nr + 1)> expanded_temp_key;
@@ -229,6 +295,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
     }
   }
 #else
+  // equivalent fallback
   for (int round = 1; round < Nr; round++) {
     SubBytes(state);
     ShiftRows(state);
@@ -253,29 +320,18 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   return return_data;
 }
 template <std::uint32_t KeyBits>
-CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
-    const CipherAlgorithmInputData& data) const {
-  if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
-    return CipherAlgorithmReturnData();
-  }
-
+constexpr CipherAlgorithmReturnData AES<KeyBits>::_Decrypt(
+    _AESEssentialData data) const {
   auto data_iter = data.data.begin();
-  auto key_iter = data.key.begin();
   AESMatrix state;
-  std::array<AESByte, 4 * Nk> key;
-  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key =
+      data.expanded_key;
 
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
       state[i][j] = *data_iter++;
     }
   }
-
-  for (int i = 0; i < 4 * Nk; i++) {
-    key[i] = *key_iter++;
-  }
-
-  KeyExpansion(key, expanded_key);
 
   AddRoundKey(state, expanded_key, Nr);
 
@@ -314,6 +370,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
     }
   }
 #else
+  // equivalent fallback
   for (int round = Nr - 1; round > 0; round--) {
     InvShiftRows(state);
     InvSubBytes(state);

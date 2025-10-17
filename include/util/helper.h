@@ -38,6 +38,17 @@ std::vector<std::byte> HexStringToBytes(const std::string& hex);
 std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
                                   const std::vector<std::byte>& b);
 
+template <std::uint32_t Size>
+std::array<std::byte, Size> XorArrays(const std::array<std::byte, Size>& a,
+                                      const std::array<std::byte, Size>& b) {
+  std::array<std::byte, Size> result;
+  for (std::size_t i = 0; i < Size; ++i) {
+    result[i] = static_cast<std::byte>(static_cast<unsigned char>(a[i]) ^
+                                       static_cast<unsigned char>(b[i]));
+  }
+  return result;
+}
+
 }  // namespace file_encrypt::util
 
 #endif

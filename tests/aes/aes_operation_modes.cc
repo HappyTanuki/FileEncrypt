@@ -2,8 +2,8 @@
 #include "util/helper.h"
 
 int main() {
-  {  // AES256_ECB
-    file_encrypt::algorithm::AES256_ECB<10> cipher(
+  {  // AES_256_ECB
+    file_encrypt::algorithm::AES_256_ECB<10> cipher(
         file_encrypt::util::HexStringToBytes<32>(""));
 
     cipher << file_encrypt::util::HexStringToBytes(

@@ -182,6 +182,9 @@ HashAlgorithmReturnData SHA256::Digest() {
     std::uint32_t v = ::htonl(H[i]);
     std::memcpy(ret.digest.data() + i * 4, &v, 4);
   }
+
+  Reset();
+
   return ret;
 }
 

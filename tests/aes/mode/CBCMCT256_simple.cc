@@ -9,7 +9,7 @@ namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 #define _TEST_TYPE "simple"
 
 #define _KEY_BIT 256
-#define _ALGORITHM file_encrypt::algorithm::AES256_CBC<10>
+#define _ALGORITHM file_encrypt::algorithm::AES_256_CBC<10>
 #define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
 #define _TESTDIRECTORY "aesmct/"
 #define _TEST_NAME "CBCMCT256"

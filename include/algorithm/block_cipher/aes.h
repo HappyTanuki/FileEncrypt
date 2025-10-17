@@ -2,6 +2,7 @@
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_AES_H_
 
 #include <array>
+#include <cstring>
 
 #include "algorithm/algorithm.h"
 
@@ -88,16 +89,30 @@ struct AESMatrix {
 };
 
 template <std::uint32_t KeyBits>
-class AES : public BlockCipherAlgorithm {
+class AES : public BlockCipherAlgorithm<KeyBits, 128> {
  public:
   static_assert(KeyBits == 128 || KeyBits == 192 || KeyBits == 256,
                 "AES key size must be 128, 192, or 256 bits");
   AES();
+  AES(std::array<std::byte, KeyBits> key);
+
+  void Init();
 
   CipherAlgorithmReturnData Encrypt(
-      const CipherAlgorithmInputData& data) const final override;
+      const CipherAlgorithmOnetimeInputData& data) const final override;
   CipherAlgorithmReturnData Decrypt(
-      const CipherAlgorithmInputData& data) const final override;
+      const CipherAlgorithmOnetimeInputData& data) const final override;
+  CipherAlgorithmReturnData Encrypt(
+      const std::array<std::byte, 16>& data) final override;
+  CipherAlgorithmReturnData Decrypt(
+      const std::array<std::byte, 16>& data) final override;
+
+  constexpr void SetKey(
+      const std::array<std::byte, KeyBits / 8>& key) final override {
+    std::array<AESByte, KeyBits / 8> aes_key;
+    std::memcpy(aes_key.data(), key.data(), key.size());
+    KeyExpansion(aes_key, expanded_key);
+  }
 
 #ifdef _DEBUG
   const std::uint8_t* _Debug_get_S_box() const { return S_box; }
@@ -106,6 +121,14 @@ class AES : public BlockCipherAlgorithm {
  private:
   static constexpr std::uint32_t Nk = KeyBits / 32;
   static constexpr std::uint32_t Nr = Nk + 6;
+
+  struct _AESEssentialData {
+    std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+    std::array<std::byte, 16> data;
+  };
+
+  constexpr CipherAlgorithmReturnData _Encrypt(_AESEssentialData data) const;
+  constexpr CipherAlgorithmReturnData _Decrypt(_AESEssentialData data) const;
 
   constexpr void KeyExpansion(
       const typename std::array<AESByte, 4 * Nk>& key,
@@ -127,6 +150,8 @@ class AES : public BlockCipherAlgorithm {
   constexpr std::array<AESByte, 4> SubWord(
       const std::array<AESByte, 4>& bytes) const;
   constexpr AESByte Rcon(const std::uint32_t& i) const;
+
+  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
 
   static const std::uint8_t S_box[256];
   static const std::uint8_t Inv_S_box[256];

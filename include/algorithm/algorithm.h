@@ -14,7 +14,7 @@ struct HashAlgorithmReturnData {
   std::vector<std::byte> digest = {};
 };
 
-struct CipherAlgorithmInputData {
+struct CipherAlgorithmOnetimeInputData {
   std::vector<std::byte> data = {};
   std::vector<std::byte> key = {};
 };
@@ -29,14 +29,20 @@ struct EncodingAlgorithmReturnData {
   std::vector<std::byte> data = {};
 };
 
+template <std::uint32_t KeyBits, std::uint32_t BlockSizeBits>
 class BlockCipherAlgorithm {
  public:
   BlockCipherAlgorithm() = default;
   virtual ~BlockCipherAlgorithm() = default;
   virtual CipherAlgorithmReturnData Encrypt(
-      const CipherAlgorithmInputData& data) const = 0;
+      const CipherAlgorithmOnetimeInputData& data) const = 0;
   virtual CipherAlgorithmReturnData Decrypt(
-      const CipherAlgorithmInputData& data) const = 0;
+      const CipherAlgorithmOnetimeInputData& data) const = 0;
+  virtual CipherAlgorithmReturnData Encrypt(
+      const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
+  virtual CipherAlgorithmReturnData Decrypt(
+      const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
+  virtual void SetKey(const std::array<std::byte, KeyBits / 8>& cipher_key) = 0;
 };
 
 class HashAlgorithm {
