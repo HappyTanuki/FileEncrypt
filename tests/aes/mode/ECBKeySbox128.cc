@@ -58,7 +58,9 @@ int main() {
     std::cout << "EXPECTED: "
               << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])
               << "\n";
-    std::cout << "RESULT: " << file_encrypt::util::BytesToStr<16>(result.data)
+    std::cout << "RESULT: "
+              << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                     result.data)
               << "\n";
 
     if (result.data != expected) {
@@ -87,7 +89,9 @@ int main() {
     std::cout << "EXPECTED: "
               << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
               << "\n";
-    std::cout << "RESULT: " << file_encrypt::util::BytesToStr<16>(result.data)
+    std::cout << "RESULT: "
+              << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                     result.data)
               << "\n";
 
     if (result.data != expected) {

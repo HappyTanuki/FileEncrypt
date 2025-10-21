@@ -92,7 +92,9 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "expected block: "
-                << file_encrypt::util::BytesToStr<16>(expected_block) << "\n";
+                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                       expected_block)
+                << "\n";
       std::cout << "\t" << i + 1;
       if ((i + 1) % 10 == 1 && (i + 1) != 11) {
         std::cout << "st ";
@@ -104,7 +106,8 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "CIPHERTEXT block: "
-                << file_encrypt::util::BytesToStr<16>(output_block.data)
+                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                       output_block.data)
                 << "\n";
       if (output_block.data != expected_block) {
         std::cout << "\t" << "Mismatch" << std::endl;
@@ -180,7 +183,9 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "expected block: "
-                << file_encrypt::util::BytesToStr<16>(expected_block) << "\n";
+                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                       expected_block)
+                << "\n";
       std::cout << "\t" << i + 1;
       if ((i + 1) % 10 == 1 && (i + 1) != 11) {
         std::cout << "st ";
@@ -192,7 +197,8 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "PLAINTEXT block: "
-                << file_encrypt::util::BytesToStr<16>(output_block.data)
+                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                       output_block.data)
                 << "\n";
       if (output_block.data != expected_block) {
         std::cout << "\t" << "Mismatch" << std::endl;

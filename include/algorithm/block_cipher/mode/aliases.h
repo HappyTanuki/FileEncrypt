@@ -13,7 +13,7 @@ class AES_128_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 128, BufferSize> {
  public:
   AES_128_CBC(const std::array<std::byte, 16>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 128, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
 };
@@ -23,7 +23,7 @@ class AES_192_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 192, BufferSize> {
  public:
   AES_192_CBC(const std::array<std::byte, 24>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 192, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
 };
@@ -33,7 +33,7 @@ class AES_256_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 256, BufferSize> {
  public:
   AES_256_CBC(const std::array<std::byte, 32>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 256, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };
@@ -43,7 +43,7 @@ class AES_128_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 128, BufferSize> {
  public:
   AES_128_ECB(const std::array<std::byte, 16>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 128, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
 };
@@ -53,7 +53,7 @@ class AES_192_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 192, BufferSize> {
  public:
   AES_192_ECB(const std::array<std::byte, 24>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 192, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
 };
@@ -63,7 +63,7 @@ class AES_256_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize> {
  public:
   AES_256_ECB(const std::array<std::byte, 32>& key = {},
-              const std::array<std::byte, 16>& iv = {})
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };

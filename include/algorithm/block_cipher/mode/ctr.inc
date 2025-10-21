@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "cbc.h"
+#include "ctr.h"
 #include "util/helper.h"
 
 namespace file_encrypt::algorithm::op_mode {
@@ -8,7 +8,7 @@ namespace file_encrypt::algorithm::op_mode {
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
-CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
+CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
     const std::vector<std::byte>& data) {
   if (this->output_buffer_full) {
     return *this;
@@ -29,6 +29,7 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
     this->input_buffer_size += bytes_to_copy;
     input_data_offset += bytes_to_copy;
 
+    // A block is complete at this point
     if (this->input_buffer_size == BlockSizeBits / 8) {
       std::array<std::byte, BlockSizeBits / 8> cipher_input_data;
       std::memcpy(cipher_input_data.data(), this->input_buffer.data(),
@@ -69,7 +70,7 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
-CBC<BlockSizeBits, KeyBits, BufferSize>::operator>>(
+CTR<BlockSizeBits, KeyBits, BufferSize>::operator>>(
     OperationModeOutputData<BlockSizeBits>& data) {
   std::memcpy(data.data.data(),
               this->output_buffer[this->output_buffer_head].data.data(),

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "algorithm/algorithm.h"
+#include "algorithm/csprng.h"
 
 namespace file_encrypt::algorithm::op_mode {
 
@@ -21,8 +22,11 @@ class OperationMode {
   OperationMode(
       std::unique_ptr<BlockCipherAlgorithm<KeyBits, BlockSizeBits>> algorithm,
       std::array<std::byte, KeyBits / 8> cipher_key = {},
-      std::array<std::byte, BlockSizeBits / 8> initial_vector = {})
-      : cipher(std::move(algorithm)), IV(initial_vector) {
+      std::array<std::byte, BlockSizeBits / 8> initial_vector =
+          GetRandomArray<BlockSizeBits / 8>())
+      : cipher(std::move(algorithm)),
+        IV(initial_vector),
+        prev_vector(initial_vector) {
     cipher->SetKey(cipher_key);
   }
   virtual ~OperationMode() = default;
@@ -52,11 +56,14 @@ class OperationMode {
   }
   constexpr void SetIV(
       std::array<std::byte, BlockSizeBits / 8> initial_vector) {
+    this->prev_vector = initial_vector;
     this->IV = initial_vector;
   }
 
- protected:
   std::array<std::byte, BlockSizeBits / 8> IV;
+
+ protected:
+  std::array<std::byte, BlockSizeBits / 8> prev_vector;
   std::unique_ptr<BlockCipherAlgorithm<KeyBits, BlockSizeBits>> cipher;
 
   std::array<std::byte, BlockSizeBits / 8> input_buffer = {};
