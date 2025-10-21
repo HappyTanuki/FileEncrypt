@@ -3,6 +3,7 @@
 #ifdef _WIN32
 #include <bcrypt.h>
 #include <windows.h>
+#pragma comment(lib, "Bcrypt.lib")
 #else
 #include <cstdio>
 #endif
