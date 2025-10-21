@@ -4,6 +4,7 @@
 
 #include "algorithm/block_cipher/aes.h"
 #include "cbc.h"
+#include "ctr.h"
 #include "ecb.h"
 
 namespace file_encrypt::algorithm {
@@ -65,6 +66,36 @@ class AES_256_ECB
   AES_256_ECB(const std::array<std::byte, 32>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize>(
+            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
+};
+
+template <std::uint32_t BufferSize>
+class AES_128_CTR
+    : public file_encrypt::algorithm::op_mode::CTR<128, 128, BufferSize> {
+ public:
+  AES_128_CTR(const std::array<std::byte, 16>& key = {},
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
+      : file_encrypt::algorithm::op_mode::CTR<128, 128, BufferSize>(
+            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
+};
+
+template <std::uint32_t BufferSize>
+class AES_192_CTR
+    : public file_encrypt::algorithm::op_mode::CTR<128, 192, BufferSize> {
+ public:
+  AES_192_CTR(const std::array<std::byte, 24>& key = {},
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
+      : file_encrypt::algorithm::op_mode::CTR<128, 192, BufferSize>(
+            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
+};
+
+template <std::uint32_t BufferSize>
+class AES_256_CTR
+    : public file_encrypt::algorithm::op_mode::CTR<128, 256, BufferSize> {
+ public:
+  AES_256_CTR(const std::array<std::byte, 32>& key = {},
+              const std::array<std::byte, 16>& iv = GetRandomArray<16>())
+      : file_encrypt::algorithm::op_mode::CTR<128, 256, BufferSize>(
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };
 

@@ -14,15 +14,18 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
       std::array<std::byte, KeyBits / 8> cipher_key = {},
       std::array<std::byte, BlockSizeBits / 8> initial_vector =
           GetRandomArray<BlockSizeBits / 8>(),
-      std::uint32_t m = 64)
-      : OperationMode(algorithm, cipher_key, initial_vector), m(m) {
-    std::uint32_t counter_bytes = m / 8;
+      std::uint32_t m_bits = 60)
+      : OperationMode<BlockSizeBits, KeyBits, BufferSize>(
+            std::move(algorithm), cipher_key, initial_vector),
+        m(m_bits) {
+    std::uint32_t counter_bytes = (m_bits + 7) / 8;
     for (int i = (BlockSizeBits / 8) - 1;
-         i >= (BlockSizeBits / 8) - counter_bytes; i--) {
-      this->prev_vector[i] = 0x00;
-      m -= 8;
+         i > (BlockSizeBits / 8) - counter_bytes; i--) {
+      this->prev_vector[i] = static_cast<std::byte>(0x00);
+      m_bits -= 8;
     }
-    this->prev_vector[(BlockSizeBits / 8) - counter_bytes] &= 0xFF << m;
+    this->prev_vector[(BlockSizeBits / 8) - counter_bytes] &=
+        static_cast<std::byte>(0xFF << m_bits);
     this->IV = this->prev_vector;
   }
 
