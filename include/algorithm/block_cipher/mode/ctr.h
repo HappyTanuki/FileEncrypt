@@ -14,7 +14,7 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
       std::array<std::byte, KeyBits / 8> cipher_key = {},
       std::array<std::byte, BlockSizeBits / 8> initial_vector =
           GetRandomArray<BlockSizeBits / 8>(),
-      std::uint32_t m_bits = 60)
+      std::uint32_t m_bits = 64)
       : OperationMode<BlockSizeBits, KeyBits, BufferSize>(
             std::move(algorithm), cipher_key, initial_vector),
         m(m_bits) {

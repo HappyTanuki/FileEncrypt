@@ -31,30 +31,18 @@ CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
 
     // A block is complete at this point
     if (this->input_buffer_size == BlockSizeBits / 8) {
-      std::array<std::byte, BlockSizeBits / 8> cipher_input_data;
-      std::memcpy(cipher_input_data.data(), this->input_buffer.data(),
-                  this->input_buffer.size());
-      CipherAlgorithmReturnData result;
-      if (this->mode == CipherMode::Encrypt) {
-        cipher_input_data = file_encrypt::util::XorArrays<BlockSizeBits / 8>(
-            cipher_input_data, this->prev_vector);
-        result = this->cipher->Encrypt(cipher_input_data);
-        std::memcpy(this->prev_vector.data(), result.data.data(),
-                    this->prev_vector.size());
-      } else {
-        result = this->cipher->Decrypt(cipher_input_data);
-        result.data = file_encrypt::util::XorVectors(
-            std::vector<std::byte>(this->prev_vector.begin(),
-                                   this->prev_vector.end()),
-            result.data);
-        std::memcpy(this->prev_vector.data(), cipher_input_data.data(),
-                    this->prev_vector.size());
-      }
+      CipherAlgorithmReturnData result =
+          this->cipher->Encrypt(this->prev_vector);
+      this->prev_vector =
+          file_encrypt::util::StandardIncrement<16>(this->prev_vector, m);
+      auto processed = file_encrypt::util::XorVectors(
+          result.data, std::vector<std::byte>(this->input_buffer.begin(),
+                                              this->input_buffer.end()));
+
       this->input_buffer_size = 0;
 
       OperationModeOutputData<BlockSizeBits> temp_result;
-      std::memcpy(temp_result.data.data(), result.data.data(),
-                  result.data.size());
+      std::memcpy(temp_result.data.data(), processed.data(), processed.size());
 
       this->output_buffer[this->output_buffer_tail++] = temp_result;
       this->output_buffer_tail %= BufferSize;
