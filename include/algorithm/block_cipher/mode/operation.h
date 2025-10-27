@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "algorithm/algorithm.h"
-#include "algorithm/csprng.h"
+#include "algorithm/csprng/csprng.h"
 
 namespace file_encrypt::algorithm::op_mode {
 

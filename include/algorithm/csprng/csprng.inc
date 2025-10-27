@@ -11,10 +11,10 @@
 namespace file_encrypt::algorithm {
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
-    std::uint32_t requested_instantiation_security_strangth,
-    bool prediction_resistance_flag,
-    std::vector<std::byte> personalization_string,
-    std::uint64_t personalization_string_length) {
+    const std::uint32_t& requested_instantiation_security_strangth,
+    const bool& prediction_resistance_flag,
+    const std::vector<std::byte>& personalization_string,
+    const std::uint64_t& personalization_string_length) {
   // Step 1
   if (requested_instantiation_security_strangth >
       highest_supported_security_strength)
@@ -69,8 +69,9 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
 }
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
-    bool prediction_resistance_request, std::vector<std::byte> additional_input,
-    std::uint64_t additional_input_length) {
+    const bool& prediction_resistance_request,
+    const std::vector<std::byte>& additional_input,
+    const std::uint64_t& additional_input_length) {
   // Step 1
   if (!valid) return ReturnStatus::kERROR_FLAG;
   // Step 2
@@ -92,10 +93,13 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
 }
 
 constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
-    std::uint64_t requested_number_of_bits,
-    std::uint32_t requested_security_strangth,
-    bool prediction_resistance_request, std::vector<std::byte> additional_input,
-    std::uint64_t additional_input_length) {
+    const std::uint64_t& requested_number_of_bits,
+    const std::uint32_t& requested_security_strangth,
+    bool prediction_resistance_request,
+    const std::vector<std::byte>& additional_input,
+    const std::uint64_t& additional_input_length) {
+  std::vector<std::byte> _additional_input = additional_input;
+  std::uint64_t _additional_input_length = additional_input_length;
   // Step 1
   if (!valid) return {ReturnStatus::kERROR_FLAG, {}};
   // Step 2
@@ -119,17 +123,18 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     if (reseed_required_flag || prediction_resistance_request) {
       // Step 7.1
       ReturnStatus status = Reseed(prediction_resistance_request,
-                                   additional_input, additional_input_length);
+                                   _additional_input, _additional_input_length);
       // Step 7.2
       if (status != ReturnStatus::kSUCCESS) return {status, {}};
       // Step 7.4
-      additional_input.clear();
+      _additional_input.clear();
+      _additional_input_length = 0;
       // Step 7.5
       reseed_required_flag = false;
     }
     // Step 8
     generate_algorithm_return_value = GenerateAlgorithm(
-        requested_number_of_bits, additional_input, additional_input_length);
+        requested_number_of_bits, _additional_input, _additional_input_length);
     // Step 9
     if (reseed_required_flag) {
       // Step 9.1
