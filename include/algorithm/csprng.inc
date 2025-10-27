@@ -91,6 +91,73 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
   return status;
 }
 
+constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
+    std::uint64_t requested_number_of_bits,
+    std::uint32_t requested_security_strangth,
+    bool prediction_resistance_request, std::vector<std::byte> additional_input,
+    std::uint64_t additional_input_length) {
+  // Step 1
+  if (!valid) return {ReturnStatus::kERROR_FLAG, {}};
+  // Step 2
+  if (requested_number_of_bits > max_number_of_bits_per_request)
+    return {ReturnStatus::kERROR_FLAG, {}};
+  // Step 3
+  if (requested_security_strangth > security_strength)
+    return {ReturnStatus::kERROR_FLAG, {}};
+  // Step 4
+  if (additional_input_length > max_additional_input_length)
+    return {ReturnStatus::kERROR_FLAG, {}};
+  // Step 5
+  if (prediction_resistance_request && !prediction_resistance_flag)
+    return {ReturnStatus::kERROR_FLAG, {}};
+  // Step 6
+  reseed_required_flag = false;
+
+  GenerateReturnValue generate_algorithm_return_value;
+  while (true) {
+    // Step 7
+    if (reseed_required_flag || prediction_resistance_request) {
+      // Step 7.1
+      ReturnStatus status = Reseed(prediction_resistance_request,
+                                   additional_input, additional_input_length);
+      // Step 7.2
+      if (status != ReturnStatus::kSUCCESS) return {status, {}};
+      // Step 7.4
+      additional_input.clear();
+      // Step 7.5
+      reseed_required_flag = false;
+    }
+    // Step 8
+    generate_algorithm_return_value = GenerateAlgorithm(
+        requested_number_of_bits, additional_input, additional_input_length);
+    // Step 9
+    if (reseed_required_flag) {
+      // Step 9.1
+      // Step 9.2
+      if (prediction_resistance_flag) prediction_resistance_request = true;
+      // Step 9.3
+      continue;
+    }
+    break;
+  }
+  // Step 11
+  return {ReturnStatus::kSUCCESS,
+          generate_algorithm_return_value.pseudorandom_bits};
+}
+
+constexpr CSPRNG::ReturnStatus CSPRNG::Uninstantiate() {
+  // Step 1
+  if (!valid) return ReturnStatus::kERROR_FLAG;
+  // Step 2
+  valid = false;
+  security_strength = 256;
+  prediction_resistance_flag = false;
+
+  reseed_required_flag = false;
+  // Step 3
+  return ReturnStatus::kSUCCESS;
+}
+
 CSPRNG::ReturnStatus CSPRNG::GetRandom(char* buf, int bufsiz) {
 #ifdef _WIN32
   if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, reinterpret_cast<UCHAR*>(buf),

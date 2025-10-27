@@ -19,6 +19,11 @@ class CSPRNG {
     std::vector<std::byte> entropy_input;
   };
 
+  struct GenerateReturnValue {
+    ReturnStatus status;
+    std::vector<std::byte> pseudorandom_bits;
+  };
+
   constexpr ReturnStatus Instantiate(
       std::uint32_t requested_instantiation_security_strangth,
       bool prediction_resistance_flag,
@@ -37,6 +42,20 @@ class CSPRNG {
       std::vector<std::byte> additional_input,
       std::uint64_t additional_input_length) = 0;
 
+  constexpr GenerateReturnValue Generate(
+      std::uint64_t requested_number_of_bits,
+      std::uint32_t requested_security_strangth,
+      bool prediction_resistance_request,
+      std::vector<std::byte> additional_input,
+      std::uint64_t additional_input_length);
+
+  virtual GenerateReturnValue GenerateAlgorithm(
+      std::uint64_t requested_number_of_bits,
+      std::vector<std::byte> additional_input,
+      std::uint64_t additional_input_length) = 0;
+
+  constexpr ReturnStatus Uninstantiate();
+
   static ReturnStatus GetRandom(char* buf, int bufsiz);
 
  private:
@@ -53,6 +72,9 @@ class CSPRNG {
   const std::uint32_t highest_supported_security_strength = 256;
   const std::uint64_t max_personalization_string_length = 34359738368;  // 2^35
   const std::uint64_t max_additional_input_length = 34359738368;        // 2^35
+  const std::uint64_t max_number_of_bits_per_request = 34359738368;     // 2^35
+
+  bool reseed_required_flag = false;
 };
 
 template <std::uint32_t Size>
