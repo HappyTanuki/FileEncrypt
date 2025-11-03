@@ -40,4 +40,37 @@ std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
   return result;
 }
 
+std::vector<std::byte> UInt8ToBytesVector(uint64_t value) {
+  std::vector<std::byte> result(1);
+  result[0] = static_cast<std::byte>(value & 0xFF);
+  return result;
+}
+
+std::vector<std::byte> UInt32ToBytesVector(uint64_t value) {
+  std::vector<std::byte> result(4);
+  for (size_t i = 0; i < 4; ++i) {
+    result[i] = static_cast<std::byte>(value & 0xFF);
+    value >>= 8;
+  }
+  return result;
+}
+
+std::vector<std::byte> UInt64ToBytesVector(uint64_t value) {
+  std::vector<std::byte> result(8);
+  for (size_t i = 0; i < 8; ++i) {
+    result[i] = static_cast<std::byte>(value & 0xFF);
+    value >>= 8;
+  }
+  return result;
+}
+
+std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
+                                const std::uint64_t& size) {
+  std::vector<std::byte> result(size / 8);
+
+  std::memcpy(result.data(), value.data() + value.size() - size / 8, size / 8);
+
+  return result;
+}
+
 }  // namespace file_encrypt::util

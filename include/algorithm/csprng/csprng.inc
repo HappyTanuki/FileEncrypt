@@ -1,20 +1,11 @@
 #include "csprng.h"
 
-#ifdef _WIN32
-#include <bcrypt.h>
-#include <windows.h>
-#pragma comment(lib, "Bcrypt.lib")
-#else
-#include <cstdio>
-#endif
-
 namespace file_encrypt::algorithm {
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
     const std::uint32_t& requested_instantiation_security_strangth,
     const bool& prediction_resistance_flag,
-    const std::vector<std::byte>& personalization_string,
-    const std::uint64_t& personalization_string_length) {
+    const std::vector<std::byte>& personalization_string) {
   // Step 1
   if (requested_instantiation_security_strangth >
       highest_supported_security_strength)
@@ -24,7 +15,7 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
     return ReturnStatus::kERROR_FLAG;
   this->prediction_resistance_flag = prediction_resistance_flag;
   // Step 3
-  if (personalization_string_length > max_personalization_string_length)
+  if (personalization_string.size() * 8 > max_personalization_string_length)
     return ReturnStatus::kERROR_FLAG;
   // Step 4
   switch (requested_instantiation_security_strangth) {
@@ -70,25 +61,24 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
     const bool& prediction_resistance_request,
-    const std::vector<std::byte>& additional_input,
-    const std::uint64_t& additional_input_length) {
+    const std::vector<std::byte>& additional_input) {
   // Step 1
   if (!valid) return ReturnStatus::kERROR_FLAG;
   // Step 2
   if (prediction_resistance_request && !prediction_resistance_flag)
     return ReturnStatus::kERROR_FLAG;
   // Step 3
-  if (additional_input_length > max_additional_input_length)
+  if (additional_input.size() * 8 > max_additional_input_length)
     return ReturnStatus::kERROR_FLAG;
   // Step 4
   GetEntropyInputReturnValue entropy_input_return_value =
-      GetEntropyInput(security_strength, security_strength, security_strength,
+      GetEntropyInput(security_strength, security_strength, max_length,
                       prediction_resistance_flag);
   // Step 5
   if (entropy_input_return_value.status != ReturnStatus::kSUCCESS)
     return entropy_input_return_value.status;
-  ReturnStatus status =
-      ReseedAlgorithm(additional_input, additional_input_length);
+  ReturnStatus status = ReseedAlgorithm(
+      entropy_input_return_value.entropy_input, additional_input);
   return status;
 }
 
@@ -96,10 +86,8 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     const std::uint64_t& requested_number_of_bits,
     const std::uint32_t& requested_security_strangth,
     bool prediction_resistance_request,
-    const std::vector<std::byte>& additional_input,
-    const std::uint64_t& additional_input_length) {
+    const std::vector<std::byte>& additional_input) {
   std::vector<std::byte> _additional_input = additional_input;
-  std::uint64_t _additional_input_length = additional_input_length;
   // Step 1
   if (!valid) return {ReturnStatus::kERROR_FLAG, {}};
   // Step 2
@@ -109,7 +97,7 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
   if (requested_security_strangth > security_strength)
     return {ReturnStatus::kERROR_FLAG, {}};
   // Step 4
-  if (additional_input_length > max_additional_input_length)
+  if (additional_input.size() * 8 > max_additional_input_length)
     return {ReturnStatus::kERROR_FLAG, {}};
   // Step 5
   if (prediction_resistance_request && !prediction_resistance_flag)
@@ -122,19 +110,18 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     // Step 7
     if (reseed_required_flag || prediction_resistance_request) {
       // Step 7.1
-      ReturnStatus status = Reseed(prediction_resistance_request,
-                                   _additional_input, _additional_input_length);
+      ReturnStatus status =
+          Reseed(prediction_resistance_request, _additional_input);
       // Step 7.2
       if (status != ReturnStatus::kSUCCESS) return {status, {}};
       // Step 7.4
       _additional_input.clear();
-      _additional_input_length = 0;
       // Step 7.5
       reseed_required_flag = false;
     }
     // Step 8
-    generate_algorithm_return_value = GenerateAlgorithm(
-        requested_number_of_bits, _additional_input, _additional_input_length);
+    generate_algorithm_return_value =
+        GenerateAlgorithm(requested_number_of_bits, _additional_input);
     // Step 9
     if (reseed_required_flag) {
       // Step 9.1
@@ -161,21 +148,6 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Uninstantiate() {
   reseed_required_flag = false;
   // Step 3
   return ReturnStatus::kSUCCESS;
-}
-
-CSPRNG::ReturnStatus CSPRNG::GetRandom(char* buf, int bufsiz) {
-#ifdef _WIN32
-  if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, reinterpret_cast<UCHAR*>(buf),
-                                      bufsiz, BCRYPT_USE_SYSTEM_PREFERRED_RNG)))
-    return ReturnStatus::kERROR_FLAG;
-  return ReturnStatus::kSUCCESS;
-#else
-  static std::FILE* urandom = fopen("/dev/urandom", "rb");
-  if (!urandom) return ReturnStatus::kCATASTROPHIC_ERROR_FLAG;
-  size_t n = std::fread(buf, 1, bufsiz, urandom);
-  if (n != (size_t)bufsiz) return ReturnStatus::kERROR_FLAG;
-  return ReturnStatus::kSUCCESS;
-#endif
 }
 
 }  // namespace file_encrypt::algorithm

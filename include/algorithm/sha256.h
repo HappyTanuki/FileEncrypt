@@ -1,6 +1,7 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
 
+#include <memory>
 #include <queue>
 
 #include "algorithm.h"

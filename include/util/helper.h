@@ -1,6 +1,7 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -68,6 +69,85 @@ constexpr std::array<std::byte, Size> StandardIncrement(
       carry = true;
     }
   } while (carry && --i >= counter_bytes);
+
+  return result;
+}
+
+// 덧셈 결과를 seedlen 비트로 자름
+constexpr std::vector<std::byte> MaskSeedlen(
+    const std::vector<std::byte>& value, const size_t& seedlen) {
+  std::vector<std::byte> return_value = value;
+  size_t byteLen = (seedlen + 7) / 8;
+  size_t extraBits = seedlen % 8;
+  if (extraBits != 0) {
+    uint8_t mask = static_cast<uint8_t>((1 << extraBits) - 1);
+    return_value[byteLen - 1] &= static_cast<std::byte>(mask);
+  }
+
+  if (return_value.size() > byteLen) {
+    return_value.resize(byteLen);
+  }
+
+  return return_value;
+}
+
+std::vector<std::byte> UInt8ToBytesVector(uint64_t value);
+std::vector<std::byte> UInt32ToBytesVector(uint64_t value);
+std::vector<std::byte> UInt64ToBytesVector(uint64_t value);
+
+template <typename... Vectors>
+std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
+                                      const Vectors&... rest) {
+  static_assert((std::is_same_v<Vectors, std::vector<std::byte>> && ...),
+                "All arguments must be std::vector<std::byte>");
+  std::array<const std::vector<std::byte>*, sizeof...(rest) + 1> all = {
+      &first, &rest...};
+
+  size_t byteLen = 0;
+  for (auto v : all) byteLen = std::max(byteLen, v->size());
+
+  std::vector<std::byte> result(byteLen);
+  uint16_t carry = 0;
+
+  for (size_t i = 0; i < byteLen; ++i) {
+    uint16_t sum = carry;
+    for (auto v : all) {
+      if (i < v->size()) sum += static_cast<uint8_t>((*v)[i]);
+    }
+    result[i] = static_cast<std::byte>(sum & 0xFF);
+    carry = sum >> 8;
+  }
+
+  if (carry) result.push_back(static_cast<std::byte>(carry));
+
+  return result;
+}
+
+template <typename... Vectors>
+std::vector<std::byte> ConcatByteVectors(Vectors&&... vecs) {
+  size_t total_size = (vecs.size() + ... + 0);
+  std::vector<std::byte> result;
+  result.reserve(total_size);
+  (result.insert(result.end(), std::make_move_iterator(vecs.begin()),
+                 std::make_move_iterator(vecs.end())),
+   ...);
+  return result;
+}
+
+std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
+                                const std::uint64_t& size);
+
+constexpr std::string GetEnglishNumberSufix(std::uint64_t number) {
+  std::string result;
+  if (number % 10 == 1 && number != 11) {
+    result = "st";
+  } else if (number % 10 == 2 && number != 12) {
+    result = "nd";
+  } else if (number % 10 == 3 && number != 13) {
+    result = "rd";
+  } else {
+    result = "th";
+  }
 
   return result;
 }
