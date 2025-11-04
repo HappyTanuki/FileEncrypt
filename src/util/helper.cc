@@ -1,8 +1,8 @@
 #include "util/helper.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <sstream>
-#include <vector>
 
 namespace file_encrypt::util {
 
@@ -66,9 +66,12 @@ std::vector<std::byte> UInt64ToBytesVector(uint64_t value) {
 
 std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
                                 const std::uint64_t& size) {
-  std::vector<std::byte> result(size / 8);
+  std::vector<std::byte> result;
+  result.resize(size / 8);
 
-  std::memcpy(result.data(), value.data() + value.size() - size / 8, size / 8);
+  std::uint32_t offset = std::max<size_t>(value.size() - size / 8, 0);
+
+  std::memcpy(result.data(), value.data() + offset, size / 8);
 
   return result;
 }

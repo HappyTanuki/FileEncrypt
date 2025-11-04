@@ -34,6 +34,10 @@ class HASH_DRBG : public CSPRNG {
       const std::uint64_t& requested_number_of_bits,
       const std::vector<std::byte>& additional_input) override final;
 
+  std::vector<std::byte> GetV() const { return V; }
+  std::vector<std::byte> GetC() const { return C; }
+  std::uint64_t GetReseedCounter() const { return reseed_counter; }
+
  private:
   HashDFReturnValue Hash_df(std::vector<std::byte> input_string,
                             std::uint32_t no_of_bits_to_return);
@@ -57,7 +61,7 @@ class HASH_DRBG : public CSPRNG {
   bool prediction_resistance_flag = false;
   std::uint32_t security_strength = 256;
   std::uint64_t seedlen = 888;
-  std::uint64_t outlen = 512;
+  std::uint64_t outlen = 128;
 };
 
 }  // namespace file_encrypt::algorithm

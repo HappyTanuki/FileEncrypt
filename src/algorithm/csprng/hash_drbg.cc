@@ -98,12 +98,12 @@ HASH_DRBG::HashDFReturnValue HASH_DRBG::Hash_df(
     std::vector<std::byte> input_string, std::uint32_t no_of_bits_to_return) {
   std::vector<std::byte> temp = {};
   std::uint32_t len = (no_of_bits_to_return + outlen - 1) / outlen;
-  std::uint32_t counter = 0x01;
+  std::uint8_t counter = 0x01;
 
   for (std::uint32_t i = 1; i <= len; i++) {
     std::vector<std::byte> concat = ConcatByteVectors(
-        file_encrypt::util::UInt32ToBytesVector(counter),
-        file_encrypt::util::UInt64ToBytesVector(no_of_bits_to_return),
+        file_encrypt::util::UInt8ToBytesVector(counter),
+        file_encrypt::util::UInt32ToBytesVector(no_of_bits_to_return),
         input_string);
     std::vector<std::byte> digest =
         hash->Digest({concat, concat.size() * 8}).digest;

@@ -24,3 +24,4 @@ endforeach()
 
 add_subdirectory(sha256)
 add_subdirectory(aes)
+add_subdirectory(drbg)

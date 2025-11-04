@@ -5,6 +5,7 @@ namespace file_encrypt::algorithm {
 constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
     const std::uint32_t& requested_instantiation_security_strangth,
     const bool& prediction_resistance_flag,
+    const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
     const std::vector<std::byte>& personalization_string) {
   // Step 1
   if (requested_instantiation_security_strangth >
@@ -35,18 +36,19 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
   }
   // Step 5
   // Step 6
-  GetEntropyInputReturnValue entropy_input_return_value =
-      GetEntropyInput(security_strength, security_strength, security_strength,
-                      prediction_resistance_flag);
+  GetEntropyInputReturnValue entropy_input_return_value;
+  if (entropy_input.size() == 0 && !_TESTING) {
+    entropy_input_return_value =
+        GetEntropyInput(security_strength, security_strength, security_strength,
+                        prediction_resistance_flag);
+  } else {
+    entropy_input_return_value.status = ReturnStatus::kSUCCESS;
+    entropy_input_return_value.entropy_input = entropy_input;
+  }
   // Step 7
   if (entropy_input_return_value.status != ReturnStatus::kSUCCESS)
     return entropy_input_return_value.status;
   // Step 8
-  std::vector<std::byte> nonce;
-  nonce.reserve((security_strength + 1) / 2);
-  ReturnStatus rng_status =
-      GetRandom(reinterpret_cast<char*>(nonce.data()), nonce.size());
-  if (rng_status != ReturnStatus::kSUCCESS) return rng_status;
   // Step 9-12
   ReturnStatus status =
       InstantiateAlgorithm(entropy_input_return_value.entropy_input, nonce,

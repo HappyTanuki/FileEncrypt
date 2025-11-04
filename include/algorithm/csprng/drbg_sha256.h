@@ -24,7 +24,7 @@ class DRBG_SHA256 : public HASH_DRBG {
   bool prediction_resistance_flag = false;
   std::uint32_t security_strength = 256;
   std::uint64_t seedlen = 888;
-  std::uint64_t outlen = 512;
+  std::uint64_t outlen = 256;
 };
 
 }  // namespace file_encrypt::algorithm

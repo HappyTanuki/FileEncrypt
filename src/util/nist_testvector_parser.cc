@@ -358,4 +358,142 @@ ReturnStatusCode ParseCipherMonteVector(
   return ReturnStatusCode::kSuccess;
 }
 
+ReturnStatusCode ParseHashDRBGVector(
+    const std::filesystem::path& file_path,
+    std::vector<NISTTestDRBGHashAlgorithm>& test_vectors) {
+  std::ifstream file(file_path);
+  std::string line;
+
+  std::regex comment("^(.*?)#.*$");
+  std::regex constant(".*\\[(.*)\\].*");
+  std::regex variable("\\s*([a-zA-Z0-9 ]+)\\s\\s*=\\s*([a-zA-Z0-9\\.]*)\\s*");
+
+  std::regex instantiate("\\*\\*\\sINSTANTIATE:");
+  std::regex reseed("\\*\\*\\sRESEED:");
+  std::regex generate("\\*\\*\\sGENERATE.*:");
+
+  std::string hash_algorithm_name;
+  std::vector<std::byte> entropy_input = {};
+  std::vector<std::byte> nonce = {};
+  std::vector<std::byte> personalization_string = {};
+  std::vector<std::byte> additional_input = {};
+  bool prediction_resistance_flag = false;
+
+  NISTTestDRBGHashState hash_state;
+  bool V_parsed = false;
+  bool C_parsed = false;
+  bool reseed_counter_parsed = false;
+  DRBGFunctionName function_name = DRBGFunctionName::kError;
+
+  if (!file.is_open()) {
+    NISTTestDRBGHashAlgorithm error_object;
+    error_object.hash_algorithm_name = "Error opening file.";
+    test_vectors.push_back(error_object);
+    return ReturnStatusCode::kError;
+  }
+
+  while (std::getline(file, line)) {
+    std::smatch matches;
+    bool is_constant = false;
+
+    if (std::regex_search(line, matches, comment)) {
+      line = matches[1];
+    }
+
+    if (std::regex_search(line, matches, constant)) {
+      line = matches[1];
+      is_constant = true;
+    } else {
+      is_constant = false;
+    }
+
+    if (std::regex_search(line, matches, variable)) {
+      std::string var_name = matches[1];
+      std::string var_value = matches[2];
+
+      if (is_constant && var_name == "PredictionResistance" &&
+          var_value == "True") {
+        prediction_resistance_flag = true;
+        continue;
+      } else if (is_constant && var_name == "PredictionResistance" &&
+                 var_value == "False") {
+        prediction_resistance_flag = false;
+        continue;
+      }
+
+      if (var_name == "EntropyInput" || var_name == "EntropyInputReseed" ||
+          var_name == "EntropyInputPR") {
+        entropy_input = HexStringToBytes(var_value);
+      } else if (var_name == "Nonce") {
+        nonce = HexStringToBytes(var_value);
+      } else if (var_name == "PersonalizationString") {
+        personalization_string = HexStringToBytes(var_value);
+      } else if (var_name == "AdditionalInput" ||
+                 var_name == "AdditionalInputReseed") {
+        additional_input = HexStringToBytes(var_value);
+      } else if (var_name == "V") {
+        hash_state.V = HexStringToBytes(var_value);
+        V_parsed = true;
+      } else if (var_name == "C") {
+        hash_state.C = HexStringToBytes(var_value);
+        C_parsed = true;
+      } else if (var_name == "reseed counter") {
+        hash_state.reseed_counter = std::stoul(var_value, nullptr, 10);
+        reseed_counter_parsed = true;
+      } else if (var_name == "ReturnedBits") {
+        (test_vectors.back().stages.back().steps.end() - 1)->returned_bits =
+            HexStringToBytes(var_value);
+      }
+    } else if (is_constant) {
+      hash_algorithm_name = line;
+      if (hash_algorithm_name == "SHA-256") {
+        continue;
+      }
+    }
+
+    if (std::regex_search(line, matches, instantiate))
+      function_name = DRBGFunctionName::kInstantiate;
+    if (std::regex_search(line, matches, reseed))
+      function_name = DRBGFunctionName::kReseed;
+    if (std::regex_search(line, matches, generate))
+      function_name = DRBGFunctionName::kGenerate;
+
+    if (V_parsed && C_parsed && reseed_counter_parsed) {
+      NISTTestDRBGHashStep step;
+      step.function_name = function_name;
+      step.entropy_input = entropy_input;
+      step.nonce = nonce;
+      step.personalization_string = personalization_string;
+      step.additional_input = additional_input;
+      step.prediction_resistance_flag = prediction_resistance_flag;
+      step.internal_state = hash_state;
+
+      if (test_vectors.size() == 0 ||
+          test_vectors.back().hash_algorithm_name != hash_algorithm_name) {
+        NISTTestDRBGHashAlgorithm stage;
+        stage.hash_algorithm_name = hash_algorithm_name;
+        test_vectors.push_back(stage);
+      }
+      if (function_name == DRBGFunctionName::kInstantiate) {
+        NISTTestDRBGHashStage new_stage;
+        test_vectors.back().stages.push_back(new_stage);
+      }
+      test_vectors.back().stages.back().steps.push_back(step);
+
+      entropy_input.clear();
+      nonce.clear();
+      personalization_string.clear();
+      additional_input.clear();
+      prediction_resistance_flag = false;
+      hash_state = NISTTestDRBGHashState();
+      V_parsed = false;
+      C_parsed = false;
+      reseed_counter_parsed = false;
+      function_name = DRBGFunctionName::kError;
+    }
+  }
+
+  return ReturnStatusCode::kSuccess;
+}
+
 }  // namespace file_encrypt::util::NISTTestVectorParser

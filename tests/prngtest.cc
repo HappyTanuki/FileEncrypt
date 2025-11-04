@@ -3,8 +3,7 @@
 #include "util/helper.h"
 
 int main() {
-  file_encrypt::algorithm::DRBG_SHA256 prng =
-      file_encrypt::algorithm::DRBG_SHA256();
+  file_encrypt::algorithm::DRBG_SHA256 prng;
   std::vector<std::byte> entropy(32);
   file_encrypt::algorithm::CSPRNG::GetRandom(
       reinterpret_cast<char*>(entropy.data()), 32);
