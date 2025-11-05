@@ -4,28 +4,27 @@
 #include "util/helper.h"
 #include "util/nist_testvector_parser.h"
 
+#define _PATH "./tests/test_vector/drbgtestvectors/drbgvectors_no_reseed/"
+#define _TESTNAME "drbg_hash_sha256_no_reseed"
+
 int main() {
   std::vector<
       file_encrypt::util::NISTTestVectorParser::NISTTestDRBGHashAlgorithm>
       test_vectors;
   if (file_encrypt::util::NISTTestVectorParser::ParseHashDRBGVector(
-          "./tests/test_vector/drbgtestvectors/drbgvectors_no_reseed/"
-          "Hash_DRBG.txt",
-          test_vectors) !=
+          _PATH "Hash_DRBG.txt", test_vectors) !=
       file_encrypt::util::NISTTestVectorParser::ReturnStatusCode::kSuccess) {
     std::string err_string = test_vectors.back().hash_algorithm_name;
     std::cout << err_string << std::endl;
     return -1;
   }
 
-  std::cout << "Performing drbg_hash_no_reseed test: " << std::endl;
+  std::cout << "Performing " _TESTNAME " test: " << std::endl;
   for (const auto& algorithm_stage : test_vectors) {
     if (algorithm_stage.hash_algorithm_name != "SHA-256") continue;
 
     file_encrypt::algorithm::DRBG_SHA256 drbg_sha256;
     drbg_sha256._TESTING = true;
-
-    std::cout << "sha256 hash: " << std::endl;
 
     for (const auto& stage : algorithm_stage.stages) {
       for (const auto& step : stage.steps) {

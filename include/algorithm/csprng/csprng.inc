@@ -3,12 +3,12 @@
 namespace file_encrypt::algorithm {
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
-    const std::uint32_t& requested_instantiation_security_strangth,
+    const std::uint32_t& requested_instantiation_security_strength,
     const bool& prediction_resistance_flag,
     const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
     const std::vector<std::byte>& personalization_string) {
   // Step 1
-  if (requested_instantiation_security_strangth >
+  if (requested_instantiation_security_strength >
       highest_supported_security_strength)
     return ReturnStatus::kERROR_FLAG;
   // Step 2
@@ -19,7 +19,7 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
   if (personalization_string.size() * 8 > max_personalization_string_length)
     return ReturnStatus::kERROR_FLAG;
   // Step 4
-  switch (requested_instantiation_security_strangth) {
+  switch (requested_instantiation_security_strength) {
     default:
     case 256:
       security_strength = 256;
@@ -39,7 +39,7 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
   GetEntropyInputReturnValue entropy_input_return_value;
   if (entropy_input.size() == 0 && !_TESTING) {
     entropy_input_return_value =
-        GetEntropyInput(security_strength, security_strength, security_strength,
+        GetEntropyInput(security_strength, security_strength, max_length,
                         prediction_resistance_flag);
   } else {
     entropy_input_return_value.status = ReturnStatus::kSUCCESS;

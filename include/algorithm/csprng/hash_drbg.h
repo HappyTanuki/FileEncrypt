@@ -60,7 +60,7 @@ class HASH_DRBG : public CSPRNG {
   bool reseed_required_flag = false;
   bool prediction_resistance_flag = false;
   std::uint32_t security_strength = 256;
-  std::uint64_t seedlen = 888;
+  std::uint64_t seedlen = 440;
   std::uint64_t outlen = 128;
 };
 
