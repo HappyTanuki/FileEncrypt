@@ -16,14 +16,14 @@ int CheckCondition(
       drbg.GetReseedCounter() != step.internal_state.reseed_counter) {
     std::cout << "Internal state does not match expected value." << std::endl;
     std::cout << "Expected V: "
-              << file_encrypt::util::BytesToStr(step.internal_state.V)
+              << file_encrypt::util::BytesToHexStr(step.internal_state.V)
               << std::endl;
-    std::cout << "Got V: " << file_encrypt::util::BytesToStr(drbg.GetV())
+    std::cout << "Got V: " << file_encrypt::util::BytesToHexStr(drbg.GetV())
               << std::endl;
     std::cout << "Expected C: "
-              << file_encrypt::util::BytesToStr(step.internal_state.C)
+              << file_encrypt::util::BytesToHexStr(step.internal_state.C)
               << std::endl;
-    std::cout << "Got C: " << file_encrypt::util::BytesToStr(drbg.GetC())
+    std::cout << "Got C: " << file_encrypt::util::BytesToHexStr(drbg.GetC())
               << std::endl;
     std::cout << "Expected Reseed Counter: "
               << step.internal_state.reseed_counter << std::endl;
@@ -34,13 +34,13 @@ int CheckCondition(
       generated_pseudorandom_bits != step.returned_bits) {
     std::cout << "Generated bits do not match expected value." << std::endl;
     std::cout << "Additional Input: "
-              << file_encrypt::util::BytesToStr(step.additional_input)
+              << file_encrypt::util::BytesToHexStr(step.additional_input)
               << std::endl;
     std::cout << "Expected: "
-              << file_encrypt::util::BytesToStr(step.returned_bits)
+              << file_encrypt::util::BytesToHexStr(step.returned_bits)
               << std::endl;
     std::cout << "Got: "
-              << file_encrypt::util::BytesToStr(generated_pseudorandom_bits)
+              << file_encrypt::util::BytesToHexStr(generated_pseudorandom_bits)
               << std::endl;
     return -1;
   }
@@ -72,12 +72,13 @@ int main() {
                                       DRBGFunctionName::kInstantiate) {
           std::cout << "Instantiate Step:" << std::endl;
           std::cout << "Entropy Input: "
-                    << file_encrypt::util::BytesToStr(step.entropy_input)
+                    << file_encrypt::util::BytesToHexStr(step.entropy_input)
                     << std::endl;
-          std::cout << "Nonce: " << file_encrypt::util::BytesToStr(step.nonce)
+          std::cout << "Nonce: "
+                    << file_encrypt::util::BytesToHexStr(step.nonce)
                     << std::endl;
           std::cout << "Personalization String: "
-                    << file_encrypt::util::BytesToStr(
+                    << file_encrypt::util::BytesToHexStr(
                            step.personalization_string)
                     << std::endl;
           std::cout << "Prediction Resistance Flag: "
@@ -92,10 +93,10 @@ int main() {
                        kGenerate) {
           std::cout << "Generate Step:" << std::endl;
           std::cout << "Additional Input: "
-                    << file_encrypt::util::BytesToStr(step.additional_input)
+                    << file_encrypt::util::BytesToHexStr(step.additional_input)
                     << std::endl;
           std::cout << "Entropy Input: "
-                    << file_encrypt::util::BytesToStr(step.entropy_input)
+                    << file_encrypt::util::BytesToHexStr(step.entropy_input)
                     << std::endl;
           auto generate_return_value = drbg_sha256.Generate(
               stage.ReturnedBitsLen, 256, step.prediction_resistance_flag,

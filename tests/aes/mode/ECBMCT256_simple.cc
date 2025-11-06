@@ -75,10 +75,10 @@ int main() {
     std::cout << "stage: " << "\n";
 
     std::cout << "KEY: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["KEY"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["KEY"])
               << "\n";
     std::cout << "PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["PLAINTEXT"])
               << "\n";
 
@@ -103,11 +103,11 @@ int main() {
 
         std::cout << "\t" << "INTERMEDIATE COUNT: " << i << "\n";
         std::cout << "\t" << "Intermediate expected CIPHERTEXT: "
-                  << file_encrypt::util::BytesToStr(
+                  << file_encrypt::util::BytesToHexStr(
                          sample.variable.binary["Intermediate Vaue CIPHERTEXT"])
                   << "\n";
         std::cout << "\t" << "Intermediate Vaue CIPHERTEXT: "
-                  << file_encrypt::util::BytesToStr(result) << "\n";
+                  << file_encrypt::util::BytesToHexStr(result) << "\n";
 
         if (result != sample.variable.binary["Intermediate Vaue CIPHERTEXT"]) {
           std::cout << "Intermediate Vaue Mismatch" << std::endl;
@@ -118,11 +118,11 @@ int main() {
     }
 
     std::cout << "EXPECTED CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["CIPHERTEXT"])
               << "\n";
-    std::cout << "CIPHERTEXT: " << file_encrypt::util::BytesToStr(prev_result)
-              << "\n";
+    std::cout << "CIPHERTEXT: "
+              << file_encrypt::util::BytesToHexStr(prev_result) << "\n";
 
     if (prev_result != item.variable.binary["CIPHERTEXT"]) {
       std::cout << "Mismatch" << std::endl;
@@ -157,10 +157,10 @@ int main() {
     std::cout << "stage: " << "\n";
 
     std::cout << "KEY: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["KEY"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["KEY"])
               << "\n";
     std::cout << "CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["CIPHERTEXT"])
               << "\n";
 
@@ -185,11 +185,11 @@ int main() {
 
         std::cout << "\t" << "INTERMEDIATE COUNT: " << i << "\n";
         std::cout << "\t" << "Intermediate expected PLAINTEXT: "
-                  << file_encrypt::util::BytesToStr(
+                  << file_encrypt::util::BytesToHexStr(
                          sample.variable.binary["Intermediate Vaue PLAINTEXT"])
                   << "\n";
         std::cout << "\t" << "Intermediate Vaue PLAINTEXT: "
-                  << file_encrypt::util::BytesToStr(result) << "\n";
+                  << file_encrypt::util::BytesToHexStr(result) << "\n";
 
         if (result != sample.variable.binary["Intermediate Vaue PLAINTEXT"]) {
           std::cout << "Intermediate Vaue Mismatch" << std::endl;
@@ -200,10 +200,10 @@ int main() {
     }
 
     std::cout << "EXPECTED PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["PLAINTEXT"])
               << "\n";
-    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToStr(prev_result)
+    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToHexStr(prev_result)
               << "\n";
 
     if (prev_result != item.variable.binary["PLAINTEXT"]) {

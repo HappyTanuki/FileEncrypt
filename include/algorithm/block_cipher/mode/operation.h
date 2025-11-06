@@ -15,6 +15,7 @@ struct OperationModeOutputData {
 
 enum class CipherMode { Encrypt, Decrypt };
 
+// 운영 모드 인터페이스
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 class OperationMode {

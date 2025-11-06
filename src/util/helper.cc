@@ -13,7 +13,7 @@ std::vector<std::byte> StrToBytes(const std::string& s) {
   return result;
 }
 
-std::vector<std::byte> HexStringToBytes(const std::string& hex) {
+std::vector<std::byte> HexStrToBytes(const std::string& hex) {
   std::vector<std::byte> bytes;
   bytes.reserve(hex.size() / 2);
 

@@ -9,6 +9,7 @@
 
 namespace file_encrypt::algorithm {
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_128_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 128, BufferSize> {
@@ -19,6 +20,7 @@ class AES_128_CBC
             std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_192_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 192, BufferSize> {
@@ -29,6 +31,7 @@ class AES_192_CBC
             std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_256_CBC
     : public file_encrypt::algorithm::op_mode::CBC<128, 256, BufferSize> {
@@ -39,6 +42,7 @@ class AES_256_CBC
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_128_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 128, BufferSize> {
@@ -49,6 +53,7 @@ class AES_128_ECB
             std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_192_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 192, BufferSize> {
@@ -59,6 +64,7 @@ class AES_192_ECB
             std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_256_ECB
     : public file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize> {
@@ -69,6 +75,7 @@ class AES_256_ECB
             std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_128_CTR
     : public file_encrypt::algorithm::op_mode::CTR<128, 128, BufferSize> {
@@ -79,6 +86,7 @@ class AES_128_CTR
             std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_192_CTR
     : public file_encrypt::algorithm::op_mode::CTR<128, 192, BufferSize> {
@@ -89,6 +97,7 @@ class AES_192_CTR
             std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
 };
 
+// AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
 template <std::uint32_t BufferSize>
 class AES_256_CTR
     : public file_encrypt::algorithm::op_mode::CTR<128, 256, BufferSize> {

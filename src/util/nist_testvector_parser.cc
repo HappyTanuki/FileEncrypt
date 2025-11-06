@@ -59,7 +59,7 @@ ReturnStatusCode ParseHashVector(const std::filesystem::path& file_path,
         count++;
         test_vectors.push_back(NISTTestVariables());
       }
-      test_vectors[count].binary[var_name] = HexStringToBytes(var_value);
+      test_vectors[count].binary[var_name] = HexStrToBytes(var_value);
     }
   }
 
@@ -132,7 +132,7 @@ ReturnStatusCode ParseHashMonteVector(
           sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
-        sample.variable.binary[var_name] = HexStringToBytes(var_value);
+        sample.variable.binary[var_name] = HexStrToBytes(var_value);
       }
     } else {
       if (pre_indented) {
@@ -151,7 +151,7 @@ ReturnStatusCode ParseHashMonteVector(
             std::stoul(var_value, nullptr, 10);
       } else {
         test_vectors[count].variable.binary[var_name] =
-            HexStringToBytes(var_value);
+            HexStrToBytes(var_value);
       }
     }
 
@@ -235,7 +235,7 @@ ReturnStatusCode ParseCipherVector(const std::filesystem::path& file_path,
         count++;
         test_vectors.push_back(NISTTestVariables());
       }
-      test_vectors[count].binary[var_name] = HexStringToBytes(var_value);
+      test_vectors[count].binary[var_name] = HexStrToBytes(var_value);
     }
   }
 
@@ -329,7 +329,7 @@ ReturnStatusCode ParseCipherMonteVector(
           sample.variable.integer.clear();
           sample.variable.binary.clear();
         }
-        sample.variable.binary[var_name] = HexStringToBytes(var_value);
+        sample.variable.binary[var_name] = HexStrToBytes(var_value);
       }
     } else {
       if (pre_indented) {
@@ -348,7 +348,7 @@ ReturnStatusCode ParseCipherMonteVector(
             std::stoul(var_value, nullptr, 10);
       } else {
         test_vectors[count].variable.binary[var_name] =
-            HexStringToBytes(var_value);
+            HexStrToBytes(var_value);
       }
     }
 
@@ -430,25 +430,25 @@ ReturnStatusCode ParseHashDRBGVector(
 
       if (var_name == "EntropyInput" || var_name == "EntropyInputReseed" ||
           var_name == "EntropyInputPR") {
-        entropy_input = HexStringToBytes(var_value);
+        entropy_input = HexStrToBytes(var_value);
       } else if (var_name == "Nonce") {
-        nonce = HexStringToBytes(var_value);
+        nonce = HexStrToBytes(var_value);
       } else if (var_name == "PersonalizationString") {
-        personalization_string = HexStringToBytes(var_value);
+        personalization_string = HexStrToBytes(var_value);
       } else if (var_name == "AdditionalInput" ||
                  var_name == "AdditionalInputReseed") {
-        additional_input = HexStringToBytes(var_value);
+        additional_input = HexStrToBytes(var_value);
       } else if (var_name == "V") {
-        hash_state.V = HexStringToBytes(var_value);
+        hash_state.V = HexStrToBytes(var_value);
         V_parsed = true;
       } else if (var_name == "C") {
-        hash_state.C = HexStringToBytes(var_value);
+        hash_state.C = HexStrToBytes(var_value);
         C_parsed = true;
       } else if (var_name == "reseed counter") {
         hash_state.reseed_counter = std::stoul(var_value, nullptr, 10);
         reseed_counter_parsed = true;
       } else if (var_name == "ReturnedBits") {
-        returned_bits = HexStringToBytes(var_value);
+        returned_bits = HexStrToBytes(var_value);
       } else if (var_name == "ReturnedBitsLen") {
         returned_bits_len = std::stoul(var_value, nullptr, 10);
       }

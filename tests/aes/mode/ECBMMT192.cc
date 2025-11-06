@@ -49,10 +49,10 @@ int main() {
     result.reserve(item.binary["CIPHERTEXT"].size());
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
 
-    std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
-              << "\n";
+    std::cout << "KEY: "
+              << file_encrypt::util::BytesToHexStr(item.binary["KEY"]) << "\n";
     std::cout << "PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["PLAINTEXT"])
               << "\n";
 
     for (int i = 0;; i++) {
@@ -80,7 +80,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "PLAINTEXT block: "
-                << file_encrypt::util::BytesToStr(input_block) << "\n";
+                << file_encrypt::util::BytesToHexStr(input_block) << "\n";
       std::cout << "\t" << i + 1;
       if ((i + 1) % 10 == 1 && (i + 1) != 11) {
         std::cout << "st ";
@@ -92,7 +92,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "expected block: "
-                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                        expected_block)
                 << "\n";
       std::cout << "\t" << i + 1;
@@ -106,7 +106,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "CIPHERTEXT block: "
-                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                        output_block.data)
                 << "\n";
       if (output_block.data != expected_block) {
@@ -116,9 +116,9 @@ int main() {
     }
 
     std::cout << "EXPECTED: "
-              << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["CIPHERTEXT"])
               << "\n";
-    std::cout << "CIPHERTEXT: " << file_encrypt::util::BytesToStr(result)
+    std::cout << "CIPHERTEXT: " << file_encrypt::util::BytesToHexStr(result)
               << "\n";
 
     if (result != item.binary["CIPHERTEXT"]) {
@@ -140,10 +140,10 @@ int main() {
     result.reserve(item.binary["PLAINTEXT"].size());
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Decrypt;
 
-    std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
-              << "\n";
+    std::cout << "KEY: "
+              << file_encrypt::util::BytesToHexStr(item.binary["KEY"]) << "\n";
     std::cout << "CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["CIPHERTEXT"])
               << "\n";
 
     for (int i = 0;; i++) {
@@ -171,7 +171,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "CIPHERTEXT block: "
-                << file_encrypt::util::BytesToStr(input_block) << "\n";
+                << file_encrypt::util::BytesToHexStr(input_block) << "\n";
       std::cout << "\t" << i + 1;
       if ((i + 1) % 10 == 1 && (i + 1) != 11) {
         std::cout << "st ";
@@ -183,7 +183,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "expected block: "
-                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                        expected_block)
                 << "\n";
       std::cout << "\t" << i + 1;
@@ -197,7 +197,7 @@ int main() {
         std::cout << "th ";
       }
       std::cout << "PLAINTEXT block: "
-                << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+                << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                        output_block.data)
                 << "\n";
       if (output_block.data != expected_block) {
@@ -207,9 +207,9 @@ int main() {
     }
 
     std::cout << "EXPECTED: "
-              << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["PLAINTEXT"])
               << "\n";
-    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToStr(result)
+    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToHexStr(result)
               << "\n";
 
     if (result != item.binary["PLAINTEXT"]) {

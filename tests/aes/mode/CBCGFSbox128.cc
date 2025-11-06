@@ -57,16 +57,16 @@ int main() {
     cipher << item.binary["PLAINTEXT"];
     cipher >> result;
 
-    std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
-              << "\n";
+    std::cout << "KEY: "
+              << file_encrypt::util::BytesToHexStr(item.binary["KEY"]) << "\n";
     std::cout << "PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["PLAINTEXT"])
               << "\n";
     std::cout << "EXPECTED: "
-              << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["CIPHERTEXT"])
               << "\n";
     std::cout << "RESULT: "
-              << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+              << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                      result.data)
               << "\n";
 
@@ -90,16 +90,16 @@ int main() {
     cipher << item.binary["CIPHERTEXT"];
     cipher >> result;
 
-    std::cout << "KEY: " << file_encrypt::util::BytesToStr(item.binary["KEY"])
-              << "\n";
+    std::cout << "KEY: "
+              << file_encrypt::util::BytesToHexStr(item.binary["KEY"]) << "\n";
     std::cout << "CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(item.binary["CIPHERTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["CIPHERTEXT"])
               << "\n";
     std::cout << "EXPECTED: "
-              << file_encrypt::util::BytesToStr(item.binary["PLAINTEXT"])
+              << file_encrypt::util::BytesToHexStr(item.binary["PLAINTEXT"])
               << "\n";
     std::cout << "RESULT: "
-              << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+              << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                      result.data)
               << "\n";
 

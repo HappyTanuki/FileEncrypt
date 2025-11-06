@@ -96,7 +96,7 @@ int main() {
     std::cout << "stage: " << "\n";
 
     std::cout << "KEY: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["KEY"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["KEY"])
               << " (" << std::to_integer<int>(item.variable.binary["KEY"][0])
               << ", " << std::to_integer<int>(item.variable.binary["KEY"][1])
               << " ... "
@@ -110,7 +110,7 @@ int main() {
               << ") "
               << "\n";
     std::cout << "IV: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["IV"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["IV"])
               << " (" << std::to_integer<int>(item.variable.binary["IV"][0])
               << ", " << std::to_integer<int>(item.variable.binary["IV"][1])
               << " ... " << std::to_integer<int>(item.variable.binary["IV"][14])
@@ -118,7 +118,7 @@ int main() {
               << ") "
               << "\n";
     std::cout << "PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["PLAINTEXT"])
               << " ("
               << std::to_integer<int>(item.variable.binary["PLAINTEXT"][0])
@@ -166,7 +166,7 @@ int main() {
         std::cout << "\t" << "INTERMEDIATE COUNT: " << i << "\n";
         std::cout
             << "\t" << "Intermediate expected CIPHERTEXT: "
-            << file_encrypt::util::BytesToStr(
+            << file_encrypt::util::BytesToHexStr(
                    sample.variable.binary["Intermediate Vaue CIPHERTEXT"])
             << " ("
             << std::to_integer<int>(
@@ -193,7 +193,7 @@ int main() {
             << ") "
             << "\n";
         std::cout << "\t" << "Intermediate Vaue CIPHERTEXT: "
-                  << file_encrypt::util::BytesToStr(result) << " ("
+                  << file_encrypt::util::BytesToHexStr(result) << " ("
                   << std::to_integer<int>(result[0]) << ", "
                   << std::to_integer<int>(result[1]) << " ... "
                   << std::to_integer<int>(result[result.size() - 2]) << ", "
@@ -216,11 +216,11 @@ int main() {
     }
 
     std::cout << "EXPECTED CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["CIPHERTEXT"])
               << "\n";
-    std::cout << "CIPHERTEXT: " << file_encrypt::util::BytesToStr(prev_result)
-              << "\n";
+    std::cout << "CIPHERTEXT: "
+              << file_encrypt::util::BytesToHexStr(prev_result) << "\n";
 
     if (prev_result != item.variable.binary["CIPHERTEXT"]) {
       std::cout << "Mismatch" << std::endl;
@@ -277,7 +277,7 @@ int main() {
     std::cout << "stage: " << "\n";
 
     std::cout << "KEY: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["KEY"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["KEY"])
               << " (" << std::to_integer<int>(item.variable.binary["KEY"][0])
               << ", " << std::to_integer<int>(item.variable.binary["KEY"][1])
               << " ... "
@@ -285,7 +285,7 @@ int main() {
               << std::to_integer<int>(item.variable.binary["KEY"][15]) << ") "
               << "\n";
     std::cout << "IV: "
-              << file_encrypt::util::BytesToStr(item.variable.binary["IV"])
+              << file_encrypt::util::BytesToHexStr(item.variable.binary["IV"])
               << " (" << std::to_integer<int>(item.variable.binary["IV"][0])
               << ", " << std::to_integer<int>(item.variable.binary["IV"][1])
               << " ... " << std::to_integer<int>(item.variable.binary["IV"][14])
@@ -293,7 +293,7 @@ int main() {
               << ") "
               << "\n";
     std::cout << "CIPHERTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["CIPHERTEXT"])
               << " ("
               << std::to_integer<int>(item.variable.binary["CIPHERTEXT"][0])
@@ -341,7 +341,7 @@ int main() {
         std::cout << "\t" << "INTERMEDIATE COUNT: " << i << "\n";
         std::cout
             << "\t" << "Intermediate expected PLAINTEXT: "
-            << file_encrypt::util::BytesToStr(
+            << file_encrypt::util::BytesToHexStr(
                    sample.variable.binary["Intermediate Vaue PLAINTEXT"])
             << " ("
             << std::to_integer<int>(
@@ -368,7 +368,7 @@ int main() {
             << ") "
             << "\n";
         std::cout << "\t" << "Intermediate Vaue PLAINTEXT: "
-                  << file_encrypt::util::BytesToStr(result) << " ("
+                  << file_encrypt::util::BytesToHexStr(result) << " ("
                   << std::to_integer<int>(result[0]) << ", "
                   << std::to_integer<int>(result[1]) << " ... "
                   << std::to_integer<int>(result[result.size() - 2]) << ", "
@@ -391,10 +391,10 @@ int main() {
     }
 
     std::cout << "EXPECTED PLAINTEXT: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      item.variable.binary["PLAINTEXT"])
               << "\n";
-    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToStr(prev_result)
+    std::cout << "PLAINTEXT: " << file_encrypt::util::BytesToHexStr(prev_result)
               << "\n";
 
     if (prev_result != item.variable.binary["PLAINTEXT"]) {

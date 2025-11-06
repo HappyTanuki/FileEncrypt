@@ -26,15 +26,15 @@ int main() {
                 generate_return_value.pseudorandom_bits.size());
 
     file_encrypt::algorithm::AES_256_CBC<10> cipher(
-        file_encrypt::util::HexStringToBytes<32>(""), pseudorandom_bits);
+        file_encrypt::util::HexStrToBytes<32>(""), pseudorandom_bits);
     auto IV = cipher.IV;
 
-    cipher << file_encrypt::util::HexStringToBytes(
+    cipher << file_encrypt::util::HexStrToBytes(
         "014730f80ac625fe84f026c60bfd547d");
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher >> result;
 
-    std::cout << file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(
+    std::cout << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
                      result.data)
               << std::endl;
 
@@ -42,9 +42,10 @@ int main() {
 
     cipher.SetIV(IV);
 
-    cipher << file_encrypt::util::HexStringToBytes(
-        file_encrypt::util::BytesToStr<std::array<std::byte, 16>>(result.data));
-    expected_result = file_encrypt::util::HexStringToBytes<16>(
+    cipher << file_encrypt::util::HexStrToBytes(
+        file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
+            result.data));
+    expected_result = file_encrypt::util::HexStrToBytes<16>(
         "014730f80ac625fe84f026c60bfd547d");
     cipher >> result;
 

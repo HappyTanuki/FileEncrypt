@@ -8,6 +8,7 @@
 
 namespace file_encrypt::util {
 
+// CPUID 명령어를 사용하여 CPU가 지원하는 명령어셋을 감지합니다.
 EdxEcx GetCPUFeatures() {
   EdxEcx features;
 #ifndef _WIN32

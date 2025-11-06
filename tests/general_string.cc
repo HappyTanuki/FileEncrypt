@@ -14,5 +14,5 @@ int main() {
   hash.Update(input_data);
   auto result = hash.Digest();
 
-  std::cout << file_encrypt::util::BytesToStr(result.digest) << std::endl;
+  std::cout << file_encrypt::util::BytesToHexStr(result.digest) << std::endl;
 }

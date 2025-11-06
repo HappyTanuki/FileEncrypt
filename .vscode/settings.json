@@ -8,7 +8,8 @@
     "editor.formatOnSave": true,
     "cmake.generator": "Ninja",
     "cmake.debugConfig": {
-        "cwd": "${command:cmake.buildDirectory}"
+        "cwd": "${command:cmake.buildDirectory}",
+        "args": ["-i", "output.aes", "-o", "test_output.txt", "-d", "-p", "84408698E835BF018855198263419FD016F682597F973E52B9A5C75CC16E8738EA30821C15DA7475920F01B6E3C75699"]
     },
     "files.associations": {
         "cctype": "cpp",

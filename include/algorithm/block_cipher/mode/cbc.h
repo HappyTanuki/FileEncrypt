@@ -5,6 +5,7 @@
 
 namespace file_encrypt::algorithm::op_mode {
 
+// CBC 운영 모드
 template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 class CBC : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {

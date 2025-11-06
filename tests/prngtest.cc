@@ -29,7 +29,7 @@ int main() {
     std::cout << std::setw(4) << std::setfill('0') << i
               << file_encrypt::util::GetEnglishNumberSufix(i)
               << " random bits: "
-              << file_encrypt::util::BytesToStr(
+              << file_encrypt::util::BytesToHexStr(
                      generate_return_value.pseudorandom_bits)
               << std::endl;
   }

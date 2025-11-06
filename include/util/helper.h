@@ -12,7 +12,7 @@ namespace file_encrypt::util {
 std::vector<std::byte> StrToBytes(const std::string& s);
 
 template <typename Container>
-std::string BytesToStr(const Container& bytes) {
+std::string BytesToHexStr(const Container& bytes) {
   std::ostringstream osstream;
 
   for (auto b : bytes) {
@@ -23,9 +23,9 @@ std::string BytesToStr(const Container& bytes) {
   return osstream.str();
 }
 
-std::vector<std::byte> HexStringToBytes(const std::string& hex);
+std::vector<std::byte> HexStrToBytes(const std::string& hex);
 template <std::uint32_t Size>
-std::array<std::byte, Size> HexStringToBytes(const std::string& hex) {
+std::array<std::byte, Size> HexStrToBytes(const std::string& hex) {
   std::array<std::byte, Size> bytes = {};
 
   for (size_t i = 0; i < hex.size(); i += 2) {

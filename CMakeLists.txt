@@ -15,6 +15,7 @@ set(DPP_BUILD_TEST OFF)
 enable_testing()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cxx" "src/*.cc")
+list(FILTER SOURCES EXCLUDE REGEX "src/main.cc")
 
 add_library(${BOT_NAME}_lib ${SOURCES})
 
@@ -37,12 +38,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-D_DEBUG)
 endif()
 
-add_executable(${BOT_NAME} ${SOURCES})
+add_executable(${BOT_NAME} "src/main.cc")
 
 target_link_libraries(${BOT_NAME} PUBLIC ${BOT_NAME}_lib)
 
-add_subdirectory(tests)
-
 if(NOT WIN32)
+    target_compile_options(${BOT_NAME}_lib PRIVATE -march=native)
     target_compile_options(${BOT_NAME} PRIVATE -march=native)
 endif()
+
+add_subdirectory(tests)
