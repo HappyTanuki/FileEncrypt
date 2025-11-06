@@ -377,6 +377,7 @@ ReturnStatusCode ParseHashDRBGVector(
   std::vector<std::byte> nonce = {};
   std::vector<std::byte> personalization_string = {};
   std::vector<std::byte> additional_input = {};
+  std::vector<std::byte> returned_bits = {};
   bool prediction_resistance_flag = false;
 
   NISTTestDRBGHashState hash_state;
@@ -384,6 +385,7 @@ ReturnStatusCode ParseHashDRBGVector(
   bool C_parsed = false;
   bool reseed_counter_parsed = false;
   DRBGFunctionName function_name = DRBGFunctionName::kError;
+  std::uint32_t returned_bits_len = 0;
 
   if (!file.is_open()) {
     NISTTestDRBGHashAlgorithm error_object;
@@ -421,6 +423,11 @@ ReturnStatusCode ParseHashDRBGVector(
         continue;
       }
 
+      // because all of it was too big
+      if (!is_constant && hash_algorithm_name != "SHA-256") {
+        continue;
+      }
+
       if (var_name == "EntropyInput" || var_name == "EntropyInputReseed" ||
           var_name == "EntropyInputPR") {
         entropy_input = HexStringToBytes(var_value);
@@ -441,14 +448,12 @@ ReturnStatusCode ParseHashDRBGVector(
         hash_state.reseed_counter = std::stoul(var_value, nullptr, 10);
         reseed_counter_parsed = true;
       } else if (var_name == "ReturnedBits") {
-        (test_vectors.back().stages.back().steps.end() - 1)->returned_bits =
-            HexStringToBytes(var_value);
+        returned_bits = HexStringToBytes(var_value);
+      } else if (var_name == "ReturnedBitsLen") {
+        returned_bits_len = std::stoul(var_value, nullptr, 10);
       }
     } else if (is_constant) {
       hash_algorithm_name = line;
-      if (hash_algorithm_name == "SHA-256") {
-        continue;
-      }
     }
 
     if (std::regex_search(line, matches, instantiate))
@@ -467,6 +472,7 @@ ReturnStatusCode ParseHashDRBGVector(
       step.additional_input = additional_input;
       step.prediction_resistance_flag = prediction_resistance_flag;
       step.internal_state = hash_state;
+      step.returned_bits = returned_bits;
 
       if (test_vectors.size() == 0 ||
           test_vectors.back().hash_algorithm_name != hash_algorithm_name) {
@@ -479,11 +485,14 @@ ReturnStatusCode ParseHashDRBGVector(
         test_vectors.back().stages.push_back(new_stage);
       }
       test_vectors.back().stages.back().steps.push_back(step);
+      test_vectors.back().stages.back().ReturnedBitsLen = returned_bits_len;
 
       entropy_input.clear();
       nonce.clear();
       personalization_string.clear();
+
       additional_input.clear();
+      returned_bits.clear();
       prediction_resistance_flag = false;
       hash_state = NISTTestDRBGHashState();
       V_parsed = false;

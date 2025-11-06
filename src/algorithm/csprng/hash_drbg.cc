@@ -79,6 +79,7 @@ HASH_DRBG::GenerateReturnValue HASH_DRBG::GenerateAlgorithm(
     V = file_encrypt::util::MaskSeedlen(
         file_encrypt::util::AddByteVectors(V, w), seedlen);
   }
+
   std::vector<std::byte> returned_bits =
       Hashgen(requested_number_of_bits, V).returned_bits;
 
@@ -88,7 +89,7 @@ HASH_DRBG::GenerateReturnValue HASH_DRBG::GenerateAlgorithm(
 
   V = file_encrypt::util::MaskSeedlen(
       file_encrypt::util::AddByteVectors(
-          V, H, C, file_encrypt::util::UInt64ToBytesVector(reseed_counter)),
+          V, H, C, file_encrypt::util::UInt32ToBytesVector(reseed_counter)),
       seedlen);
   reseed_counter++;
   return {ReturnStatus::kSUCCESS, returned_bits};
@@ -120,9 +121,8 @@ HASH_DRBG::HashgenReturnValue HASH_DRBG::Hashgen(
   std::uint64_t m = (requested_no_of_bits + outlen - 1) / outlen;
   std::vector<std::byte> data = V;
   std::vector<std::byte> W = {};
-
-  for (std::uint64_t i = 1; i <= m; i++) {
-    std::vector<std::byte> w = hash->Digest({data, data.size() * 8}).digest;
+  for (std::uint64_t i = 1; i <= m; ++i) {
+    auto w = hash->Digest({data, data.size() * 8}).digest;
     W = ConcatByteVectors(W, w);
     data = file_encrypt::util::MaskSeedlen(
         file_encrypt::util::AddByteVectors(

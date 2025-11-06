@@ -88,8 +88,7 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     const std::uint64_t& requested_number_of_bits,
     const std::uint32_t& requested_security_strangth,
     bool prediction_resistance_request,
-    const std::vector<std::byte>& additional_input) {
-  std::vector<std::byte> _additional_input = additional_input;
+    std::vector<std::byte> additional_input) {
   // Step 1
   if (!valid) return {ReturnStatus::kERROR_FLAG, {}};
   // Step 2
@@ -113,20 +112,22 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     if (reseed_required_flag || prediction_resistance_request) {
       // Step 7.1
       ReturnStatus status =
-          Reseed(prediction_resistance_request, _additional_input);
+          Reseed(prediction_resistance_request, additional_input);
       // Step 7.2
       if (status != ReturnStatus::kSUCCESS) return {status, {}};
       // Step 7.4
-      _additional_input.clear();
+      additional_input.clear();
       // Step 7.5
       reseed_required_flag = false;
     }
     // Step 8
     generate_algorithm_return_value =
-        GenerateAlgorithm(requested_number_of_bits, _additional_input);
+        GenerateAlgorithm(requested_number_of_bits, additional_input);
     // Step 9
-    if (reseed_required_flag) {
+    if (generate_algorithm_return_value.status ==
+        ReturnStatus::kRESEED_REQUIRED) {
       // Step 9.1
+      reseed_required_flag = true;
       // Step 9.2
       if (prediction_resistance_flag) prediction_resistance_request = true;
       // Step 9.3

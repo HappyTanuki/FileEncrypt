@@ -54,6 +54,7 @@ struct NISTTestDRBGHashStep {
 };
 
 struct NISTTestDRBGHashStage {
+  std::uint32_t ReturnedBitsLen = 0;
   std::vector<NISTTestDRBGHashStep> steps = {};
 };
 

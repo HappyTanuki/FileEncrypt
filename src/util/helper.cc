@@ -49,16 +49,7 @@ std::vector<std::byte> UInt8ToBytesVector(uint64_t value) {
 std::vector<std::byte> UInt32ToBytesVector(uint64_t value) {
   std::vector<std::byte> result(4);
   for (size_t i = 0; i < 4; ++i) {
-    result[i] = static_cast<std::byte>(value & 0xFF);
-    value >>= 8;
-  }
-  return result;
-}
-
-std::vector<std::byte> UInt64ToBytesVector(uint64_t value) {
-  std::vector<std::byte> result(8);
-  for (size_t i = 0; i < 8; ++i) {
-    result[i] = static_cast<std::byte>(value & 0xFF);
+    result[3 - i] = static_cast<std::byte>(value & 0xFF);
     value >>= 8;
   }
   return result;
@@ -66,6 +57,24 @@ std::vector<std::byte> UInt64ToBytesVector(uint64_t value) {
 
 std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
                                 const std::uint64_t& size) {
+  std::vector<std::byte> result;
+  size_t byteLen = (size + 7) / 8;
+  result.resize(byteLen);
+  std::memcpy(result.data(), value.data(), byteLen);
+
+  std::uint32_t extraBits = size % 8;
+  if (extraBits != 0) {
+    // 예: extraBits = 3 → 상위 3비트만 남기고 나머지는 0으로
+    uint8_t mask = static_cast<uint8_t>(0xFF << (8 - extraBits));
+    result.back() &= static_cast<std::byte>(mask);
+  }
+
+  return result;
+}
+
+// incomplete, only for size multiple of 8
+std::vector<std::byte> Rightmost(const std::vector<std::byte>& value,
+                                 const std::uint64_t& size) {
   std::vector<std::byte> result;
   result.resize(size / 8);
 

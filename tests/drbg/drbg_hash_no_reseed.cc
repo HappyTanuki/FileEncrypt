@@ -7,6 +7,45 @@
 #define _PATH "./tests/test_vector/drbgtestvectors/drbgvectors_no_reseed/"
 #define _TESTNAME "drbg_hash_sha256_no_reseed"
 
+int CheckCondition(
+    const file_encrypt::util::NISTTestVectorParser::NISTTestDRBGHashStep& step,
+    const file_encrypt::algorithm::DRBG_SHA256& drbg,
+    const std::vector<std::byte>& generated_pseudorandom_bits = {}) {
+  if (drbg.GetV() != step.internal_state.V ||
+      drbg.GetC() != step.internal_state.C ||
+      drbg.GetReseedCounter() != step.internal_state.reseed_counter) {
+    std::cout << "Internal state does not match expected value." << std::endl;
+    std::cout << "Expected V: "
+              << file_encrypt::util::BytesToStr(step.internal_state.V)
+              << std::endl;
+    std::cout << "Got V: " << file_encrypt::util::BytesToStr(drbg.GetV())
+              << std::endl;
+    std::cout << "Expected C: "
+              << file_encrypt::util::BytesToStr(step.internal_state.C)
+              << std::endl;
+    std::cout << "Got C: " << file_encrypt::util::BytesToStr(drbg.GetC())
+              << std::endl;
+    std::cout << "Expected Reseed Counter: "
+              << step.internal_state.reseed_counter << std::endl;
+    std::cout << "Got Reseed Counter: " << drbg.GetReseedCounter() << std::endl;
+    return -1;
+  }
+  if (!step.returned_bits.empty() && !generated_pseudorandom_bits.empty() &&
+      generated_pseudorandom_bits != step.returned_bits) {
+    std::cout << "Generated bits do not match expected value." << std::endl;
+    std::cout << "Additional Input: "
+              << file_encrypt::util::BytesToStr(step.additional_input)
+              << std::endl;
+    std::cout << "Expected: "
+              << file_encrypt::util::BytesToStr(step.returned_bits)
+              << std::endl;
+    std::cout << "Got: "
+              << file_encrypt::util::BytesToStr(generated_pseudorandom_bits)
+              << std::endl;
+    return -1;
+  }
+  return 0;
+}
 int main() {
   std::vector<
       file_encrypt::util::NISTTestVectorParser::NISTTestDRBGHashAlgorithm>
@@ -23,13 +62,14 @@ int main() {
   for (const auto& algorithm_stage : test_vectors) {
     if (algorithm_stage.hash_algorithm_name != "SHA-256") continue;
 
-    file_encrypt::algorithm::DRBG_SHA256 drbg_sha256;
-    drbg_sha256._TESTING = true;
-
     for (const auto& stage : algorithm_stage.stages) {
+      file_encrypt::algorithm::DRBG_SHA256 drbg_sha256;
+      drbg_sha256._TESTING = true;
+
       for (const auto& step : stage.steps) {
         if (step.function_name == file_encrypt::util::NISTTestVectorParser::
                                       DRBGFunctionName::kInstantiate) {
+          std::cout << "Instantiate Step:" << std::endl;
           std::cout << "Entropy Input: "
                     << file_encrypt::util::BytesToStr(step.entropy_input)
                     << std::endl;
@@ -45,60 +85,26 @@ int main() {
           drbg_sha256.Instantiate(256, step.prediction_resistance_flag,
                                   step.entropy_input, step.nonce,
                                   step.personalization_string);
-          if (drbg_sha256.GetV() != step.internal_state.V ||
-              drbg_sha256.GetC() != step.internal_state.C ||
-              drbg_sha256.GetReseedCounter() !=
-                  step.internal_state.reseed_counter) {
-            std::cout << "Internal state does not match expected value."
-                      << std::endl;
-            std::cout << "Expected V: "
-                      << file_encrypt::util::BytesToStr(step.internal_state.V)
-                      << std::endl;
-            std::cout << "Got V: "
-                      << file_encrypt::util::BytesToStr(drbg_sha256.GetV())
-                      << std::endl;
-            std::cout << "Expected C: "
-                      << file_encrypt::util::BytesToStr(step.internal_state.C)
-                      << std::endl;
-            std::cout << "Got C: "
-                      << file_encrypt::util::BytesToStr(drbg_sha256.GetC())
-                      << std::endl;
-            std::cout << "Expected Reseed Counter: "
-                      << step.internal_state.reseed_counter << std::endl;
-            std::cout << "Got Reseed Counter: "
-                      << drbg_sha256.GetReseedCounter() << std::endl;
-            return -1;
-          }
+          if (CheckCondition(step, drbg_sha256) != 0) return -1;
         } else if (step.function_name ==
                    file_encrypt::util::NISTTestVectorParser::DRBGFunctionName::
                        kGenerate) {
+          std::cout << "Generate Step:" << std::endl;
           auto generate_return_value = drbg_sha256.Generate(
-              step.returned_bits.size() * 8, 256,
-              step.prediction_resistance_flag, step.additional_input);
+              stage.ReturnedBitsLen, 256, step.prediction_resistance_flag,
+              step.additional_input);
           if (generate_return_value.status !=
               file_encrypt::algorithm::CSPRNG::ReturnStatus::kSUCCESS) {
             std::cout << "Generate failed." << std::endl;
             return -1;
           }
-          if (!step.returned_bits.empty() &&
-              generate_return_value.pseudorandom_bits != step.returned_bits) {
-            std::cout << "Generated bits do not match expected value."
-                      << std::endl;
-            std::cout << "Additional Input: "
-                      << file_encrypt::util::BytesToStr(step.additional_input)
-                      << std::endl;
-            std::cout << "Expected: "
-                      << file_encrypt::util::BytesToStr(step.returned_bits)
-                      << std::endl;
-            std::cout << "Got: "
-                      << file_encrypt::util::BytesToStr(
-                             generate_return_value.pseudorandom_bits)
-                      << std::endl;
+          if (CheckCondition(step, drbg_sha256,
+                             generate_return_value.pseudorandom_bits) != 0)
             return -1;
-          }
         } else if (step.function_name ==
                    file_encrypt::util::NISTTestVectorParser::DRBGFunctionName::
                        kReseed) {
+          std::cout << "Reseed Step:" << std::endl;
           drbg_sha256.Reseed(step.prediction_resistance_flag,
                              step.additional_input);
         }

@@ -1,6 +1,7 @@
 #ifndef FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 #define FILE_ENCRYPT_UTIL_INCLUDE_UTIL_HELPER_H_
 
+#include <algorithm>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -73,69 +74,88 @@ constexpr std::array<std::byte, Size> StandardIncrement(
   return result;
 }
 
-// 덧셈 결과를 seedlen 비트로 자름
-constexpr std::vector<std::byte> MaskSeedlen(
-    const std::vector<std::byte>& value, const size_t& seedlen) {
-  std::vector<std::byte> return_value = value;
-  size_t byteLen = (seedlen + 7) / 8;
-  size_t extraBits = seedlen % 8;
+inline std::vector<std::byte> MaskSeedlen(const std::vector<std::byte>& v,
+                                          const std::size_t seedlen_bits) {
+  std::size_t byteLen = (seedlen_bits + 7) / 8;
+  // 결과는 하위(byteLen) 바이트를 취함 (rightmost)
+  std::vector<std::byte> res;
+  if (v.size() <= byteLen) {
+    // v가 짧으면 좌측(상위) 0으로 패딩하여 길이 맞춤
+    res.assign(byteLen - v.size(), static_cast<std::byte>(0));
+    res.insert(res.end(), v.begin(), v.end());
+  } else {
+    // v가 길면 오른쪽 끝에서 byteLen 바이트를 복사
+    res.resize(byteLen);
+    std::memcpy(res.data(), v.data() + (v.size() - byteLen), byteLen);
+  }
+  // seedlen이 바이트 정렬이 아닌 경우(즉 extraBits != 0) :
+  // res[0]의 상위(왼쪽) 비트들만 남기고 나머지 비트는 0으로
+  std::size_t extraBits = seedlen_bits % 8;
   if (extraBits != 0) {
-    uint8_t mask = static_cast<uint8_t>((1 << extraBits) - 1);
-    return_value[byteLen - 1] &= static_cast<std::byte>(mask);
+    uint8_t mask = static_cast<uint8_t>(0xFF << (8 - extraBits));
+    res[0] = static_cast<std::byte>(static_cast<unsigned char>(res[0]) & mask);
   }
-
-  if (return_value.size() > byteLen) {
-    return_value.resize(byteLen);
-  }
-
-  return return_value;
+  return res;
 }
 
 std::vector<std::byte> UInt8ToBytesVector(uint64_t value);
 std::vector<std::byte> UInt32ToBytesVector(uint64_t value);
-std::vector<std::byte> UInt64ToBytesVector(uint64_t value);
 
 template <typename... Vectors>
 std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
                                       const Vectors&... rest) {
   static_assert((std::is_same_v<Vectors, std::vector<std::byte>> && ...),
                 "All arguments must be std::vector<std::byte>");
+
+  // 포인터 배열로 가리켜 읽기 전용으로 사용
   std::array<const std::vector<std::byte>*, sizeof...(rest) + 1> all = {
       &first, &rest...};
 
+  // 결과 바이트 길이 = 가장 긴 입력 길이 (MSB-first 표현을 가정)
   size_t byteLen = 0;
   for (auto v : all) byteLen = std::max(byteLen, v->size());
 
   std::vector<std::byte> result(byteLen);
-  uint16_t carry = 0;
+  unsigned int carry = 0;
 
+  // i는 하위 바이트 오프셋: 0 => LSB (맨 끝)
   for (size_t i = 0; i < byteLen; ++i) {
-    uint16_t sum = carry;
+    unsigned int sum = carry;
     for (auto v : all) {
-      if (i < v->size()) sum += static_cast<uint8_t>((*v)[i]);
+      if (i < v->size()) {
+        // 입력 벡터들은 MSB-first로 저장되어 있다고 가정.
+        // LSB 쪽 바이트를 읽으려면 (size-1 - i) 인덱스를 사용.
+        sum += static_cast<unsigned int>(
+            std::to_integer<unsigned char>((*v)[v->size() - 1 - i]));
+      }
     }
-    result[i] = static_cast<std::byte>(sum & 0xFF);
+    // 결과는 MSB-first로 유지해야 하므로, LSB부터 채우되
+    // 결과의 (byteLen-1 - i) 위치에 쓴다.
+    result[byteLen - 1 - i] = static_cast<std::byte>(sum & 0xFF);
     carry = sum >> 8;
   }
 
-  if (carry) result.push_back(static_cast<std::byte>(carry));
+  // 최상위 carry가 남으면 앞에 삽입 (MSB-first)
+  if (carry) {
+    result.insert(result.begin(), static_cast<std::byte>(carry & 0xFF));
+  }
 
   return result;
 }
 
 template <typename... Vectors>
-std::vector<std::byte> ConcatByteVectors(Vectors&&... vecs) {
+std::vector<std::byte> ConcatByteVectors(const Vectors&... vecs) {
   size_t total_size = (vecs.size() + ... + 0);
   std::vector<std::byte> result;
   result.reserve(total_size);
-  (result.insert(result.end(), std::make_move_iterator(vecs.begin()),
-                 std::make_move_iterator(vecs.end())),
-   ...);
+  (result.insert(result.end(), vecs.begin(), vecs.end()), ...);
   return result;
 }
 
 std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
                                 const std::uint64_t& size);
+std::vector<std::byte> Rightmost(const std::vector<std::byte>& value,
+                                 const std::uint64_t& size);
 
 constexpr std::string GetEnglishNumberSufix(std::uint64_t number) {
   std::string result;

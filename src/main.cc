@@ -16,12 +16,12 @@ int main(int argc, char* argv[]) {
   while ((opt = nolibc::getopt(argc, argv, "aiop:")) != -1) {
     switch (opt) {
       case 'i':
-        if (nolibc::optarg != "-") {
+        if (nolibc::optarg[0] != '-') {
           input = std::ifstream(nolibc::optarg, std::ios::binary);
         }
         break;
       case 'o':
-        if (nolibc::optarg != "-") {
+        if (nolibc::optarg[0] != '-') {
           output = std::ofstream(nolibc::optarg, std::ios::binary);
         }
         break;
