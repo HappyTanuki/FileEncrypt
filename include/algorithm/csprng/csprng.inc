@@ -63,7 +63,8 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
 
 constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
     const bool& prediction_resistance_request,
-    const std::vector<std::byte>& additional_input) {
+    const std::vector<std::byte>& additional_input,
+    const std::vector<std::byte>& entropy_input) {
   // Step 1
   if (!valid) return ReturnStatus::kERROR_FLAG;
   // Step 2
@@ -73,9 +74,15 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
   if (additional_input.size() * 8 > max_additional_input_length)
     return ReturnStatus::kERROR_FLAG;
   // Step 4
-  GetEntropyInputReturnValue entropy_input_return_value =
-      GetEntropyInput(security_strength, security_strength, max_length,
-                      prediction_resistance_flag);
+  GetEntropyInputReturnValue entropy_input_return_value;
+  if (entropy_input.size() == 0 && !_TESTING) {
+    entropy_input_return_value =
+        GetEntropyInput(security_strength, security_strength, max_length,
+                        prediction_resistance_flag);
+  } else {
+    entropy_input_return_value.status = ReturnStatus::kSUCCESS;
+    entropy_input_return_value.entropy_input = entropy_input;
+  }
   // Step 5
   if (entropy_input_return_value.status != ReturnStatus::kSUCCESS)
     return entropy_input_return_value.status;
@@ -87,8 +94,8 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
 constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     const std::uint64_t& requested_number_of_bits,
     const std::uint32_t& requested_security_strangth,
-    bool prediction_resistance_request,
-    std::vector<std::byte> additional_input) {
+    bool prediction_resistance_request, std::vector<std::byte> additional_input,
+    const std::vector<std::byte>& entropy_input) {
   // Step 1
   if (!valid) return {ReturnStatus::kERROR_FLAG, {}};
   // Step 2
@@ -111,8 +118,8 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
     // Step 7
     if (reseed_required_flag || prediction_resistance_request) {
       // Step 7.1
-      ReturnStatus status =
-          Reseed(prediction_resistance_request, additional_input);
+      ReturnStatus status = Reseed(prediction_resistance_request,
+                                   additional_input, entropy_input);
       // Step 7.2
       if (status != ReturnStatus::kSUCCESS) return {status, {}};
       // Step 7.4

@@ -4,8 +4,8 @@
 #include "util/helper.h"
 #include "util/nist_testvector_parser.h"
 
-#define _PATH "./tests/test_vector/drbgtestvectors/drbgvectors_no_reseed/"
-#define _TESTNAME "drbg_hash_sha256_no_reseed"
+#define _PATH "./tests/test_vector/drbgtestvectors/drbgvectors_pr_false/"
+#define _TESTNAME "drbg_hash_sha256_pr_false"
 
 int CheckCondition(
     const file_encrypt::util::NISTTestVectorParser::NISTTestDRBGHashStep& step,

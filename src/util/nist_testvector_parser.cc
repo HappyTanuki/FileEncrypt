@@ -493,7 +493,6 @@ ReturnStatusCode ParseHashDRBGVector(
 
       additional_input.clear();
       returned_bits.clear();
-      prediction_resistance_flag = false;
       hash_state = NISTTestDRBGHashState();
       V_parsed = false;
       C_parsed = false;

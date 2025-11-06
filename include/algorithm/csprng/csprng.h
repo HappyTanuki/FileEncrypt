@@ -45,8 +45,10 @@ class CSPRNG {
       const std::vector<std::byte>& personalization_string,
       const std::uint32_t& security_strangth) = 0;
 
-  constexpr ReturnStatus Reseed(const bool& prediction_resistance_request,
-                                const std::vector<std::byte>& additional_input);
+  constexpr ReturnStatus Reseed(
+      const bool& prediction_resistance_request,
+      const std::vector<std::byte>& additional_input,
+      const std::vector<std::byte>& entropy_input = {});
   virtual ReturnStatus ReseedAlgorithm(
       const std::vector<std::byte>& entropy_input,
       const std::vector<std::byte>& additional_input) = 0;
@@ -55,7 +57,8 @@ class CSPRNG {
       const std::uint64_t& requested_number_of_bits,
       const std::uint32_t& requested_security_strangth,
       bool prediction_resistance_request,
-      std::vector<std::byte> additional_input);
+      std::vector<std::byte> additional_input,
+      const std::vector<std::byte>& entropy_input = {});
 
   virtual GenerateReturnValue GenerateAlgorithm(
       const std::uint64_t& requested_number_of_bits,
