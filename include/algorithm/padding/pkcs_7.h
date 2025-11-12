@@ -11,7 +11,7 @@ class Pkcs_7 : public Padding<BlockSize> {
  public:
   std::vector<std::array<std::byte, BlockSize / 8>> MakePaddingBlock(
       std::vector<std::byte> data) final override;
-  std::array<std::byte, BlockSize / 8> RemovePadding(
+  RemovePaddingReturnData<BlockSize> RemovePadding(
       std::vector<std::byte> data) final override;
 };
 

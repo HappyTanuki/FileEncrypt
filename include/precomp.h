@@ -7,10 +7,13 @@
 #endif
 #include <immintrin.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #if _WIN32

@@ -17,7 +17,9 @@ class AES_128_CBC
   AES_128_CBC(const std::array<std::byte, 16>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 128, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {
+    this->SetAlgorithmName("CBC");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -28,7 +30,9 @@ class AES_192_CBC
   AES_192_CBC(const std::array<std::byte, 24>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 192, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {
+    this->SetAlgorithmName("CBC");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -39,7 +43,9 @@ class AES_256_CBC
   AES_256_CBC(const std::array<std::byte, 32>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CBC<128, 256, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {
+    this->SetAlgorithmName("CBC");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -50,7 +56,9 @@ class AES_128_ECB
   AES_128_ECB(const std::array<std::byte, 16>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 128, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {
+    this->SetAlgorithmName("ECB");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -61,7 +69,9 @@ class AES_192_ECB
   AES_192_ECB(const std::array<std::byte, 24>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 192, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {
+    this->SetAlgorithmName("ECB");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -72,7 +82,9 @@ class AES_256_ECB
   AES_256_ECB(const std::array<std::byte, 32>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::ECB<128, 256, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {
+    this->SetAlgorithmName("ECB");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -83,7 +95,9 @@ class AES_128_CTR
   AES_128_CTR(const std::array<std::byte, 16>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CTR<128, 128, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<128>>(), key, iv) {
+    this->SetAlgorithmName("CTR");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -94,7 +108,9 @@ class AES_192_CTR
   AES_192_CTR(const std::array<std::byte, 24>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CTR<128, 192, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<192>>(), key, iv) {
+    this->SetAlgorithmName("CTR");
+  }
 };
 
 // AES 모드 별 별칭 클래스 텔플릿은 내부적으로 유지할 블록 갯수
@@ -105,7 +121,9 @@ class AES_256_CTR
   AES_256_CTR(const std::array<std::byte, 32>& key = {},
               const std::array<std::byte, 16>& iv = GetRandomArray<16>())
       : file_encrypt::algorithm::op_mode::CTR<128, 256, BufferSize>(
-            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {}
+            std::make_unique<file_encrypt::algorithm::AES<256>>(), key, iv) {
+    this->SetAlgorithmName("CTR");
+  }
 };
 
 }  // namespace file_encrypt::algorithm

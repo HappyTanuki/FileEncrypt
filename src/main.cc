@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "algorithm/base64.h"
 #include "algorithm/block_cipher/mode/aliases.h"
 #include "algorithm/csprng/drbg_sha256.h"
 #include "algorithm/padding/pkcs_7.h"
@@ -58,6 +59,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  algorithm::BASE64 base64;
   algorithm::DRBG_SHA256 drbg;
   drbg.Instantiate(256, false);
   algorithm::Pkcs_7<128> pkcs_7;
@@ -76,7 +78,8 @@ int main(int argc, char* argv[]) {
     std::memcpy(iv.data(), iv_return.pseudorandom_bits.data(), 16);
     output->write(reinterpret_cast<char*>(iv.data()), 16);
   } else {
-    std::vector<std::byte> password_bytes = util::HexStrToBytes(key_hex);
+    std::vector<std::byte> password_bytes =
+        base64.Decoding(base64.ReplaceChar(util::StrToBytes(key_hex)));
     std::memcpy(key.data(), password_bytes.data(), 32);
     input->read(reinterpret_cast<char*>(iv.data()), 16);
   }
@@ -88,6 +91,7 @@ int main(int argc, char* argv[]) {
     std::array<std::byte, 16> buffer = {};
     input->read(reinterpret_cast<char*>(buffer.data()), 16);
     std::streamsize read_bytes = input->gcount();
+    size_t write_size = 0;
     if (read_bytes == 0) break;
 
     std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
@@ -105,20 +109,23 @@ int main(int argc, char* argv[]) {
     algorithm::op_mode::OperationModeOutputData<128> output_data;
     aes_cbc >> output_data;
 
+    write_size = output_data.data.size();
     if (input->peek() == EOF) {
       if (cipher_mode == algorithm::op_mode::CipherMode::Decrypt) {
         auto un_padded = pkcs_7.RemovePadding(
             {output_data.data.begin(), output_data.data.end()});
-        std::memcpy(output_data.data.data(), un_padded.data(),
-                    un_padded.size());
+        std::memcpy(output_data.data.data(), un_padded.data.data(),
+                    un_padded.data.size());
+        write_size = un_padded.real_length;
       }
     }
 
-    output->write(reinterpret_cast<char*>(output_data.data.data()),
-                  output_data.data.size());
+    output->write(reinterpret_cast<char*>(output_data.data.data()), write_size);
   }
 
-  std::cout << "Key: " << util::BytesToHexStr(key) << std::endl;
+  std::cout << "Key: "
+            << util::BytesToStr(base64.Encoding({key.begin(), key.end()}))
+            << std::endl;
 
   output->flush();
 

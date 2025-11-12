@@ -36,7 +36,7 @@ Pkcs_7<BlockSize>::MakePaddingBlock(std::vector<std::byte> data) {
 }
 
 template <std::uint32_t BlockSize>
-std::array<std::byte, BlockSize / 8> Pkcs_7<BlockSize>::RemovePadding(
+RemovePaddingReturnData<BlockSize> Pkcs_7<BlockSize>::RemovePadding(
     std::vector<std::byte> data) {
   std::array<std::byte, BlockSize / 8> result = {};
   std::uint32_t bytes_to_copy =
@@ -45,7 +45,7 @@ std::array<std::byte, BlockSize / 8> Pkcs_7<BlockSize>::RemovePadding(
   data.resize(bytes_to_copy);
   std::memcpy(result.data(), data.data(), data.size());
 
-  return result;
+  return {result, bytes_to_copy};
 }
 
 };  // namespace file_encrypt::algorithm

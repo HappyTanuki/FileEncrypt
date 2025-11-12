@@ -60,8 +60,12 @@ class OperationMode {
     this->prev_vector = initial_vector;
     this->IV = initial_vector;
   }
+  constexpr void SetAlgorithmName(std::string additional_name) {
+    this->algorithm_name = this->cipher->algorithm_name + "-" + additional_name;
+  }
 
   std::array<std::byte, BlockSizeBits / 8> IV;
+  std::string algorithm_name = "";
 
  protected:
   std::array<std::byte, BlockSizeBits / 8> prev_vector;

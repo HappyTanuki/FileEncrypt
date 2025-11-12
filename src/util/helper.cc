@@ -3,14 +3,22 @@
 #include <algorithm>
 #include <cstdint>
 #include <sstream>
+#include <vector>
 
 namespace file_encrypt::util {
 
 std::vector<std::byte> StrToBytes(const std::string& s) {
-  std::vector<std::byte> result;
-  result.reserve(s.size());
-  for (char c : s) result.push_back(static_cast<std::byte>(c));
+  std::vector<std::byte> result(s.size());
+  std::memcpy(result.data(), s.data(), s.size());
   return result;
+}
+
+std::string BytesToStr(const std::vector<std::byte>& bytes) {
+  std::ostringstream osstream;
+  for (auto b : bytes) {
+    osstream << static_cast<char>(b);
+  }
+  return osstream.str();
 }
 
 std::vector<std::byte> HexStrToBytes(const std::string& hex) {
@@ -81,6 +89,21 @@ std::vector<std::byte> Rightmost(const std::vector<std::byte>& value,
   std::uint32_t offset = std::max<size_t>(value.size() - size / 8, 0);
 
   std::memcpy(result.data(), value.data() + offset, size / 8);
+
+  return result;
+}
+
+std::string GetEnglishNumberSufix(std::uint64_t number) {
+  std::string result;
+  if (number % 10 == 1 && number != 11) {
+    result = "st";
+  } else if (number % 10 == 2 && number != 12) {
+    result = "nd";
+  } else if (number % 10 == 3 && number != 13) {
+    result = "rd";
+  } else {
+    result = "th";
+  }
 
   return result;
 }

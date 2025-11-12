@@ -42,6 +42,7 @@ class BlockCipherAlgorithm {
       const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
   // 내부에 키를 설정.
   virtual void SetKey(const std::array<std::byte, KeyBits / 8>& cipher_key) = 0;
+  std::string algorithm_name = "";
 };
 
 // 해쉬 알고리즘의 기본 인터페이스
