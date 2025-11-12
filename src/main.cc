@@ -3,6 +3,7 @@
 
 #include "algorithm/block_cipher/mode/aliases.h"
 #include "algorithm/csprng/drbg_sha256.h"
+#include "algorithm/padding/pkcs_7.h"
 #include "nolibc/getopt.h"
 #include "util/helper.h"
 
@@ -10,7 +11,7 @@ namespace file_encrypt {
 
 int main(int argc, char* argv[]) {
   int opt;
-  std::string password;
+  std::string key_hex;
 
   std::istream* input = &std::cin;
   std::ostream* output = &std::cout;
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
         }
         break;
       case 'p':
-        password = nolibc::optarg;
+        key_hex = nolibc::optarg;
         break;
       case 'e':
         cipher_mode = algorithm::op_mode::CipherMode::Encrypt;
@@ -50,13 +51,16 @@ int main(int argc, char* argv[]) {
                      " -i input_file_or_phrase\n"
                      " -o output_file_or_stream\n"
                      " -k key\n"
-                     "[-e / -d] (-e encrypt, -d decrypt)\n";
+                     " -h digests file\n"
+                     "[-e / -d] (-e encrypt, -d decrypt / compare digest in "
+                     "hash mode)\n";
         std::exit(EXIT_FAILURE);
     }
   }
 
   algorithm::DRBG_SHA256 drbg;
   drbg.Instantiate(256, false);
+  algorithm::Pkcs_7<128> pkcs_7;
   std::array<std::byte, 32> key;
   std::array<std::byte, 16> iv;
 
@@ -70,10 +74,11 @@ int main(int argc, char* argv[]) {
     }
     std::memcpy(key.data(), key_return.pseudorandom_bits.data(), 32);
     std::memcpy(iv.data(), iv_return.pseudorandom_bits.data(), 16);
+    output->write(reinterpret_cast<char*>(iv.data()), 16);
   } else {
-    std::vector<std::byte> password_bytes = util::HexStrToBytes(password);
+    std::vector<std::byte> password_bytes = util::HexStrToBytes(key_hex);
     std::memcpy(key.data(), password_bytes.data(), 32);
-    std::memcpy(iv.data(), password_bytes.data() + 32, 16);
+    input->read(reinterpret_cast<char*>(iv.data()), 16);
   }
 
   algorithm::AES_256_CBC<1> aes_cbc(key, iv);
@@ -86,17 +91,36 @@ int main(int argc, char* argv[]) {
     if (read_bytes == 0) break;
 
     std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
+
+    if (input->peek() == EOF) {
+      if (cipher_mode == algorithm::op_mode::CipherMode::Encrypt) {
+        auto padded = pkcs_7.MakePaddingBlock(data).back();
+        data.resize(16);
+        std::memcpy(data.data(), padded.data(), padded.size());
+      }
+    }
+
     aes_cbc << data;
 
     algorithm::op_mode::OperationModeOutputData<128> output_data;
     aes_cbc >> output_data;
 
+    if (input->peek() == EOF) {
+      if (cipher_mode == algorithm::op_mode::CipherMode::Decrypt) {
+        auto un_padded = pkcs_7.RemovePadding(
+            {output_data.data.begin(), output_data.data.end()});
+        std::memcpy(output_data.data.data(), un_padded.data(),
+                    un_padded.size());
+      }
+    }
+
     output->write(reinterpret_cast<char*>(output_data.data.data()),
                   output_data.data.size());
   }
 
-  std::cout << "Password: "
-            << util::BytesToHexStr(key) + util::BytesToHexStr(iv) << std::endl;
+  std::cout << "Key: " << util::BytesToHexStr(key) << std::endl;
+
+  output->flush();
 
   std::exit(EXIT_SUCCESS);
 }
