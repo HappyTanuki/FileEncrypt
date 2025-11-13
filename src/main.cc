@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
     input->read(reinterpret_cast<char*>(iv.data()), 16);
   }
 
-  algorithm::AES_256_CBC<1> aes_cbc(key, iv);
+  algorithm::AES_CBC<256> aes_cbc(key, iv);
   aes_cbc << cipher_mode;
 
   while (input->good()) {
@@ -123,9 +123,11 @@ int main(int argc, char* argv[]) {
     output->write(reinterpret_cast<char*>(output_data.data.data()), write_size);
   }
 
-  std::cout << "Key: "
-            << util::BytesToStr(base64.Encoding({key.begin(), key.end()}))
-            << std::endl;
+  if (cipher_mode == algorithm::op_mode::CipherMode::Encrypt) {
+    std::cout << "Key: "
+              << util::BytesToStr(base64.Encoding({key.begin(), key.end()}))
+              << std::endl;
+  }
 
   output->flush();
 

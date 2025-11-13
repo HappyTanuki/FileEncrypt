@@ -25,7 +25,7 @@ int main() {
                 generate_return_value.pseudorandom_bits.data(),
                 generate_return_value.pseudorandom_bits.size());
 
-    file_encrypt::algorithm::AES_256_CBC<10> cipher(
+    file_encrypt::algorithm::AES_CBC<256> cipher(
         file_encrypt::util::HexStrToBytes<32>(""), pseudorandom_bits);
     auto IV = cipher.IV;
 

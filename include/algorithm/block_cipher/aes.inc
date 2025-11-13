@@ -153,9 +153,11 @@ AES<KeyBits>::AES() {
 }
 
 template <std::uint32_t KeyBits>
-AES<KeyBits>::AES(std::array<std::byte, KeyBits> key) {
+AES<KeyBits>::AES(std::array<std::byte, KeyBits / 8> key) {
   Init();
-  SetKey(key);
+  std::array<AESByte, KeyBits / 8> aes_key;
+  std::memcpy(aes_key.data(), key.data(), key.size());
+  KeyExpansion(aes_key, expanded_key);
 }
 
 template <std::uint32_t KeyBits>

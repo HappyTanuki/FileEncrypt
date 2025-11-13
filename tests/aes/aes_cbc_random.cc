@@ -5,7 +5,7 @@ int main() {
   {  // AES_256_ECB
     std::array<std::byte, 16> expected_result = {};
 
-    file_encrypt::algorithm::AES_256_CBC<10> cipher(
+    file_encrypt::algorithm::AES_CBC<256> cipher(
         file_encrypt::util::HexStrToBytes<32>(""));
     auto IV = cipher.IV;
 

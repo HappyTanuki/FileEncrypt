@@ -9,7 +9,7 @@ namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 #define _TEST_TYPE "complex"
 
 #define _KEY_BIT 192
-#define _ALGORITHM file_encrypt::algorithm::AES_192_ECB<10>
+#define _ALGORITHM file_encrypt::algorithm::AES_ECB<192>
 #define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
 #define _TESTDIRECTORY "aesmct_intermediate/"
 #define _TEST_NAME "ECBMCT192"

@@ -94,7 +94,7 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   static_assert(KeyBits == 128 || KeyBits == 192 || KeyBits == 256,
                 "AES key size must be 128, 192, or 256 bits");
   AES();
-  AES(std::array<std::byte, KeyBits> key);
+  AES(std::array<std::byte, KeyBits / 8> key);
 
   void Init();
 
@@ -107,12 +107,12 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   CipherAlgorithmReturnData Decrypt(
       const std::array<std::byte, 16>& data) final override;
 
-  constexpr void SetKey(
-      const std::array<std::byte, KeyBits / 8>& key) final override {
-    std::array<AESByte, KeyBits / 8> aes_key;
-    std::memcpy(aes_key.data(), key.data(), key.size());
-    KeyExpansion(aes_key, expanded_key);
-  }
+  // constexpr void SetKey(
+  //     const std::array<std::byte, KeyBits / 8>& key) final override {
+  //   std::array<AESByte, KeyBits / 8> aes_key;
+  //   std::memcpy(aes_key.data(), key.data(), key.size());
+  //   KeyExpansion(aes_key, expanded_key);
+  // }
 
 #ifdef _DEBUG
   const std::uint8_t* _Debug_get_S_box() const { return S_box; }

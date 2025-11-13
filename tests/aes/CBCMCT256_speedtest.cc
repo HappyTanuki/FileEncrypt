@@ -10,7 +10,7 @@ namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 #define _TEST_TYPE "complex"
 
 #define _KEY_BIT 256
-#define _ALGORITHM file_encrypt::algorithm::AES_256_CBC<10>
+#define _ALGORITHM file_encrypt::algorithm::AES_CBC<256>
 #define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
 #define _TESTDIRECTORY "aesmct_intermediate/"
 #define _TEST_NAME "CBCMCT256"
@@ -35,9 +35,6 @@ int main() {
   std::vector<std::byte> prev_prev_result;
 
   auto start_time = std::clock();
-
-  _ALGORITHM cipher;
-  cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
 
   for (int i = 0; i < encrypt_test_vectors.size(); i++) {
     NISTTestVectorParser::NISTTestMonteStage item = encrypt_test_vectors[i];
@@ -70,7 +67,8 @@ int main() {
     std::array<std::byte, 16> IV;
     std::memcpy(IV.data(), item.variable.binary["IV"].data(), 16);
 
-    cipher.SetKey(key);
+    _ALGORITHM cipher(key);
+    cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
     cipher.SetIV(IV);
 
     std::vector<std::byte> next_input;

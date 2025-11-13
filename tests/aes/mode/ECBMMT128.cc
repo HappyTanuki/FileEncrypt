@@ -40,7 +40,7 @@ int main() {
     std::array<std::byte, _KEY_BIT / 8> key;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
 
-    file_encrypt::algorithm::AES_128_ECB<10> cipher(key);
+    file_encrypt::algorithm::AES_ECB<128> cipher(key);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> output_block;
     std::vector<std::byte> input_block;
     std::array<std::byte, 16> expected_block;
@@ -131,7 +131,7 @@ int main() {
     std::array<std::byte, _KEY_BIT / 8> key;
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
 
-    file_encrypt::algorithm::AES_128_ECB<10> cipher(key);
+    file_encrypt::algorithm::AES_ECB<128> cipher(key);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> output_block;
     std::vector<std::byte> input_block;
     std::array<std::byte, 16> expected_block;

@@ -44,7 +44,7 @@ int main() {
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
     std::memcpy(expected.data(), item.binary["CIPHERTEXT"].data(), 16);
 
-    file_encrypt::algorithm::AES_128_ECB<10> cipher(key);
+    file_encrypt::algorithm::AES_ECB<128> cipher(key);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Encrypt;
     cipher << item.binary["PLAINTEXT"];
@@ -75,7 +75,7 @@ int main() {
     std::memcpy(key.data(), item.binary["KEY"].data(), _KEY_BIT / 8);
     std::memcpy(expected.data(), item.binary["PLAINTEXT"].data(), 16);
 
-    file_encrypt::algorithm::AES_128_ECB<10> cipher(key);
+    file_encrypt::algorithm::AES_ECB<128> cipher(key);
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Decrypt;
     cipher << item.binary["CIPHERTEXT"];

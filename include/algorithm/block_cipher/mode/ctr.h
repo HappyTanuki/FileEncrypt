@@ -11,12 +11,11 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
  public:
   using OperationMode<BlockSizeBits, KeyBits, BufferSize>::OperationMode;
   CTR(std::unique_ptr<BlockCipherAlgorithm<KeyBits, BlockSizeBits>> algorithm,
-      std::array<std::byte, KeyBits / 8> cipher_key = {},
       std::array<std::byte, BlockSizeBits / 8> initial_vector =
           GetRandomArray<BlockSizeBits / 8>(),
       std::uint32_t m_bits = 64)
-      : OperationMode<BlockSizeBits, KeyBits, BufferSize>(
-            std::move(algorithm), cipher_key, initial_vector),
+      : OperationMode<BlockSizeBits, KeyBits, BufferSize>(std::move(algorithm),
+                                                          initial_vector),
         m(m_bits) {
     std::uint32_t counter_bytes = (m_bits + 7) / 8;
     for (int i = (BlockSizeBits / 8) - 1;

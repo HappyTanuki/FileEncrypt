@@ -7,7 +7,7 @@
 namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 
 #define _KEY_BIT 128
-#define _ALGORITHM file_encrypt::algorithm::AES_128_CBC<10>
+#define _ALGORITHM file_encrypt::algorithm::AES_CBC<128>
 #define _TESTDIRECTORY_PREFIX "./tests/test_vector/"
 #define _TESTDIRECTORY "KAT_AES/"
 #define _TEST_NAME "CBCGFSbox128"

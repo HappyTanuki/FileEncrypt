@@ -3,7 +3,7 @@
 
 int main() {
   {  // AES_256_ECB
-    file_encrypt::algorithm::AES_256_ECB<10> cipher(
+    file_encrypt::algorithm::AES_ECB<256> cipher(
         file_encrypt::util::HexStrToBytes<32>(""));
 
     cipher << file_encrypt::util::HexStrToBytes(
