@@ -16,7 +16,7 @@ class SHA256 : public HashAlgorithm {
 
   void Update(const HashAlgorithmInputData& data) final override;
   HashAlgorithmReturnData Digest() final override;
-  void Reset();
+  void Reset() final override;
 
  private:
   constexpr std::vector<std::array<std::uint32_t, 16>> Padding(

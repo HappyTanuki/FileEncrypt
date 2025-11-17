@@ -12,6 +12,18 @@ set(BUILD_TESTING ON)
 
 set(DPP_BUILD_TEST OFF)
 
+set(CXXOPTS_URL "https://raw.githubusercontent.com/jarro2783/cxxopts/refs/heads/master/include/cxxopts.hpp")
+set(CXXOPTS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/cxxopts.hpp")
+
+# 다운로드
+file(DOWNLOAD
+    ${CXXOPTS_URL}
+    ${CXXOPTS_FILE}
+    SHOW_PROGRESS
+    STATUS download_status
+    TLS_VERIFY ON
+)
+
 enable_testing()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cxx" "src/*.cc")

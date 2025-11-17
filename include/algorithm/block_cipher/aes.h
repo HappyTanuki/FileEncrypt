@@ -107,17 +107,6 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   CipherAlgorithmReturnData Decrypt(
       const std::array<std::byte, 16>& data) final override;
 
-  // constexpr void SetKey(
-  //     const std::array<std::byte, KeyBits / 8>& key) final override {
-  //   std::array<AESByte, KeyBits / 8> aes_key;
-  //   std::memcpy(aes_key.data(), key.data(), key.size());
-  //   KeyExpansion(aes_key, expanded_key);
-  // }
-
-#ifdef _DEBUG
-  const std::uint8_t* _Debug_get_S_box() const { return S_box; }
-#endif
-
  private:
   static constexpr std::uint32_t Nk = KeyBits / 32;
   static constexpr std::uint32_t Nr = Nk + 6;

@@ -10,13 +10,8 @@
     "cmake.debugConfig": {
         "cwd": "${command:cmake.buildDirectory}",
         "args": [
-            "-i",
-            "output.aes",
-            "-o",
-            "test_output.txt",
-            "-d",
-            "-p",
-            "gBBS/oO35pLIBl+Vv60MzgyafETLeX+0MigopWHTmjA="
+            "encrypt",
+            "-?"
         ]
     },
     "files.associations": {

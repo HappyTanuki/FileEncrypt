@@ -266,26 +266,6 @@ constexpr CipherAlgorithmReturnData AES<KeyBits>::_Encrypt(
     }
   }
 
-  // debugging code
-  // std::array<std::array<std::byte, 4>, 4 * (Nr + 1)> expanded_temp_key;
-  // for (int i = 0; i < 4 * (Nr + 1); i++) {
-  //   std::memcpy(expanded_temp_key[i].data(), expanded_key[i].data(), 4);
-  //   std::cout << "expanded_key[" << std::setw(2) << std::setfill('0') << i
-  //             << "]: "
-  //             << file_encrypt::util::BytesToStr<4>(expanded_temp_key[i]) << "
-  //             ("
-  //             << std::setw(3) << std::setfill('0')
-  //             << std::to_integer<int>(expanded_temp_key[i][0]) << ", "
-  //             << std::setw(3) << std::setfill('0')
-  //             << std::to_integer<int>(expanded_temp_key[i][1]) << ", "
-  //             << std::setw(3) << std::setfill('0')
-  //             << std::to_integer<int>(expanded_temp_key[i][2]) << ", "
-  //             << std::setw(3) << std::setfill('0')
-  //             << std::to_integer<int>(expanded_temp_key[i][3]) << ") "
-  //             << std::endl;
-  // }
-  // std::cout << "debug point" << std::endl;
-
   AddRoundKey(state, expanded_key, 0);
 
 #if (_USE_SIMD_INTRINSIC)
