@@ -30,14 +30,14 @@ std::string PromptPasswordCreateInput() {
   util::EchoOff echo_off;
 
   while (true) {
-    std::cout << "Type password: ";
+    std::cout << "Enter password: ";
     std::cin >> password;
     std::cout << std::endl;
     std::cout << "Confirm password: ";
     std::cin >> password_confirm;
     std::cout << std::endl;
     if (password != password_confirm) {
-      std::cout << "Password mismatch." << std::endl;
+      std::cout << "Passwords do not match." << std::endl;
       continue;
     }
     if (!password.empty()) break;
@@ -52,7 +52,7 @@ std::string PromptPasswordInput() {
   util::EchoOff echo_off;
 
   while (true) {
-    std::cout << "Type password: ";
+    std::cout << "Enter password: ";
     std::cin >> password;
     if (!password.empty()) break;
   }
@@ -111,14 +111,14 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 
   auto salt_return = drbg.Generate(256, 256, false, {});
   if (salt_return.status != algorithm::ReturnStatus::kSUCCESS) {
-    std::cerr << "CSPRNG error\n";
+    std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
   salt = std::move(salt_return.pseudorandom_bits);
 
   auto iv_return = drbg.Generate(128, 256, false, {});
   if (iv_return.status != algorithm::ReturnStatus::kSUCCESS) {
-    std::cerr << "CSPRNG error\n";
+    std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
   std::memcpy(iv.data(), iv_return.pseudorandom_bits.data(), 16);
@@ -145,7 +145,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     key = algorithm::PBKDF2<256>(password, salt, hmac, 600000);
     auto key_return = drbg.Generate(256, 256, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
-      std::cerr << "CSPRNG error\n";
+      std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
     std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(), 32);
@@ -153,7 +153,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     // 키 입력이 없고 엔트로피 전용모드일 때
     auto key_return = drbg.Generate(256, 256, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
-      std::cerr << "CSPRNG error\n";
+      std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
     std::memcpy(key.data(), key_return.pseudorandom_bits.data(), 32);
@@ -323,7 +323,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   if ((magic_number == util::PasswordCombinedKey ||
        magic_number == util::NoPasswordKey) &&
       parsed_args.count("key") == 0) {
-    std::cerr << "An key shall be specified." << std::endl;
+    std::cerr << "A key shall be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
   if (parsed_args.count("key") > 0) {
@@ -502,7 +502,8 @@ int main(int argc, char* argv[]) {
     case ProgramOperationMode::kKeygen:
       return KeygenMain(parsed_args, help_string);
     default:
-      std::cerr << "Unknown error in mode selection" << std::endl;
+      std::cerr << "An unknown error occurred during mode selection."
+                << std::endl;
       std::exit(EXIT_FAILURE);
   };
 }
