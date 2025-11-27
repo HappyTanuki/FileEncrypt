@@ -11,7 +11,8 @@ namespace file_encrypt::algorithm {
 
 class HMAC : public MacAlgorithm {
  public:
-  HMAC(std::unique_ptr<HashAlgorithm> algorithm, std::vector<std::byte> key)
+  HMAC(std::unique_ptr<HashAlgorithm> algorithm,
+       std::vector<std::byte> key = {})
       : algorithm(std::move(algorithm)),
         inner_padding(
             std::vector<std::byte>(this->algorithm->inner_block_size / 8,
@@ -25,6 +26,7 @@ class HMAC : public MacAlgorithm {
                static_cast<std::byte>(0x00));
     this->key = key;
     this->xored_key = file_encrypt::util::XorVectors(key, inner_padding);
+    this->digest_size = this->algorithm->digest_size;
     Reset();
   }
 

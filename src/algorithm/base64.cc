@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "util/helper.h"
+
 namespace file_encrypt::algorithm {
 
 std::vector<std::byte> BASE64::Encoding(
@@ -52,7 +54,7 @@ std::vector<std::byte> BASE64::Decoding(
                          (word_bytes[1] & 0x3F) << 12 |
                          (word_bytes[2] & 0x3F) << 6 | (word_bytes[3] & 0x3F);
 
-        if (data[i - 2] != static_cast<std::byte>('='))
+    if (data[i - 2] != static_cast<std::byte>('='))
       decoded[j++] = static_cast<std::byte>((word >> 16) & 0xFF);
     if (data[i - 1] != static_cast<std::byte>('='))
       decoded[j++] = static_cast<std::byte>((word >> 8) & 0xFF);
@@ -62,11 +64,19 @@ std::vector<std::byte> BASE64::Decoding(
   return decoded;
 }
 
+std::vector<std::byte> BASE64::Decoding(const std::string& data) const {
+  return Decoding(ReplaceChar(data));
+}
+
 std::vector<std::byte> BASE64::ReplaceChar(std::vector<std::byte> data) const {
   std::transform(data.begin(), data.end(), data.begin(), [this](std::byte c) {
     return kIBase64[static_cast<std::uint8_t>(c)];
   });
   return data;
+}
+
+std::vector<std::byte> BASE64::ReplaceChar(const std::string& data) const {
+  return ReplaceChar(file_encrypt::util::StrToBytes(data));
 }
 
 }  // namespace file_encrypt::algorithm

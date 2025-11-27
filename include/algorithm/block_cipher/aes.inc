@@ -161,29 +161,10 @@ AES<KeyBits>::AES(std::array<std::byte, KeyBits / 8> key) {
 }
 
 template <std::uint32_t KeyBits>
-constexpr const char* algo_name();
-
-template <>
-constexpr const char* algo_name<128>() {
-  return "AES-128";
-}
-
-template <>
-constexpr const char* algo_name<192>() {
-  return "AES-192";
-}
-
-template <>
-constexpr const char* algo_name<256>() {
-  return "AES-256";
-}
-
-template <std::uint32_t KeyBits>
 void AES<KeyBits>::Init() {
   file_encrypt::util::EdxEcx features = file_encrypt::util::GetCPUFeatures();
   cpu_aes_ni = features.ecx & file_encrypt::util::FeatureECXBits::kAESNI;
   cpu_sse2 = features.edx & file_encrypt::util::FeatureEDXBits::kSSE2;
-  this->algorithm_name = algo_name<KeyBits>();
 }
 
 template <std::uint32_t KeyBits>

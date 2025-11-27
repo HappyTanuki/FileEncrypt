@@ -30,14 +30,18 @@ class OperationMode {
   virtual ~OperationMode() = default;
 
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
-      const std::vector<std::byte>& data) = 0;
+      const std::vector<std::byte>& data) {
+    return *this;
+  };
   OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
       const CipherMode& mode) {
     this->mode = mode;
     return *this;
   }
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
-      OperationModeOutputData<BlockSizeBits>& data) = 0;
+      OperationModeOutputData<BlockSizeBits>& data) {
+    return *this;
+  };
 
   constexpr std::uint32_t GetBufferCount() {
     if (this->output_buffer_full) {
@@ -54,12 +58,8 @@ class OperationMode {
     this->prev_vector = initial_vector;
     this->IV = initial_vector;
   }
-  constexpr void SetAlgorithmName(std::string additional_name) {
-    this->algorithm_name = this->cipher->algorithm_name + "-" + additional_name;
-  }
 
   std::array<std::byte, BlockSizeBits / 8> IV;
-  std::string algorithm_name = "";
 
  protected:
   std::array<std::byte, BlockSizeBits / 8> prev_vector;

@@ -6,6 +6,13 @@
 
 namespace file_encrypt::algorithm {
 
+enum class ReturnStatus {
+  kSUCCESS = 0,
+  kERROR_FLAG = 1,
+  kCATASTROPHIC_ERROR_FLAG = 2,
+  kRESEED_REQUIRED = 3
+};
+
 struct HashAlgorithmInputData {
   std::vector<std::byte> message = {};
   std::uint64_t bit_length = 0;
@@ -40,7 +47,6 @@ class BlockCipherAlgorithm {
   // 키를 내부에 유지하는 복호화에 사용.
   virtual CipherAlgorithmReturnData Decrypt(
       const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
-  std::string algorithm_name = "";
 };
 
 // 해시 알고리즘의 기본 인터페이스
@@ -60,9 +66,11 @@ class HashAlgorithm {
   // 인스턴스 리셋
   virtual void Reset() = 0;
 
-  // HMAC에서 필요해서 추가함. 이 해시 알고리즘이 한번에 처리하는 블록 크기,
+  // HMAC에서 필요해서 추가함. 이 해시 알고리즘이 내부적으로 처리하는 블록 크기,
   // 비트 단위로 표시(예: SHA256은 512비트임).
   std::uint32_t inner_block_size = 0;
+  // 출력 다이제스트 비트 길이
+  std::uint32_t digest_size = 0;
 };
 
 // MAC 알고리즘의 기본 인터페이스
@@ -78,6 +86,9 @@ class MacAlgorithm {
   virtual void Compute(const std::vector<std::byte>& data) = 0;
   // 내부 버퍼를 비우고 패딩하여 계산하여 반환.
   virtual std::vector<std::byte> Finalize() = 0;
+
+  // 출력 다이제스트 비트 길이
+  std::uint32_t digest_size = 0;
 };
 
 // 인코딩 알고리즘의 기본 인터페이스

@@ -13,7 +13,7 @@ HASH_DRBG::HASH_DRBG(std::unique_ptr<HashAlgorithm> algorithm) {
   hash = std::move(algorithm);
 }
 
-HASH_DRBG::ReturnStatus HASH_DRBG::InstantiateAlgorithm(
+ReturnStatus HASH_DRBG::InstantiateAlgorithm(
     const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
     const std::vector<std::byte>& personalization_string,
     const std::uint32_t& security_strangth) {
@@ -37,7 +37,7 @@ HASH_DRBG::ReturnStatus HASH_DRBG::InstantiateAlgorithm(
 }
 
 // This function shall not return failure status
-HASH_DRBG::ReturnStatus HASH_DRBG::ReseedAlgorithm(
+ReturnStatus HASH_DRBG::ReseedAlgorithm(
     const std::vector<std::byte>& entropy_input,
     const std::vector<std::byte>& additional_input) {
   std::vector<std::byte> seed;

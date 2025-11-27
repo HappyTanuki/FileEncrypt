@@ -19,7 +19,7 @@ int main() {
     file_encrypt::algorithm::CSPRNG::GenerateReturnValue generate_return_value =
         prng.Generate(128, 256, true, entropy);
     if (generate_return_value.status ==
-        file_encrypt::algorithm::CSPRNG::ReturnStatus::kRESEED_REQUIRED) {
+        file_encrypt::algorithm::ReturnStatus::kRESEED_REQUIRED) {
       file_encrypt::algorithm::CSPRNG::GetRandom(
           reinterpret_cast<char*>(entropy.data()), 16);
       std::cout << "Reseeding..." << std::endl;

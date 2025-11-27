@@ -9,9 +9,27 @@
     "cmake.generator": "Ninja",
     "cmake.debugConfig": {
         "cwd": "${command:cmake.buildDirectory}",
+        // "args": [
+        //     "encrypt",
+        //     "-i",
+        //     "compile_commands.json",
+        //     "-p",
+        //     "asdf",
+        //     "-o",
+        //     "encrypted.aes",
+        //     "-k",
+        //     "key.pem"
+        // ]
         "args": [
-            "encrypt",
-            "-?"
+            "decrypt",
+            "-o",
+            "output.txt",
+            "-i",
+            "encrypted.aes",
+            "-p",
+            "asdf",
+            "-k",
+            "key.pem"
         ]
     },
     "files.associations": {

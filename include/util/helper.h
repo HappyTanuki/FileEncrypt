@@ -17,8 +17,8 @@ std::vector<std::byte> HexStrToBytes(const std::string& hex);
 template <std::uint32_t Size>
 std::array<std::byte, Size> HexStrToBytes(const std::string& hex);
 
-std::vector<std::byte> XorVectors(const std::vector<std::byte>& a,
-                                  const std::vector<std::byte>& b);
+std::vector<std::byte> XorVectors(std::vector<std::byte> a,
+                                  std::vector<std::byte> b);
 
 template <std::uint32_t Size>
 constexpr std::array<std::byte, Size> XorArrays(

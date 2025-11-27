@@ -2,7 +2,7 @@
 
 namespace file_encrypt::algorithm {
 
-constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
+constexpr ReturnStatus CSPRNG::Instantiate(
     const std::uint32_t& requested_instantiation_security_strength,
     const bool& prediction_resistance_flag,
     const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
@@ -61,7 +61,7 @@ constexpr CSPRNG::ReturnStatus CSPRNG::Instantiate(
   return ReturnStatus::kSUCCESS;
 }
 
-constexpr CSPRNG::ReturnStatus CSPRNG::Reseed(
+constexpr ReturnStatus CSPRNG::Reseed(
     const bool& prediction_resistance_request,
     const std::vector<std::byte>& additional_input,
     const std::vector<std::byte>& entropy_input) {
@@ -147,7 +147,7 @@ constexpr CSPRNG::GenerateReturnValue CSPRNG::Generate(
           generate_algorithm_return_value.pseudorandom_bits};
 }
 
-constexpr CSPRNG::ReturnStatus CSPRNG::Uninstantiate() {
+constexpr ReturnStatus CSPRNG::Uninstantiate() {
   // Step 1
   if (!valid) return ReturnStatus::kERROR_FLAG;
   // Step 2

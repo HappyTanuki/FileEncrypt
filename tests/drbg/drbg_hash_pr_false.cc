@@ -102,7 +102,7 @@ int main() {
               stage.ReturnedBitsLen, 256, step.prediction_resistance_flag,
               step.additional_input, step.entropy_input);
           if (generate_return_value.status !=
-              file_encrypt::algorithm::CSPRNG::ReturnStatus::kSUCCESS) {
+              file_encrypt::algorithm::ReturnStatus::kSUCCESS) {
             std::cout << "Generate failed." << std::endl;
             return -1;
           }

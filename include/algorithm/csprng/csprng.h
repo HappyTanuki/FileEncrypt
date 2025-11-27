@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+
+#include "algorithm/algorithm.h"
 #ifdef _WIN32
 #include <bcrypt.h>
 #include <windows.h>
@@ -15,13 +17,6 @@ namespace file_encrypt::algorithm {
 
 class CSPRNG {
  public:
-  enum class ReturnStatus {
-    kSUCCESS = 0,
-    kERROR_FLAG = 1,
-    kCATASTROPHIC_ERROR_FLAG = 2,
-    kRESEED_REQUIRED = 3
-  };
-
   struct GetEntropyInputReturnValue {
     ReturnStatus status;
     std::vector<std::byte> entropy_input;

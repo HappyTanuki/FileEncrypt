@@ -7,13 +7,16 @@
 
 namespace file_encrypt::algorithm {
 
-SHA256::SHA256() { Reset(); }
+SHA256::SHA256() {
+  digest_size = 256;
+  inner_block_size = 512;
+  Reset();
+}
 
 void SHA256::Reset() {
   std::copy(std::begin(H0), std::end(H0), H.begin());
   data_length = 0;
   data_buffer_bit_length = 0;
-  inner_block_size = 512;
 }
 
 constexpr std::uint32_t SHA256::ROTR(std::uint32_t x, std::uint32_t n) const {

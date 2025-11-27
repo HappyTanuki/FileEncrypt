@@ -8,10 +8,22 @@
 namespace file_encrypt::util {
 
 template <std::uint32_t KeySize>
-std::array<std::byte, KeySize> KeyStore(const std::filesystem::path& file_path);
+void KeyStore(const std::filesystem::path& file_path,
+              std::array<std::byte, KeySize / 8> key,
+              const std::string& algorithm_name);
 
 template <std::uint32_t KeySize>
-std::array<std::byte, KeySize> KeyLoad(const std::filesystem::path& file_path);
+std::array<std::byte, KeySize / 8> KeyLoad(
+    const std::filesystem::path& file_path, const std::string& algorithm_name);
+
+template <std::uint32_t KeySize>
+void KeyStore(std::ostream* stream,
+              const std::array<std::byte, KeySize / 8>& key,
+              const std::string& algorithm_name);
+
+template <std::uint32_t KeySize>
+std::array<std::byte, KeySize / 8> KeyLoad(std::istream* stream,
+                                           const std::string& algorithm_name);
 
 };  // namespace file_encrypt::util
 
