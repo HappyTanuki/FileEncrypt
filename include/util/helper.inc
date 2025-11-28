@@ -61,7 +61,7 @@ constexpr std::array<std::byte, Size> StandardIncrement(
       result[i] = static_cast<std::byte>(0x00);
       carry = true;
     }
-  } while (carry && --i >= counter_bytes);
+  } while (carry && --i > counter_bytes);
 
   return result;
 }
