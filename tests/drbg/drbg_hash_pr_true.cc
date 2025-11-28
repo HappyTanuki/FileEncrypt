@@ -85,8 +85,8 @@ int main() {
                     << (step.prediction_resistance_flag ? "true" : "false")
                     << std::endl;
           drbg_sha256.Instantiate(256, step.prediction_resistance_flag,
-                                  step.entropy_input, step.nonce,
-                                  step.personalization_string);
+                                  step.nonce, step.personalization_string,
+                                  step.entropy_input);
           if (CheckCondition(step, drbg_sha256) != 0) return -1;
         } else if (step.function_name ==
                    file_encrypt::util::NISTTestVectorParser::DRBGFunctionName::

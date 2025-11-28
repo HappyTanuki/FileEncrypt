@@ -7,7 +7,7 @@ int main() {
   std::vector<std::byte> entropy(32);
   file_encrypt::algorithm::CSPRNG::GetRandom(
       reinterpret_cast<char*>(entropy.data()), 32);
-  prng.Instantiate(256, true, entropy);
+  prng.Instantiate(256, true, {}, {}, entropy);
 
   entropy.resize(16);
   file_encrypt::algorithm::CSPRNG::GetRandom(

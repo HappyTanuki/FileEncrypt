@@ -4,9 +4,9 @@ namespace file_encrypt::algorithm {
 
 constexpr ReturnStatus CSPRNG::Instantiate(
     const std::uint32_t& requested_instantiation_security_strength,
-    const bool& prediction_resistance_flag,
-    const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
-    const std::vector<std::byte>& personalization_string) {
+    const bool& prediction_resistance_flag, std::vector<std::byte> nonce,
+    const std::vector<std::byte>& personalization_string,
+    const std::vector<std::byte>& entropy_input) {
   // Step 1
   if (requested_instantiation_security_strength >
       highest_supported_security_strength)

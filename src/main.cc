@@ -428,8 +428,8 @@ int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   return 0;
 }
 
-int CallMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
-             std::string help_string, std::uint32_t key_bits) {
+int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
+                 std::string help_string, std::uint32_t key_bits) {
   switch (key_bits) {
     case 256:
       switch (mode) {
@@ -488,19 +488,6 @@ int CallMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
 
 int main(int argc, char* argv[]) {
   ProgramOperationMode mode = ProgramOperationMode::kError;
-
-  std::string key_hex;
-
-  std::istream* input = &std::cin;
-  std::istream* password = &std::cin;
-  std::ostream* output = &std::cout;
-
-  std::ifstream input_file;
-  std::ifstream password_file;
-  std::ofstream output_file;
-
-  algorithm::op_mode::CipherMode cipher_mode =
-      algorithm::op_mode::CipherMode::Encrypt;
 
   std::string help_string;
   auto parsed_args = util::ToplevelArgParse(argc, argv, help_string);
@@ -562,7 +549,7 @@ int main(int argc, char* argv[]) {
     std::exit(EXIT_FAILURE);
   }
 
-  return CallMain(mode, parsed_args, help_string, it->second);
+  return CallModeMain(mode, parsed_args, help_string, it->second);
 }
 
 }  // namespace file_encrypt

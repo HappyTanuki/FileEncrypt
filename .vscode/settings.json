@@ -9,32 +9,32 @@
     "cmake.generator": "Ninja",
     "cmake.debugConfig": {
         "cwd": "${command:cmake.buildDirectory}",
-        // "args": [
-        //     "encrypt",
-        //     "-a",
-        //     "AES-256-CTR",
-        //     "-i",
-        //     "compile_commands.json",
-        //     "-p",
-        //     "asdf",
-        //     "-o",
-        //     "encrypted.aes",
-        //     "-k",
-        //     "key.pem"
-        // ]
         "args": [
-            "decrypt",
+            "encrypt",
             "-a",
             "AES-256-CTR",
-            "-o",
-            "output.txt",
             "-i",
-            "encrypted.aes",
+            "compile_commands.json",
             "-p",
             "asdf",
+            "-o",
+            "encrypted.aes",
             "-k",
             "key.pem"
         ]
+        // "args": [
+        //     "decrypt",
+        //     "-a",
+        //     "AES-256-CTR",
+        //     "-o",
+        //     "output.txt",
+        //     "-i",
+        //     "encrypted.aes",
+        //     "-p",
+        //     "asdf",
+        //     "-k",
+        //     "key.pem"
+        // ]
     },
     "files.associations": {
         "cctype": "cpp",

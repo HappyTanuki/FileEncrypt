@@ -30,10 +30,9 @@ class CSPRNG {
 
   constexpr ReturnStatus Instantiate(
       const std::uint32_t& requested_instantiation_security_strangth,
-      const bool& prediction_resistance_flag,
-      const std::vector<std::byte>& entropy_input = {},
-      std::vector<std::byte> nonce = {},
-      const std::vector<std::byte>& personalization_string = {});
+      const bool& prediction_resistance_flag, std::vector<std::byte> nonce = {},
+      const std::vector<std::byte>& personalization_string = {},
+      const std::vector<std::byte>& entropy_input = {});
 
   virtual ReturnStatus InstantiateAlgorithm(
       const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
