@@ -60,6 +60,7 @@ std::string PromptPasswordInput() {
   return password;
 }
 
+template <std::uint32_t KeySize>
 int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::istream* input = &std::cin;
   std::istream* key_input = &std::cin;
@@ -74,7 +75,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::ostringstream output_sstream;
 
   algorithm::DRBG_SHA256 drbg;
-  drbg.Instantiate(256, false);
+  drbg.Instantiate(KeySize, false);
 
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
 
@@ -95,13 +96,13 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   }
 
   // 최종적으로 사용할 키
-  std::array<std::byte, 32> key = {};
+  std::array<std::byte, KeySize / 8> key = {};
   // 만약 엔트로피 추가용 랜덤 키를 쓴다면 여기에 저장됨
   // use_password && use_key일 때는 비밀번호 + 엔트로피 복합모드,
   // use_password && !use_key일 때는 비밀번호 전용모드,
   // !use_password && use_key일 때는 엔트로피 전용모드이기 때문에 이 키는 비어
   // 있음.
-  std::array<std::byte, 32> second_key = {};
+  std::array<std::byte, KeySize / 8> second_key = {};
   std::array<std::byte, 16> iv = {};
   std::vector<std::byte> salt = {};
 
@@ -109,14 +110,14 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
       std::make_shared<file_encrypt::algorithm::HMAC>(
           std::make_unique<file_encrypt::algorithm::SHA256>());
 
-  auto salt_return = drbg.Generate(256, 256, false, {});
+  auto salt_return = drbg.Generate(KeySize, KeySize, false, {});
   if (salt_return.status != algorithm::ReturnStatus::kSUCCESS) {
     std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
   salt = std::move(salt_return.pseudorandom_bits);
 
-  auto iv_return = drbg.Generate(128, 256, false, {});
+  auto iv_return = drbg.Generate(128, KeySize, false, {});
   if (iv_return.status != algorithm::ReturnStatus::kSUCCESS) {
     std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
@@ -136,27 +137,28 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
         key_input = &key_sstream;
       }
     }
-    key = util::KeyLoad<256>(key_input, algorithm_name);
+    key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   } else if (use_password && !use_key) {
     // 비밀번호 전용모드일 때
-    key = algorithm::PBKDF2<256>(password, salt, hmac, 600000);
+    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
   } else if (use_password && use_key) {
     // 비밀번호 엔트로피 복합모드일 때
-    key = algorithm::PBKDF2<256>(password, salt, hmac, 600000);
-    auto key_return = drbg.Generate(256, 256, false, {});
+    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
+    auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
       std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
-    std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(), 32);
+    std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(),
+                KeySize / 8);
   } else {
     // 키 입력이 없고 엔트로피 전용모드일 때
-    auto key_return = drbg.Generate(256, 256, false, {});
+    auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
       std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
-    std::memcpy(key.data(), key_return.pseudorandom_bits.data(), 32);
+    std::memcpy(key.data(), key_return.pseudorandom_bits.data(), KeySize / 8);
   }
 
   if (parsed_args.count("input") == 0) {
@@ -204,23 +206,24 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   else
     output->write(reinterpret_cast<const char*>(util::NoPasswordKey.data()), 4);
   output->write(reinterpret_cast<char*>(iv.data()), 16);
-  if (use_password) output->write(reinterpret_cast<char*>(salt.data()), 32);
+  if (use_password)
+    output->write(reinterpret_cast<char*>(salt.data()), KeySize / 8);
 
   std::ofstream temp_ofstream = std::ofstream("key.pem", std::ios::binary);
   if (use_key && !use_password) {
     // 엔트로피 키 전용모드
-    util::KeyStore<256>(static_cast<std::ostream*>(&temp_ofstream), key,
-                        algorithm_name);
+    util::KeyStore<KeySize>(static_cast<std::ostream*>(&temp_ofstream), key,
+                            algorithm_name);
   } else if (use_key && use_password) {
     // 엔트로피 키 + 비밀번호 모드
-    util::KeyStore<256>(static_cast<std::ostream*>(&temp_ofstream), second_key,
-                        algorithm_name);
+    util::KeyStore<KeySize>(static_cast<std::ostream*>(&temp_ofstream),
+                            second_key, algorithm_name);
   }
   // 비밀번호 전용모드는 키를 저장할 필요가 없음
 
-  std::unique_ptr<algorithm::op_mode::OperationMode<128, 256, 1>>
-      encrypt_algorithm = algorithm::op_mode::OPModeFactory<256>(
-          algorithm_name, util::XorArrays<32>(key, second_key), iv);
+  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
+      encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
+          algorithm_name, util::XorArrays<KeySize / 8>(key, second_key), iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Encrypt;
 
   while (input->good()) {
@@ -252,6 +255,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::exit(EXIT_SUCCESS);
 }
 
+template <std::uint32_t KeySize>
 int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::istream* input = &std::cin;
   std::istream* key_input = &std::cin;
@@ -266,10 +270,10 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::ostringstream output_sstream;
 
   std::array<std::byte, 4> magic_number;
-  std::array<std::byte, 32> key;
-  std::array<std::byte, 32> second_key = {};
+  std::array<std::byte, KeySize / 8> key;
+  std::array<std::byte, KeySize / 8> second_key = {};
   std::array<std::byte, 16> iv;
-  std::vector<std::byte> salt(32);
+  std::vector<std::byte> salt(KeySize / 8);
 
   std::shared_ptr<file_encrypt::algorithm::HMAC> hmac =
       std::make_shared<file_encrypt::algorithm::HMAC>(
@@ -296,7 +300,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   input->read(reinterpret_cast<char*>(magic_number.data()), 4);
   input->read(reinterpret_cast<char*>(iv.data()), 16);
   if (magic_number != util::NoPasswordKey)
-    input->read(reinterpret_cast<char*>(salt.data()), 32);
+    input->read(reinterpret_cast<char*>(salt.data()), KeySize / 8);
 
   std::string password = "";
   bool use_password = false;
@@ -311,7 +315,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     } else {
       password = PromptPasswordInput();
     }
-    key = algorithm::PBKDF2<256>(password, salt, hmac, 600000);
+    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
   } else if (magic_number == util::NoPasswordKey) {
     // Nothing to do
   } else {
@@ -338,9 +342,9 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
       }
     }
     if (magic_number == util::PasswordCombinedKey)
-      second_key = util::KeyLoad<256>(key_input, algorithm_name);
+      second_key = util::KeyLoad<KeySize>(key_input, algorithm_name);
     else if (magic_number == util::NoPasswordKey)
-      key = util::KeyLoad<256>(key_input, algorithm_name);
+      key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   }
   std::string output_filename = parsed_args["output"].as<std::string>();
   if (output_filename != "-") {
@@ -364,12 +368,12 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 
   algorithm::BASE64 base64;
   algorithm::DRBG_SHA256 drbg;
-  drbg.Instantiate(256, false);
+  drbg.Instantiate(KeySize, false);
   algorithm::Pkcs_7<128> pkcs_7;
 
-  std::unique_ptr<algorithm::op_mode::OperationMode<128, 256, 1>>
-      encrypt_algorithm = algorithm::op_mode::OPModeFactory<256>(
-          algorithm_name, util::XorArrays<32>(key, second_key), iv);
+  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
+      encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
+          algorithm_name, util::XorArrays<KeySize / 8>(key, second_key), iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Decrypt;
 
   while (input->good()) {
@@ -422,6 +426,64 @@ int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::ofstream output_file;
 
   return 0;
+}
+
+int CallMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
+             std::string help_string, std::uint32_t key_bits) {
+  switch (key_bits) {
+    case 256:
+      switch (mode) {
+        case ProgramOperationMode::kEncrypt:
+          return EncryptMain<256>(parsed_args, help_string);
+        case ProgramOperationMode::kDecrypt:
+          return DecryptMain<256>(parsed_args, help_string);
+        case ProgramOperationMode::kHash:
+          return HashMain(parsed_args, help_string);
+        case ProgramOperationMode::kKeygen:
+          return KeygenMain(parsed_args, help_string);
+        default:
+          std::cerr << "An unknown error occurred during mode selection."
+                    << std::endl;
+          std::exit(EXIT_FAILURE);
+      }
+      break;
+    case 192:
+      switch (mode) {
+        case ProgramOperationMode::kEncrypt:
+          return EncryptMain<192>(parsed_args, help_string);
+        case ProgramOperationMode::kDecrypt:
+          return DecryptMain<192>(parsed_args, help_string);
+        case ProgramOperationMode::kHash:
+          return HashMain(parsed_args, help_string);
+        case ProgramOperationMode::kKeygen:
+          return KeygenMain(parsed_args, help_string);
+        default:
+          std::cerr << "An unknown error occurred during mode selection."
+                    << std::endl;
+          std::exit(EXIT_FAILURE);
+      }
+      break;
+    case 128:
+      switch (mode) {
+        case ProgramOperationMode::kEncrypt:
+          return EncryptMain<128>(parsed_args, help_string);
+        case ProgramOperationMode::kDecrypt:
+          return DecryptMain<128>(parsed_args, help_string);
+        case ProgramOperationMode::kHash:
+          return HashMain(parsed_args, help_string);
+        case ProgramOperationMode::kKeygen:
+          return KeygenMain(parsed_args, help_string);
+        default:
+          std::cerr << "An unknown error occurred during mode selection."
+                    << std::endl;
+          std::exit(EXIT_FAILURE);
+      }
+      break;
+    default:
+      std::cerr << "Unsupported keysize.\n";
+      std::exit(EXIT_FAILURE);
+      break;
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -492,20 +554,15 @@ int main(int argc, char* argv[]) {
     std::exit(EXIT_FAILURE);
   }
 
-  switch (mode) {
-    case ProgramOperationMode::kEncrypt:
-      return EncryptMain(parsed_args, help_string);
-    case ProgramOperationMode::kDecrypt:
-      return DecryptMain(parsed_args, help_string);
-    case ProgramOperationMode::kHash:
-      return HashMain(parsed_args, help_string);
-    case ProgramOperationMode::kKeygen:
-      return KeygenMain(parsed_args, help_string);
-    default:
-      std::cerr << "An unknown error occurred during mode selection."
-                << std::endl;
-      std::exit(EXIT_FAILURE);
-  };
+  std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
+
+  auto it = algorithm::kAlgoBits.find(algorithm_name);
+  if (it == algorithm::kAlgoBits.end()) {
+    std::cerr << "Unknown algorithm\n";
+    std::exit(EXIT_FAILURE);
+  }
+
+  return CallMain(mode, parsed_args, help_string, it->second);
 }
 
 }  // namespace file_encrypt
