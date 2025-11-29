@@ -11,22 +11,24 @@ template <std::uint32_t KeySize>
 void KeyStore(const std::filesystem::path& file_path,
               std::array<std::byte, KeySize / 8> key,
               const std::string& algorithm_name) {
-  std::ofstream file(file_path, std::ios::binary);
-  KeyStore<KeySize>(&file, key, algorithm_name);
-  file.close();
+  std::shared_ptr<std::ofstream> file =
+      std::make_shared<std::ofstream>(file_path, std::ios::binary);
+  KeyStore<KeySize>(file, key, algorithm_name);
+  file->close();
 }
 
 template <std::uint32_t KeySize>
 std::array<std::byte, KeySize / 8> KeyLoad(
     const std::filesystem::path& file_path, const std::string& algorithm_name) {
-  std::ifstream file(file_path, std::ios::binary);
-  auto value = KeyLoad<KeySize>(&file, algorithm_name);
-  file.close();
+  std::shared_ptr<std::ifstream> file =
+      std::make_shared<std::ifstream>(file_path, std::ios::binary);
+  auto value = KeyLoad<KeySize>(file, algorithm_name);
+  file->close();
   return value;
 }
 
 template <std::uint32_t KeySize>
-void KeyStore(std::ostream* stream,
+void KeyStore(std::shared_ptr<std::ostream> stream,
               const std::array<std::byte, KeySize / 8>& key,
               const std::string& algorithm_name) {
   if (!stream->good()) return;
@@ -40,7 +42,7 @@ void KeyStore(std::ostream* stream,
 }
 
 template <std::uint32_t KeySize>
-std::array<std::byte, KeySize / 8> KeyLoad(std::istream* stream,
+std::array<std::byte, KeySize / 8> KeyLoad(std::shared_ptr<std::istream> stream,
                                            const std::string& algorithm_name) {
   // 실패 시 자동으로 0-filled 리턴
   std::array<std::byte, KeySize / 8> key = {};

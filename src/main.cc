@@ -62,17 +62,9 @@ std::string PromptPasswordInput() {
 
 template <std::uint32_t KeySize>
 int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
-  std::istream* input = &std::cin;
-  std::istream* key_input = &std::cin;
-  std::ostream* output = &std::cout;
-
-  std::ifstream input_file;
-  std::ifstream key_file;
-  std::ofstream output_file;
-
-  std::istringstream input_sstream;
-  std::istringstream key_sstream;
-  std::ostringstream output_sstream;
+  std::shared_ptr<std::istream> input;
+  std::shared_ptr<std::istream> key_input;
+  std::shared_ptr<std::ostream> output;
 
   algorithm::DRBG_SHA256 drbg;
   drbg.Instantiate(KeySize, false);
@@ -128,15 +120,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     // 키 입력이 있고 엔트로피 전용모드일 때
     use_key = true;
     std::string key_filename = parsed_args["key"].as<std::string>();
-    if (key_filename != "-") {
-      key_file = std::ifstream(key_filename, std::ios::binary);
-      if (key_file.good()) {
-        key_input = &key_file;
-      } else {
-        key_sstream = std::istringstream(key_filename);
-        key_input = &key_sstream;
-      }
-    }
+    key_input = util::OpenIStream(key_filename);
     key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   } else if (use_password && !use_key) {
     // 비밀번호 전용모드일 때
@@ -166,34 +150,10 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     std::exit(EXIT_FAILURE);
   }
   std::string input_filename = parsed_args["input"].as<std::string>();
-  if (input_filename != "-") {
-    input_file = std::ifstream(input_filename, std::ios::binary);
-    if (input_file.good()) {
-      input = &input_file;
-    } else {
-      input_sstream = std::istringstream(input_filename);
-      input = &input_sstream;
-    }
-  }
+  input = util::OpenIStream(input_filename);
+
   std::string output_filename = parsed_args["output"].as<std::string>();
-  if (output_filename != "-") {
-    if (std::filesystem::exists(output_filename) &&
-        parsed_args.count("overwrite") == 0) {
-      std::string prompt_input = "";
-      std::cout << "Overwrite? [y/N]:";
-      std::cin >> prompt_input;
-      if (prompt_input == "Y" || prompt_input == "y") {
-        output_file = std::ofstream(output_filename, std::ios::binary);
-        output = &output_file;
-      } else {
-        std::cerr << "Exiting...\n";
-        std::exit(EXIT_FAILURE);
-      }
-    } else {
-      output_file = std::ofstream(output_filename, std::ios::binary);
-      output = &output_file;
-    }
-  }
+  output = util::OpenOStream(output_filename, false, true);
 
   algorithm::BASE64 base64;
   algorithm::Pkcs_7<128> pkcs_7;
@@ -209,15 +169,13 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   if (use_password)
     output->write(reinterpret_cast<char*>(salt.data()), KeySize / 8);
 
-  std::ofstream temp_ofstream = std::ofstream("key.pem", std::ios::binary);
+  std::filesystem::path keyname = "key.pem";
   if (use_key && !use_password) {
     // 엔트로피 키 전용모드
-    util::KeyStore<KeySize>(static_cast<std::ostream*>(&temp_ofstream), key,
-                            algorithm_name);
+    util::KeyStore<KeySize>(keyname, key, algorithm_name);
   } else if (use_key && use_password) {
     // 엔트로피 키 + 비밀번호 모드
-    util::KeyStore<KeySize>(static_cast<std::ostream*>(&temp_ofstream),
-                            second_key, algorithm_name);
+    util::KeyStore<KeySize>(keyname, second_key, algorithm_name);
   }
   // 비밀번호 전용모드는 키를 저장할 필요가 없음
 
@@ -257,17 +215,9 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 
 template <std::uint32_t KeySize>
 int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
-  std::istream* input = &std::cin;
-  std::istream* key_input = &std::cin;
-  std::ostream* output = &std::cout;
-
-  std::ifstream input_file;
-  std::ifstream key_file;
-  std::ofstream output_file;
-
-  std::istringstream input_sstream;
-  std::istringstream key_sstream;
-  std::ostringstream output_sstream;
+  std::shared_ptr<std::istream> input;
+  std::shared_ptr<std::istream> key_input;
+  std::shared_ptr<std::ostream> output;
 
   std::array<std::byte, 4> magic_number;
   std::array<std::byte, KeySize / 8> key;
@@ -286,15 +236,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     std::exit(EXIT_FAILURE);
   }
   std::string input_filename = parsed_args["input"].as<std::string>();
-  if (input_filename != "-") {
-    input_file = std::ifstream(input_filename, std::ios::binary);
-    if (input_file.good()) {
-      input = &input_file;
-    } else {
-      input_sstream = std::istringstream(input_filename);
-      input = &input_sstream;
-    }
-  }
+  input = util::OpenIStream(input_filename);
 
   // File header
   input->read(reinterpret_cast<char*>(magic_number.data()), 4);
@@ -332,39 +274,14 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   }
   if (parsed_args.count("key") > 0) {
     std::string key_filename = parsed_args["key"].as<std::string>();
-    if (key_filename != "-") {
-      key_file = std::ifstream(key_filename, std::ios::binary);
-      if (key_file.good()) {
-        key_input = &key_file;
-      } else {
-        key_sstream = std::istringstream(key_filename);
-        key_input = &key_sstream;
-      }
-    }
+    key_input = util::OpenIStream(key_filename);
     if (magic_number == util::PasswordCombinedKey)
       second_key = util::KeyLoad<KeySize>(key_input, algorithm_name);
     else if (magic_number == util::NoPasswordKey)
       key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   }
   std::string output_filename = parsed_args["output"].as<std::string>();
-  if (output_filename != "-") {
-    if (std::filesystem::exists(output_filename) &&
-        parsed_args.count("overwrite") == 0) {
-      std::string prompt_input = "";
-      std::cout << "Overwrite? [y/N]:";
-      std::cin >> prompt_input;
-      if (prompt_input == "Y" || prompt_input == "y") {
-        output_file = std::ofstream(output_filename, std::ios::binary);
-        output = &output_file;
-      } else {
-        std::cerr << "Exiting...\n";
-        std::exit(EXIT_FAILURE);
-      }
-    } else {
-      output_file = std::ofstream(output_filename, std::ios::binary);
-      output = &output_file;
-    }
-  }
+  output = util::OpenOStream(output_filename, false, true);
 
   algorithm::BASE64 base64;
   algorithm::DRBG_SHA256 drbg;

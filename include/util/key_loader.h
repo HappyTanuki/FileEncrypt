@@ -17,12 +17,12 @@ std::array<std::byte, KeySize / 8> KeyLoad(
     const std::filesystem::path& file_path, const std::string& algorithm_name);
 
 template <std::uint32_t KeySize>
-void KeyStore(std::ostream* stream,
+void KeyStore(std::shared_ptr<std::ostream> stream,
               const std::array<std::byte, KeySize / 8>& key,
               const std::string& algorithm_name);
 
 template <std::uint32_t KeySize>
-std::array<std::byte, KeySize / 8> KeyLoad(std::istream* stream,
+std::array<std::byte, KeySize / 8> KeyLoad(std::shared_ptr<std::istream> stream,
                                            const std::string& algorithm_name);
 
 };  // namespace file_encrypt::util

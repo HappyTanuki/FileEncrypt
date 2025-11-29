@@ -48,6 +48,12 @@ std::vector<std::byte> Rightmost(const std::vector<std::byte>& value,
 
 std::string GetEnglishNumberSufix(std::uint64_t number);
 
+std::string GetCandidateName(std::string name_with_extention);
+std::shared_ptr<std::ostream> OpenOStream(std::string name,
+                                          bool overwrite = false,
+                                          bool avoid = false);
+std::shared_ptr<std::istream> OpenIStream(std::string name);
+
 }  // namespace file_encrypt::util
 
 #include "helper.inc"

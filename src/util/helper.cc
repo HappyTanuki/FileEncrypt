@@ -107,4 +107,49 @@ std::string GetEnglishNumberSufix(std::uint64_t number) {
   return result;
 }
 
+std::string GetCandidateName(std::string name_with_extention) {
+  std::uint64_t avoid_number = 1;
+  std::uint64_t split_index = 0;
+
+  for (char c : name_with_extention) {
+    if (c != '.')
+      split_index++;
+    else
+      break;
+  }
+
+  std::string name = name_with_extention.substr(0, split_index);
+  std::string ext = name_with_extention.substr(split_index);
+
+  while (std::filesystem::exists(name + " (" + std::to_string(avoid_number++) +
+                                 ")" + ext));
+
+  return name + " (" + std::to_string(--avoid_number) + ")" + ext;
+}
+
+std::shared_ptr<std::ostream> OpenOStream(std::string name, bool overwrite,
+                                          bool avoid) {
+  if (name == "-") {
+    return std::shared_ptr<std::ostream>(&std::cout, [](std::ostream*) {});
+  } else if (std::filesystem::exists(name) && !overwrite && !avoid) {
+    std::string prompt_input = "";
+    std::cout << "\"" << name << "\"" << "is already exists, Overwrite? [y/N]:";
+    std::cin >> prompt_input;
+    if (prompt_input != "Y" && prompt_input != "y") return nullptr;
+  } else if (std::filesystem::exists(name) && avoid) {
+    name = GetCandidateName(name);
+  }
+  return std::make_shared<std::ofstream>(name, std::ios::binary);
+}
+
+std::shared_ptr<std::istream> OpenIStream(std::string name) {
+  if (name == "-") {
+    return std::shared_ptr<std::istream>(&std::cin, [](std::istream*) {});
+  } else if (std::filesystem::exists(name)) {
+    return std::make_shared<std::ifstream>(name, std::ios::binary);
+  } else {
+    return std::make_shared<std::istringstream>(name);
+  }
+}
+
 }  // namespace file_encrypt::util
