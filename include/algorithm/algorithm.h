@@ -50,6 +50,7 @@ class BlockCipherAlgorithm {
 };
 
 // 해시 알고리즘의 기본 인터페이스
+template <std::uint32_t DigestLen>
 class HashAlgorithm {
  public:
   HashAlgorithm() = default;
@@ -66,11 +67,11 @@ class HashAlgorithm {
   // 인스턴스 리셋
   virtual void Reset() = 0;
 
-  // HMAC에서 필요해서 추가함. 이 해시 알고리즘이 내부적으로 처리하는 블록 크기,
-  // 비트 단위로 표시(예: SHA256은 512비트임).
+  // HMAC<HashDigestLen>에서 필요해서 추가함. 이 해시 알고리즘이 내부적으로
+  // 처리하는 블록 크기, 비트 단위로 표시(예: SHA<256>은 512비트임).
   std::uint32_t inner_block_size = 0;
   // 출력 다이제스트 비트 길이
-  std::uint32_t digest_size = 0;
+  std::uint32_t digest_size = DigestLen;
 };
 
 // MAC 알고리즘의 기본 인터페이스

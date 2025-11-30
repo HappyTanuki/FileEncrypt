@@ -1,4 +1,4 @@
-#include "algorithm/sha256.h"
+#include "algorithm/hash/sha.h"
 #include "precomp.h"
 #include "util/nist_testvector_parser.h"
 
@@ -22,7 +22,7 @@ static std::vector<std::byte> ByteStitch(const std::vector<std::byte>& a,
 }
 
 int main() {
-  file_encrypt::algorithm::SHA256 sha256;
+  file_encrypt::algorithm::SHA<256> sha256;
 
   std::vector<NISTTestVectorParser::NISTTestMonteStage> test_vectors;
   if (NISTTestVectorParser::ParseHashMonteVector(

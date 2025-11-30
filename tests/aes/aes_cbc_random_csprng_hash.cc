@@ -1,13 +1,13 @@
 #include "algorithm/block_cipher/mode/aliases.h"
-#include "algorithm/csprng/drbg_sha256.h"
+#include "algorithm/csprng/drbg_sha.h"
 #include "util/helper.h"
 
 int main() {
   {  // AES_256_ECB
     std::array<std::byte, 16> expected_result = {};
 
-    file_encrypt::algorithm::DRBG_SHA256 prng =
-        file_encrypt::algorithm::DRBG_SHA256();
+    file_encrypt::algorithm::DRBG_SHA<256> prng =
+        file_encrypt::algorithm::DRBG_SHA<256>();
     std::vector<std::byte> entropy(32);
     file_encrypt::algorithm::CSPRNG::GetRandom(
         reinterpret_cast<char*>(entropy.data()), 32);

@@ -1,16 +1,17 @@
-#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
-#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_SHA256_H_
+#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_HASH_SHA_H_
+#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_HASH_SHA_H_
 
 #include <memory>
 #include <queue>
 
-#include "algorithm.h"
+#include "algorithm/algorithm.h"
 
 namespace file_encrypt::algorithm {
 
-class SHA256 : public HashAlgorithm {
+template <std::uint32_t DigestLen>
+class SHA : public HashAlgorithm<DigestLen> {
  public:
-  SHA256();
+  SHA();
   HashAlgorithmReturnData Digest(
       const HashAlgorithmInputData& data) const final override;
 
@@ -60,5 +61,7 @@ class SHA256 : public HashAlgorithm {
                                           0x1f83d9ab, 0x5be0cd19};
 };
 }  // namespace file_encrypt::algorithm
+
+#include "sha.inc"
 
 #endif

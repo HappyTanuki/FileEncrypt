@@ -1,18 +1,19 @@
-#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_HMAC_H_
-#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_HMAC_H_
+#ifndef FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_MAC_HMAC_H_
+#define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_MAC_HMAC_H_
 
 #include <cstdint>
 #include <memory>
 
-#include "algorithm.h"
+#include "algorithm/algorithm.h"
 #include "util/helper.h"
 
 namespace file_encrypt::algorithm {
 
+template <std::uint32_t HashDigestLen>
 class HMAC : public MacAlgorithm {
  public:
-  HMAC(std::unique_ptr<HashAlgorithm> algorithm,
-       std::vector<std::byte> key = {})
+  HMAC<HashDigestLen>(std::unique_ptr<HashAlgorithm<HashDigestLen>> algorithm,
+                      std::vector<std::byte> key = {})
       : algorithm(std::move(algorithm)),
         inner_padding(
             std::vector<std::byte>(this->algorithm->inner_block_size / 8,
@@ -46,7 +47,7 @@ class HMAC : public MacAlgorithm {
   std::vector<std::byte> Finalize() final;
 
  private:
-  std::unique_ptr<HashAlgorithm> algorithm;
+  std::unique_ptr<HashAlgorithm<HashDigestLen>> algorithm;
 
   std::vector<std::byte> key;
   std::vector<std::byte> xored_key;
@@ -55,5 +56,7 @@ class HMAC : public MacAlgorithm {
 };
 
 }  // namespace file_encrypt::algorithm
+
+#include "hmac.inc"
 
 #endif

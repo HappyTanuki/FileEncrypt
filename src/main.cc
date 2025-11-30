@@ -9,7 +9,7 @@
 #include "algorithm/base64.h"
 #include "algorithm/block_cipher/mode/aliases.h"
 #include "algorithm/block_cipher/mode/block_cipher_modes_factory.h"
-#include "algorithm/csprng/drbg_sha256.h"
+#include "algorithm/csprng/drbg_sha.h"
 #include "algorithm/padding/pkcs_7.h"
 #include "algorithm/pbkdf2.h"
 #include "cxxopts.hpp"
@@ -66,7 +66,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::shared_ptr<std::istream> key_input;
   std::shared_ptr<std::ostream> output;
 
-  algorithm::DRBG_SHA256 drbg;
+  algorithm::DRBG_SHA<256> drbg;
   drbg.Instantiate(KeySize, false);
 
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
@@ -98,9 +98,9 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::array<std::byte, 16> iv = {};
   std::vector<std::byte> salt = {};
 
-  std::shared_ptr<file_encrypt::algorithm::HMAC> hmac =
-      std::make_shared<file_encrypt::algorithm::HMAC>(
-          std::make_unique<file_encrypt::algorithm::SHA256>());
+  std::shared_ptr<file_encrypt::algorithm::HMAC<256>> hmac =
+      std::make_shared<file_encrypt::algorithm::HMAC<256>>(
+          std::make_unique<file_encrypt::algorithm::SHA<256>>());
 
   auto salt_return = drbg.Generate(KeySize, KeySize, false, {});
   if (salt_return.status != algorithm::ReturnStatus::kSUCCESS) {
@@ -124,10 +124,10 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   } else if (use_password && !use_key) {
     // 비밀번호 전용모드일 때
-    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
+    key = algorithm::PBKDF2<256, KeySize>(password, salt, hmac, 600000);
   } else if (use_password && use_key) {
     // 비밀번호 엔트로피 복합모드일 때
-    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
+    key = algorithm::PBKDF2<256, KeySize>(password, salt, hmac, 600000);
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
       std::cerr << "CSPRNG error.\n";
@@ -225,9 +225,9 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::array<std::byte, 16> iv;
   std::vector<std::byte> salt(KeySize / 8);
 
-  std::shared_ptr<file_encrypt::algorithm::HMAC> hmac =
-      std::make_shared<file_encrypt::algorithm::HMAC>(
-          std::make_unique<file_encrypt::algorithm::SHA256>());
+  std::shared_ptr<file_encrypt::algorithm::HMAC<256>> hmac =
+      std::make_shared<file_encrypt::algorithm::HMAC<256>>(
+          std::make_unique<file_encrypt::algorithm::SHA<256>>());
 
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
 
@@ -257,7 +257,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
     } else {
       password = PromptPasswordInput();
     }
-    key = algorithm::PBKDF2<KeySize>(password, salt, hmac, 600000);
+    key = algorithm::PBKDF2<256, KeySize>(password, salt, hmac, 600000);
   } else if (magic_number == util::NoPasswordKey) {
     // Nothing to do
   } else {
@@ -284,7 +284,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   output = util::OpenOStream(output_filename, false, true);
 
   algorithm::BASE64 base64;
-  algorithm::DRBG_SHA256 drbg;
+  algorithm::DRBG_SHA<256> drbg;
   drbg.Instantiate(KeySize, false);
   algorithm::Pkcs_7<128> pkcs_7;
 
@@ -323,6 +323,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::exit(EXIT_SUCCESS);
 }
 
+template <std::uint32_t KeySize>
 int HashMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::istream* input = &std::cin;
   std::ostream* output = &std::cout;
@@ -330,9 +331,12 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::ifstream input_file;
   std::ofstream output_file;
 
+  std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
+
   return 0;
 }
 
+template <std::uint32_t KeySize>
 int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   std::istream* input = &std::cin;
   std::istream* password = &std::cin;
@@ -355,9 +359,9 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
         case ProgramOperationMode::kDecrypt:
           return DecryptMain<256>(parsed_args, help_string);
         case ProgramOperationMode::kHash:
-          return HashMain(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;
@@ -371,9 +375,9 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
         case ProgramOperationMode::kDecrypt:
           return DecryptMain<192>(parsed_args, help_string);
         case ProgramOperationMode::kHash:
-          return HashMain(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;
@@ -387,9 +391,9 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
         case ProgramOperationMode::kDecrypt:
           return DecryptMain<128>(parsed_args, help_string);
         case ProgramOperationMode::kHash:
-          return HashMain(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;

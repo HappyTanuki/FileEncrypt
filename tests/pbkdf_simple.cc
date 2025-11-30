@@ -1,15 +1,15 @@
-#include "algorithm/hmac.h"
+#include "algorithm/hash/sha.h"
+#include "algorithm/mac/hmac.h"
 #include "algorithm/pbkdf2.h"
-#include "algorithm/sha256.h"
 #include "util/helper.h"
 
 int main() {
   std::string password;
   std::vector<std::byte> salt;
 
-  std::shared_ptr<file_encrypt::algorithm::HMAC> hmac =
-      std::make_shared<file_encrypt::algorithm::HMAC>(
-          std::make_unique<file_encrypt::algorithm::SHA256>());
+  std::shared_ptr<file_encrypt::algorithm::HMAC<256>> hmac =
+      std::make_shared<file_encrypt::algorithm::HMAC<256>>(
+          std::make_unique<file_encrypt::algorithm::SHA<256>>());
 
   // test 1
   {
@@ -20,7 +20,7 @@ int main() {
         "07BABF16773F6DFE4D1F08D231F40340");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<128>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 128>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 2
@@ -30,7 +30,8 @@ int main() {
     std::array<std::byte, 20> key = file_encrypt::util::HexStrToBytes<20>(
         "120fb6cffcf8b32c43e7225256c4f837a86548c9");
 
-    auto result = file_encrypt::algorithm::PBKDF2<160>(password, salt, hmac, 1);
+    auto result =
+        file_encrypt::algorithm::PBKDF2<256, 160>(password, salt, hmac, 1);
     if (result != key) return -1;
   }
   // test 3
@@ -42,7 +43,7 @@ int main() {
         "957638CF44D50AEEC390871E271D6D6F17751525E1A1022F");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<192>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 192>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 4
@@ -54,7 +55,7 @@ int main() {
         "340A103BCE1389A04DF1D0B6DC5D5CE7F7577F8C0831F49CDE87BFE7274676FE");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<256>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 256>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 5
@@ -67,7 +68,7 @@ int main() {
         "C6E39C367C7F45B3471559D232");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 6
@@ -80,7 +81,7 @@ int main() {
         "C3B5B2288C0C11BC31471FC416");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 7
@@ -93,7 +94,7 @@ int main() {
         "68D8760EBEB1F1F72CB50D3A45");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 8
@@ -106,7 +107,7 @@ int main() {
         "FD9FE43EDFA05D97318B7C2AD0");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 9
@@ -119,7 +120,7 @@ int main() {
         "7C362A4A6E2A2BC1DCD7D678A6");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 10
@@ -132,7 +133,7 @@ int main() {
         "3819A9B74B7B38E4ED39357A53");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 11
@@ -145,7 +146,7 @@ int main() {
         "CB52EE9352F9D81CBFD1909684");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 12
@@ -158,7 +159,7 @@ int main() {
         "6F96CC76D8124CD909E09A6ABD");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 13
@@ -171,7 +172,7 @@ int main() {
         "9717FBC0953F311555FBE0A30D");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 14
@@ -184,7 +185,7 @@ int main() {
         "BD4DCB9528FED8263E383C385C");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<384>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 384>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 15
@@ -197,7 +198,7 @@ int main() {
         "1B92968E77716160B55B6DC46D2E133FFD7B86A70B60D8827AF9889DFF");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<512>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 512>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 16
@@ -211,7 +212,7 @@ int main() {
         "0E502420B90B64EA9B82F84E5A24860A59A110E13428EDDEBF98");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<768>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 768>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 17
@@ -226,7 +227,7 @@ int main() {
         "D42F8709F0D171AC190F7F304C416907DCB3BE504BDD2C");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<1024>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 1024>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 18
@@ -245,7 +246,7 @@ int main() {
         "B038E7618BA51D46DDE978");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<2048>(password, salt, hmac, 1011);
+        file_encrypt::algorithm::PBKDF2<256, 2048>(password, salt, hmac, 1011);
     if (result != key) return -1;
   }
   // test 19
@@ -264,7 +265,7 @@ int main() {
         "09CD3C7A41A28C4C45F5DA");
 
     auto result =
-        file_encrypt::algorithm::PBKDF2<2048>(password, salt, hmac, 65614);
+        file_encrypt::algorithm::PBKDF2<256, 2048>(password, salt, hmac, 65614);
     if (result != key) return -1;
   }
   return 0;

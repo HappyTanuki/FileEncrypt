@@ -1,5 +1,5 @@
 #include "algorithm/block_cipher/mode/aliases.h"
-#include "algorithm/csprng/drbg_sha256.h"
+#include "algorithm/csprng/drbg_sha.h"
 #include "precomp.h"
 #include "util/helper.h"
 #include "util/nist_testvector_parser.h"
@@ -9,7 +9,7 @@
 
 int CheckCondition(
     const file_encrypt::util::NISTTestVectorParser::NISTTestDRBGHashStep& step,
-    const file_encrypt::algorithm::DRBG_SHA256& drbg,
+    const file_encrypt::algorithm::DRBG_SHA<256>& drbg,
     const std::vector<std::byte>& generated_pseudorandom_bits = {}) {
   if (drbg.GetV() != step.internal_state.V ||
       drbg.GetC() != step.internal_state.C ||
@@ -64,7 +64,7 @@ int main() {
     if (algorithm_stage.hash_algorithm_name != "SHA-256") continue;
 
     for (const auto& stage : algorithm_stage.stages) {
-      file_encrypt::algorithm::DRBG_SHA256 drbg_sha256;
+      file_encrypt::algorithm::DRBG_SHA<256> drbg_sha256;
       drbg_sha256._TESTING = true;
 
       for (const auto& step : stage.steps) {

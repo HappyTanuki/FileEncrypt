@@ -3,13 +3,12 @@
 
 namespace file_encrypt::algorithm {
 
-template <std::uint32_t Keylen>
-std::array<std::byte, Keylen / 8> PBKDF2(std::string password,
-                                         std::vector<std::byte> salt,
-                                         std::weak_ptr<HMAC> hmac,
-                                         std::uint64_t IterationCount) {
+template <std::uint32_t HashDigestLen, std::uint32_t Keylen>
+std::array<std::byte, Keylen / 8> PBKDF2(
+    std::string password, std::vector<std::byte> salt,
+    std::weak_ptr<HMAC<HashDigestLen>> hmac, std::uint64_t IterationCount) {
   std::array<std::byte, Keylen / 8> key = {};
-  std::shared_ptr<HMAC> hmac_instance = hmac.lock();
+  std::shared_ptr<HMAC<HashDigestLen>> hmac_instance = hmac.lock();
   if (!hmac_instance) return key;
   if (Keylen > (4294967296 /*2^32*/ - 1) * hmac_instance->digest_size)
     return key;

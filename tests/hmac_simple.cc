@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "algorithm/hmac.h"
-#include "algorithm/sha256.h"
+#include "algorithm/hash/sha.h"
+#include "algorithm/mac/hmac.h"
 #include "util/helper.h"
 
 int main() {
@@ -19,8 +19,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();
@@ -39,8 +39,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();
@@ -59,8 +59,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();
@@ -79,8 +79,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();
@@ -104,8 +104,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();
@@ -122,8 +122,8 @@ int main() {
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     // "This is a test using a larger than block-size key and a larger than
-    // block-size data. The key needs to be hashed before being used by the HMAC
-    // algorithm."
+    // block-size data. The key needs to be hashed before being used by the
+    // HMAC<HashDigestLen> algorithm."
     data = file_encrypt::util::HexStrToBytes(
         "5468697320697320612074657374207573696e672061206c6172676572207468616e20"
         "626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c"
@@ -133,8 +133,8 @@ int main() {
     digest = file_encrypt::util::HexStrToBytes(
         "9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2");
 
-    file_encrypt::algorithm::HMAC hmac_sha256(
-        std::make_unique<file_encrypt::algorithm::SHA256>(), key);
+    file_encrypt::algorithm::HMAC<256> hmac_sha256(
+        std::make_unique<file_encrypt::algorithm::SHA<256>>(), key);
     hmac_sha256.Compute(data);
 
     auto result = hmac_sha256.Finalize();

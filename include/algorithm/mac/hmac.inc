@@ -1,11 +1,11 @@
-#include "algorithm/hmac.h"
-
+#include "hmac.h"
 #include "util/helper.h"
 
 namespace file_encrypt::algorithm {
 
-std::vector<std::byte> HMAC::Compute(std::vector<std::byte> key,
-                                     const std::vector<std::byte>& data) const {
+template <std::uint32_t HashDigestLen>
+std::vector<std::byte> HMAC<HashDigestLen>::Compute(
+    std::vector<std::byte> key, const std::vector<std::byte>& data) const {
   if (key.size() > algorithm->inner_block_size / 8)
     key = algorithm->Digest({key, key.size() * 8}).digest;
   key.resize(algorithm->inner_block_size / 8, static_cast<std::byte>(0x00));
@@ -26,11 +26,13 @@ std::vector<std::byte> HMAC::Compute(std::vector<std::byte> key,
   return algorithm->Digest({to_digest, to_digest.size() * 8}).digest;
 }
 
-void HMAC::Compute(const std::vector<std::byte>& data) {
+template <std::uint32_t HashDigestLen>
+void HMAC<HashDigestLen>::Compute(const std::vector<std::byte>& data) {
   algorithm->Update({data, data.size() * 8});
 }
 
-std::vector<std::byte> HMAC::Finalize() {
+template <std::uint32_t HashDigestLen>
+std::vector<std::byte> HMAC<HashDigestLen>::Finalize() {
   std::vector<std::byte> to_digest;
   auto inner_hashed = algorithm->Digest().digest;
 

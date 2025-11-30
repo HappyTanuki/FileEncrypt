@@ -1,50 +1,65 @@
-#include "algorithm/sha256.h"
-
 #include <cassert>
 #include <cstring>
 
 #include "precomp.h"
+#include "sha.h"
 
 namespace file_encrypt::algorithm {
 
-SHA256::SHA256() {
-  digest_size = 256;
-  inner_block_size = 512;
+template <std::uint32_t DigestLen>
+SHA<DigestLen>::SHA() {
+  if (DigestLen == 1)
+    this->digest_size = 160;
+  else
+    this->digest_size = DigestLen;
+  if (DigestLen >= 384)
+    this->inner_block_size = 1024;
+  else
+    this->inner_block_size = 512;
   Reset();
 }
 
-void SHA256::Reset() {
+template <std::uint32_t DigestLen>
+void SHA<DigestLen>::Reset() {
   std::copy(std::begin(H0), std::end(H0), H.begin());
   data_length = 0;
   data_buffer_bit_length = 0;
 }
 
-constexpr std::uint32_t SHA256::ROTR(std::uint32_t x, std::uint32_t n) const {
+template <>
+constexpr std::uint32_t SHA<256>::ROTR(std::uint32_t x, std::uint32_t n) const {
   return (x >> n) | (x << (32 - n));
 }
-constexpr std::uint32_t SHA256::Ch(std::uint32_t x, std::uint32_t y,
-                                   std::uint32_t z) const {
+template <>
+constexpr std::uint32_t SHA<256>::Ch(std::uint32_t x, std::uint32_t y,
+                                     std::uint32_t z) const {
   return (x & y) ^ (~x & z);
 }
-constexpr std::uint32_t SHA256::Maj(std::uint32_t x, std::uint32_t y,
-                                    std::uint32_t z) const {
+template <>
+constexpr std::uint32_t SHA<256>::Maj(std::uint32_t x, std::uint32_t y,
+                                      std::uint32_t z) const {
   return (x & y) ^ (x & z) ^ (y & z);
 }
 
-constexpr std::uint32_t SHA256::Sigma0(std::uint32_t x) const {
+template <>
+constexpr std::uint32_t SHA<256>::Sigma0(std::uint32_t x) const {
   return ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22);
 }
-constexpr std::uint32_t SHA256::Sigma1(std::uint32_t x) const {
+template <>
+constexpr std::uint32_t SHA<256>::Sigma1(std::uint32_t x) const {
   return ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25);
 }
-constexpr std::uint32_t SHA256::sigma0(std::uint32_t x) const {
+template <>
+constexpr std::uint32_t SHA<256>::sigma0(std::uint32_t x) const {
   return ROTR(x, 7) ^ ROTR(x, 18) ^ (x >> 3);
 }
-constexpr std::uint32_t SHA256::sigma1(std::uint32_t x) const {
+template <>
+constexpr std::uint32_t SHA<256>::sigma1(std::uint32_t x) const {
   return ROTR(x, 17) ^ ROTR(x, 19) ^ (x >> 10);
 }
 
-constexpr std::vector<std::array<std::uint32_t, 16>> SHA256::Padding(
+template <>
+constexpr std::vector<std::array<std::uint32_t, 16>> SHA<256>::Padding(
     const HashAlgorithmInputData& data) const {
   std::vector<std::array<std::uint32_t, 16>> padded = {};
   padded.resize((data.bit_length + 1 + 64 + 511) / 512);
@@ -63,7 +78,8 @@ constexpr std::vector<std::array<std::uint32_t, 16>> SHA256::Padding(
   return padded;
 }
 
-constexpr std::array<std::uint32_t, 16> SHA256::MakeMessage(
+template <>
+constexpr std::array<std::uint32_t, 16> SHA<256>::MakeMessage(
     const std::array<std::byte, 64>& data, std::uint64_t data_bit_length) {
   std::array<std::uint32_t, 16> M = {};
 
@@ -74,7 +90,8 @@ constexpr std::array<std::uint32_t, 16> SHA256::MakeMessage(
   return M;
 }
 
-constexpr std::array<std::uint32_t, 8> SHA256::ProcessMessageBlock(
+template <>
+constexpr std::array<std::uint32_t, 8> SHA<256>::ProcessMessageBlock(
     const std::array<std::uint32_t, 16>& M,
     const std::array<std::uint32_t, 8>& H) const {
   std::array<std::uint32_t, 64> W = {};
@@ -105,7 +122,8 @@ constexpr std::array<std::uint32_t, 8> SHA256::ProcessMessageBlock(
           H[4] + e, H[5] + f, H[6] + g, H[7] + h};
 }
 
-HashAlgorithmReturnData SHA256::Digest(
+template <>
+HashAlgorithmReturnData SHA<256>::Digest(
     const HashAlgorithmInputData& data) const {
   std::vector<std::array<std::uint32_t, 16>> M = Padding(data);
 
@@ -124,7 +142,8 @@ HashAlgorithmReturnData SHA256::Digest(
   return ret;
 }
 
-void SHA256::Update(const HashAlgorithmInputData& data) {
+template <>
+void SHA<256>::Update(const HashAlgorithmInputData& data) {
   const uint8_t* input_ptr =
       reinterpret_cast<const uint8_t*>(data.message.data());
   size_t input_bits = data.bit_length;
@@ -164,7 +183,8 @@ void SHA256::Update(const HashAlgorithmInputData& data) {
   }
 }
 
-HashAlgorithmReturnData SHA256::Digest() {
+template <>
+HashAlgorithmReturnData SHA<256>::Digest() {
   std::array<std::uint32_t, 16> M = {};
 
   M = MakeMessage(data_buffer, data_buffer_bit_length);

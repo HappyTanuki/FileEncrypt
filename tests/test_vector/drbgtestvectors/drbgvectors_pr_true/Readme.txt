@@ -2,7 +2,7 @@ There are two sets of NIST SP 800-90A DRBG example files included in this zip
 file.  All values in this zip file are for Prediction Resistance ENABLED, and
 the DRBG returned bits are four (4) output blocks long.
 
-The files contain sample files for all supported SHA, HMAC, AES, TDES, Elliptic
+The files contain sample files for all supported SHA, HMAC<HashDigestLen>, AES, TDES, Elliptic
 Curves for each mechanism, including SHA-512/224 and SHA-512/256 as defined in
 FIPS 180-4.
 
@@ -26,7 +26,7 @@ FIPS 180-4.
    
 The working state values printed out for the different DRBG mechanisms are:
 1. Hash_DRBG - working state consists of 'V' (variable) 'C' (constant) and reseed_counter
-2. HMAC_DRBG - working state consists of 'V' and 'Key'.
+2. HMAC<HashDigestLen>_DRBG - working state consists of 'V' and 'Key'.
 3. CTR_DRBG - working state consists of 'V' and 'Key'.
 
 Refer to NIST SP 800-90A Revision 1 (June 2015) for more on the DRBG mechanisms and their working state

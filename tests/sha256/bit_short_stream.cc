@@ -1,11 +1,11 @@
-#include "algorithm/sha256.h"
+#include "algorithm/hash/sha.h"
 #include "precomp.h"
 #include "util/nist_testvector_parser.h"
 
 namespace NISTTestVectorParser = file_encrypt::util::NISTTestVectorParser;
 
 int main() {
-  file_encrypt::algorithm::SHA256 sha256;
+  file_encrypt::algorithm::SHA<256> sha256;
 
   std::vector<NISTTestVectorParser::NISTTestVariables> test_vectors;
   if (NISTTestVectorParser::ParseHashVector(
@@ -44,7 +44,7 @@ int main() {
     part2.message = std::vector<std::byte>(
         input_data.message.begin() + mid_bytes, input_data.message.end());
 
-    // SHA256 업데이트
+    // SHA<256> 업데이트
     sha256.Update(part1);
     sha256.Update(part2);
     file_encrypt::algorithm::HashAlgorithmReturnData result = sha256.Digest();

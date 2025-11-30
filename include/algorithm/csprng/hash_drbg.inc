@@ -1,19 +1,21 @@
-#include "algorithm/csprng/hash_drbg.h"
-
 #include <cstring>
 
 #include "algorithm/algorithm.h"
+#include "hash_drbg.h"
 #include "util/helper.h"
 
 namespace file_encrypt::algorithm {
 
 using file_encrypt::util::ConcatByteVectors;
 
-HASH_DRBG::HASH_DRBG(std::unique_ptr<HashAlgorithm> algorithm) {
+template <std::uint32_t HashDigestLen>
+HASH_DRBG<HashDigestLen>::HASH_DRBG(
+    std::unique_ptr<HashAlgorithm<HashDigestLen>> algorithm) {
   hash = std::move(algorithm);
 }
 
-ReturnStatus HASH_DRBG::InstantiateAlgorithm(
+template <std::uint32_t HashDigestLen>
+ReturnStatus HASH_DRBG<HashDigestLen>::InstantiateAlgorithm(
     const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
     const std::vector<std::byte>& personalization_string,
     const std::uint32_t& security_strangth) {
@@ -37,7 +39,8 @@ ReturnStatus HASH_DRBG::InstantiateAlgorithm(
 }
 
 // This function shall not return failure status
-ReturnStatus HASH_DRBG::ReseedAlgorithm(
+template <std::uint32_t HashDigestLen>
+ReturnStatus HASH_DRBG<HashDigestLen>::ReseedAlgorithm(
     const std::vector<std::byte>& entropy_input,
     const std::vector<std::byte>& additional_input) {
   std::vector<std::byte> seed;
@@ -61,7 +64,9 @@ ReturnStatus HASH_DRBG::ReseedAlgorithm(
   return ReturnStatus::kSUCCESS;
 }
 
-HASH_DRBG::GenerateReturnValue HASH_DRBG::GenerateAlgorithm(
+template <std::uint32_t HashDigestLen>
+HASH_DRBG<HashDigestLen>::GenerateReturnValue
+HASH_DRBG<HashDigestLen>::GenerateAlgorithm(
     const std::uint64_t& requested_number_of_bits,
     const std::vector<std::byte>& additional_input) {
   std::vector<std::byte> w = {};
@@ -95,7 +100,8 @@ HASH_DRBG::GenerateReturnValue HASH_DRBG::GenerateAlgorithm(
   return {ReturnStatus::kSUCCESS, returned_bits};
 }
 
-HASH_DRBG::HashDFReturnValue HASH_DRBG::Hash_df(
+template <std::uint32_t HashDigestLen>
+HASH_DRBG<HashDigestLen>::HashDFReturnValue HASH_DRBG<HashDigestLen>::Hash_df(
     std::vector<std::byte> input_string, std::uint32_t no_of_bits_to_return) {
   std::vector<std::byte> temp = {};
   std::uint32_t len = (no_of_bits_to_return + outlen - 1) / outlen;
@@ -116,7 +122,8 @@ HASH_DRBG::HashDFReturnValue HASH_DRBG::Hash_df(
           file_encrypt::util::Leftmost(temp, no_of_bits_to_return)};
 }
 
-HASH_DRBG::HashgenReturnValue HASH_DRBG::Hashgen(
+template <std::uint32_t HashDigestLen>
+HASH_DRBG<HashDigestLen>::HashgenReturnValue HASH_DRBG<HashDigestLen>::Hashgen(
     std::uint64_t requested_no_of_bits, std::vector<std::byte> V) {
   std::uint64_t m = (requested_no_of_bits + outlen - 1) / outlen;
   std::vector<std::byte> data = V;

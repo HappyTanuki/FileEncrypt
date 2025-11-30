@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include "algorithm/sha256.h"
+#include "algorithm/hash/sha.h"
 #include "util/helper.h"
 
 int main() {
-  file_encrypt::algorithm::SHA256 hash;
+  file_encrypt::algorithm::SHA<256> hash;
 
   file_encrypt::algorithm::HashAlgorithmInputData input_data;
   input_data.message =

@@ -3,7 +3,7 @@
 # Generated on Tue Apr 02 15:42:24 2013
 # 95457bd75edcb8505f8652eda4e77148a0ae60cbd8157510e84f185a5ffd87204140eed7d93c484dbf54622919af77fd0466ece6cab886ea78385de4b3a0b665
 
-# HMAC_DRBG options: SHA-1 :: SHA-224 :: SHA-256 :: SHA-384 :: SHA-512 :: SHA-512/224 :: SHA-512/256
+# HMAC<HashDigestLen>_DRBG options: SHA-1 :: SHA-224 :: SHA-256 :: SHA-384 :: SHA-512 :: SHA-512/224 :: SHA-512/256
 
 [SHA-1]
 [PredictionResistance = False]

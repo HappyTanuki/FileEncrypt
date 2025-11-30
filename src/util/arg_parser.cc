@@ -48,9 +48,8 @@ cxxopts::ParseResult EncryptArgParse(int argc, char* argv[],
       cxxopts::value<std::string>());
   options.add_options()("o,output", "<file|-> Output file or '-' for stdout",
                         cxxopts::value<std::string>());
-  options.add_options()(
-      "use-password-only",
-      "When this flag is set, program will encrypt file only using password");
+  options.add_options()("use-password-only",
+                        "Enable password-only encryption.");
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",
@@ -115,6 +114,7 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
       cxxopts::value<std::string>());
   options.add_options()("o,output", "<file|-> Output file or '-' for stdout",
                         cxxopts::value<std::string>());
+  options.add_options()("m,merkle", "Generate the hash using a Merkle tree.");
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",

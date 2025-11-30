@@ -8,6 +8,7 @@
 
 namespace file_encrypt::algorithm {
 
+template <std::uint32_t HashDigestLen>
 class HASH_DRBG : public CSPRNG {
  public:
   struct HashDFReturnValue {
@@ -19,7 +20,7 @@ class HASH_DRBG : public CSPRNG {
     std::vector<std::byte> returned_bits;
   };
 
-  HASH_DRBG(std::unique_ptr<HashAlgorithm> algorithm);
+  HASH_DRBG(std::unique_ptr<HashAlgorithm<HashDigestLen>> algorithm);
 
   virtual ReturnStatus InstantiateAlgorithm(
       const std::vector<std::byte>& entropy_input, std::vector<std::byte> nonce,
@@ -46,7 +47,7 @@ class HASH_DRBG : public CSPRNG {
 
   std::vector<std::byte> V, C;
 
-  std::unique_ptr<HashAlgorithm> hash;
+  std::unique_ptr<HashAlgorithm<HashDigestLen>> hash;
 
  protected:
   std::uint64_t seedlen = 0;
@@ -54,5 +55,7 @@ class HASH_DRBG : public CSPRNG {
 };
 
 }  // namespace file_encrypt::algorithm
+
+#include "hash_drbg.inc"
 
 #endif
