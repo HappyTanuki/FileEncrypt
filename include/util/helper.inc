@@ -102,7 +102,7 @@ std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
 
   // 결과 바이트 길이 = 가장 긴 입력 길이 (MSB-first 표현을 가정)
   size_t byteLen = 0;
-  for (auto v : all) byteLen = std::max(byteLen, v->size());
+  for (auto v : all) byteLen = (std::max)(byteLen, v->size());
 
   std::vector<std::byte> result(byteLen);
   unsigned int carry = 0;

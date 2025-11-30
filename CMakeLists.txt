@@ -29,7 +29,7 @@ enable_testing()
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cxx" "src/*.cc")
 list(FILTER SOURCES EXCLUDE REGEX "src/main.cc")
 
-add_library(${PROJECT_NAME}_lib SHARED ${SOURCES})
+add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
 set_target_properties(${PROJECT_NAME}_lib PROPERTIES OUTPUT_NAME "FileEncrypt")
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

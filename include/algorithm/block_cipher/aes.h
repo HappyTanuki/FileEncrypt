@@ -10,8 +10,8 @@ namespace file_encrypt::algorithm {
 
 struct AESByte {
  public:
-  constexpr AESByte() : value(0) {}
-  constexpr AESByte(const std::uint8_t& byte) : value(byte) {}
+  inline constexpr AESByte() : value(0) {}
+  inline constexpr AESByte(const std::uint8_t& byte) : value(byte) {}
 
   constexpr AESByte& operator=(const std::uint8_t& byte);
   constexpr AESByte& operator=(const std::byte& byte);
@@ -62,7 +62,8 @@ struct AESByte {
     }
     return table;
   }
-  static const std::array<std::array<std::uint8_t, 256>, 256> mul_table;
+  inline static const std::array<std::array<std::uint8_t, 256>, 256> mul_table =
+      generate_LUT();
 };
 
 struct AESMatrix {

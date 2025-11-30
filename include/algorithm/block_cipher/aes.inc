@@ -84,7 +84,7 @@ constexpr AESByte AESByte::xtime(const AESByte& byte) const {
   return result;
 }
 
-AESMatrix::AESMatrix(
+inline AESMatrix::AESMatrix(
     std::initializer_list<std::initializer_list<AESByte>> init) {
   int i = 0;
   for (auto& row : init) {
@@ -790,6 +790,6 @@ std::array<AESByte, 14> AES<KeyBits>::Rcon_memo = {
 template <std::uint32_t KeyBits>
 int AES<KeyBits>::Rcon_memo_index = 1;
 
-const std::array<std::array<std::uint8_t, 256>, 256> AESByte::mul_table =
-    AESByte::generate_LUT();
+// const std::array<std::array<std::uint8_t, 256>, 256> AESByte::mul_table =
+//     AESByte::generate_LUT();
 };  // namespace file_encrypt::algorithm

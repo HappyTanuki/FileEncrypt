@@ -19,7 +19,7 @@
 
 #if _WIN32
 // because microsoft smart app control blocks
-#define _USE_SIMD_INTRINSIC false
+#define _USE_SIMD_INTRINSIC true
 #else
 #define _USE_SIMD_INTRINSIC true
 #endif

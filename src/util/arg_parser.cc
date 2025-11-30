@@ -35,10 +35,10 @@ cxxopts::ParseResult ToplevelArgParse(int argc, char* argv[],
 cxxopts::ParseResult EncryptArgParse(int argc, char* argv[],
                                      std::string& help_string) {
   cxxopts::Options options(argv[0], PROGRAM_DESCRIPTION);
+  std::string default_algorithm(file_encrypt::algorithm::AlgorithmTraits<
+      file_encrypt::algorithm::AES_CBC<256>>::name);
   options.add_options()("a,algorithm", "Algorithm to use (default:AES-256-CBC)",
-                        cxxopts::value<std::string>()->default_value(
-                            file_encrypt::algorithm::AlgorithmTraits<
-                                file_encrypt::algorithm::AES_CBC<256>>::name));
+      cxxopts::value<std::string>()->default_value(default_algorithm));
   options.add_options()("p,password",
                         "[text|-] password text, or '-' for prompt",
                         cxxopts::value<std::string>());

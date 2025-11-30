@@ -9,7 +9,7 @@
 
 namespace file_encrypt::util {
 #if _WIN32
-static DWORD oldmode = 0;
+static DWORD old_mode = 0;
 #else
 static termios old_tty = {};
 #endif
@@ -36,7 +36,7 @@ EchoOff::~EchoOff() {
 #if _WIN32
   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 
-  SetConsoleMode(hStdin, oldmode);
+  SetConsoleMode(hStdin, old_mode);
 #else
   tcsetattr(STDIN_FILENO, TCSANOW, &old_tty);
 #endif

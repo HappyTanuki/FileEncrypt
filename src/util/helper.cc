@@ -37,7 +37,7 @@ std::vector<std::byte> HexStrToBytes(const std::string& hex) {
 std::vector<std::byte> XorVectors(std::vector<std::byte> a,
                                   std::vector<std::byte> b) {
   std::vector<std::byte> result;
-  result.resize(std::max(a.size(), b.size()));
+  result.resize((std::max)(a.size(), b.size()));
   a.resize(result.size());
   b.resize(result.size());
   for (std::size_t i = 0; i < result.size(); ++i) {
@@ -65,7 +65,7 @@ std::vector<std::byte> UInt32ToBytesVector(uint64_t value) {
 std::vector<std::byte> Leftmost(const std::vector<std::byte>& value,
                                 const std::uint64_t& size) {
   std::vector<std::byte> result;
-  size_t byteLen = std::min((size + 7) / 8, value.size());
+  size_t byteLen = (std::min)((size + 7) / 8, value.size());
   result.resize(byteLen);
   std::memcpy(result.data(), value.data(), byteLen);
 

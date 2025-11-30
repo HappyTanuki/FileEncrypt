@@ -123,7 +123,7 @@ constexpr std::array<std::uint32_t, 8> SHA<256>::ProcessMessageBlock(
 }
 
 template <>
-HashAlgorithmReturnData SHA<256>::Digest(
+inline HashAlgorithmReturnData SHA<256>::Digest(
     const HashAlgorithmInputData& data) const {
   std::vector<std::array<std::uint32_t, 16>> M = Padding(data);
 
@@ -143,7 +143,7 @@ HashAlgorithmReturnData SHA<256>::Digest(
 }
 
 template <>
-void SHA<256>::Update(const HashAlgorithmInputData& data) {
+inline void SHA<256>::Update(const HashAlgorithmInputData& data) {
   const uint8_t* input_ptr =
       reinterpret_cast<const uint8_t*>(data.message.data());
   size_t input_bits = data.bit_length;
@@ -184,7 +184,7 @@ void SHA<256>::Update(const HashAlgorithmInputData& data) {
 }
 
 template <>
-HashAlgorithmReturnData SHA<256>::Digest() {
+inline HashAlgorithmReturnData SHA<256>::Digest() {
   std::array<std::uint32_t, 16> M = {};
 
   M = MakeMessage(data_buffer, data_buffer_bit_length);
