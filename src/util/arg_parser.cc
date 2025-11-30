@@ -14,6 +14,11 @@ cxxopts::ParseResult ToplevelArgParse(int argc, char* argv[],
                               "\"keygen\"\tKeygen mode.",
                               cxxopts::value<std::string>());
   options.add_options("General")("H,help", "Show this help message");
+  options.add_options("General")(
+      "overwrite",
+      "Overwrite output file if exists (prompts when not specified)\n\n"
+      "If the '-' option is specified multiple times, stdin inputs are parsed "
+      "in the order in which the options are listed above.");
 
   options.show_positional_help();
 
@@ -118,7 +123,9 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",
-      "Overwrite output file if exists (prompts when not specified)");
+      "Overwrite output file if exists (prompts when not specified)\n\n"
+      "If the '-' option is specified multiple times, stdin inputs are parsed "
+      "in the order in which the options are listed above.");
 
   options.allow_unrecognised_options();
   options.custom_help("hash [OPTION...]");
@@ -145,7 +152,9 @@ cxxopts::ParseResult KeygenArgParse(int argc, char* argv[],
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",
-      "Overwrite output file if exists (prompts when not specified)");
+      "Overwrite output file if exists (prompts when not specified)\n\n"
+      "If the '-' option is specified multiple times, stdin inputs are parsed "
+      "in the order in which the options are listed above.");
 
   options.allow_unrecognised_options();
   options.custom_help("keygen [OPTION...]");

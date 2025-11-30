@@ -6,9 +6,9 @@
 #define PROGRAM_DESCRIPTION \
   "A file encryption, decryption, and hash validation utility."
 
+#include "algorithm/algorithm_factory.h"
 #include "algorithm/base64.h"
 #include "algorithm/block_cipher/mode/aliases.h"
-#include "algorithm/block_cipher/mode/block_cipher_modes_factory.h"
 #include "algorithm/csprng/drbg_sha.h"
 #include "algorithm/padding/pkcs_7.h"
 #include "algorithm/pbkdf2.h"
@@ -61,7 +61,8 @@ std::string PromptPasswordInput() {
 }
 
 template <std::uint32_t KeySize>
-int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
+int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
+                bool overwrite) {
   std::shared_ptr<std::istream> input;
   std::shared_ptr<std::istream> key_input;
   std::shared_ptr<std::ostream> output;
@@ -153,7 +154,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
   input = util::OpenIStream(input_filename);
 
   std::string output_filename = parsed_args["output"].as<std::string>();
-  output = util::OpenOStream(output_filename, false, true);
+  output = util::OpenOStream(output_filename, overwrite, !overwrite);
 
   algorithm::BASE64 base64;
   algorithm::Pkcs_7<128> pkcs_7;
@@ -214,7 +215,8 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 }
 
 template <std::uint32_t KeySize>
-int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
+int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
+                bool overwrite) {
   std::shared_ptr<std::istream> input;
   std::shared_ptr<std::istream> key_input;
   std::shared_ptr<std::ostream> output;
@@ -281,7 +283,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
       key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   }
   std::string output_filename = parsed_args["output"].as<std::string>();
-  output = util::OpenOStream(output_filename, false, true);
+  output = util::OpenOStream(output_filename, overwrite, !overwrite);
 
   algorithm::BASE64 base64;
   algorithm::DRBG_SHA<256> drbg;
@@ -324,7 +326,8 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 }
 
 template <std::uint32_t KeySize>
-int HashMain(cxxopts::ParseResult parsed_args, std::string help_string) {
+int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
+             bool overwrite) {
   std::istream* input = &std::cin;
   std::ostream* output = &std::cout;
 
@@ -337,7 +340,8 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 }
 
 template <std::uint32_t KeySize>
-int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string) {
+int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string,
+               bool overwrite) {
   std::istream* input = &std::cin;
   std::istream* password = &std::cin;
   std::ostream* output = &std::cout;
@@ -350,18 +354,19 @@ int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string) {
 }
 
 int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
-                 std::string help_string, std::uint32_t key_bits) {
+                 std::string help_string, std::uint32_t key_bits,
+                 bool overwrite) {
   switch (key_bits) {
     case 256:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<256>(parsed_args, help_string);
+          return EncryptMain<256>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<256>(parsed_args, help_string);
+          return DecryptMain<256>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string, overwrite);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;
@@ -371,13 +376,13 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
     case 192:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<192>(parsed_args, help_string);
+          return EncryptMain<192>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<192>(parsed_args, help_string);
+          return DecryptMain<192>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string, overwrite);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;
@@ -387,13 +392,13 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
     case 128:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<128>(parsed_args, help_string);
+          return EncryptMain<128>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<128>(parsed_args, help_string);
+          return DecryptMain<128>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string);
+          return HashMain<256>(parsed_args, help_string, overwrite);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string);
+          return KeygenMain<256>(parsed_args, help_string, overwrite);
         default:
           std::cerr << "An unknown error occurred during mode selection."
                     << std::endl;
@@ -409,6 +414,7 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
 
 int main(int argc, char* argv[]) {
   ProgramOperationMode mode = ProgramOperationMode::kError;
+  bool overwrite = false;
 
   std::string help_string;
   auto parsed_args = util::ToplevelArgParse(argc, argv, help_string);
@@ -428,6 +434,10 @@ int main(int argc, char* argv[]) {
   } else {
     std::cerr << "A mode shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
+  }
+
+  if (parsed_args.count("overwrite") != 0) {
+    overwrite = true;
   }
 
   if (parsed_args["Mode"].as<std::string>() == "encrypt") {
@@ -470,7 +480,7 @@ int main(int argc, char* argv[]) {
     std::exit(EXIT_FAILURE);
   }
 
-  return CallModeMain(mode, parsed_args, help_string, it->second);
+  return CallModeMain(mode, parsed_args, help_string, it->second, overwrite);
 }
 
 }  // namespace file_encrypt

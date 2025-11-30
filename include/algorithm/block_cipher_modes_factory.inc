@@ -1,6 +1,6 @@
 #include "algorithm/algorithm_traits.h"
+#include "algorithm_factory.h"
 #include "aliases.h"
-#include "block_cipher_modes_factory.h"
 
 namespace file_encrypt::algorithm::op_mode {
 
