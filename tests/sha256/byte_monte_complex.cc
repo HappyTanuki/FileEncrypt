@@ -54,8 +54,8 @@ int main() {
       message_input_data.bit_length = 256 * 3;
       M[i] = ByteStitch(MD[i - 3], MD[i - 2], MD[i - 1]);
       message_input_data.message = M[i];
-      auto ret_value = sha256.Digest(message_input_data);
-      MD[i] = ret_value.digest;
+      auto digest = sha256.Digest(message_input_data);
+      MD[i] = std::vector<std::byte>(digest.begin(), digest.end());
 
       if (!item.samples.empty() &&
           item.samples.front().variable.integer["i"] == i) {

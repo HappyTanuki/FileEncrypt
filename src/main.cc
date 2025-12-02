@@ -6,6 +6,8 @@
 #define PROGRAM_DESCRIPTION \
   "A file encryption, decryption, and hash validation utility."
 
+#define READ_CHUNK_SIZE 4096
+
 #include "algorithm/algorithm_factory.h"
 #include "algorithm/base64.h"
 #include "algorithm/block_cipher/mode/aliases.h"
@@ -62,7 +64,7 @@ std::string PromptPasswordInput() {
 
 template <std::uint32_t KeySize>
 int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
-                bool overwrite) {
+                bool overwrite, bool verbose) {
   std::shared_ptr<std::istream> input;
   std::shared_ptr<std::istream> key_input;
   std::shared_ptr<std::ostream> output;
@@ -105,14 +107,14 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
   auto salt_return = drbg.Generate(KeySize, KeySize, false, {});
   if (salt_return.status != algorithm::ReturnStatus::kSUCCESS) {
-    std::cerr << "CSPRNG error.\n";
+    if (verbose) std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
   salt = std::move(salt_return.pseudorandom_bits);
 
   auto iv_return = drbg.Generate(128, KeySize, false, {});
   if (iv_return.status != algorithm::ReturnStatus::kSUCCESS) {
-    std::cerr << "CSPRNG error.\n";
+    if (verbose) std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
   std::memcpy(iv.data(), iv_return.pseudorandom_bits.data(), 16);
@@ -131,7 +133,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     key = algorithm::PBKDF2<256, KeySize>(password, salt, hmac, 600000);
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
-      std::cerr << "CSPRNG error.\n";
+      if (verbose) std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
     std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(),
@@ -140,14 +142,15 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     // 키 입력이 없고 엔트로피 전용모드일 때
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
-      std::cerr << "CSPRNG error.\n";
+      if (verbose) std::cerr << "CSPRNG error.\n";
       std::exit(EXIT_FAILURE);
     }
     std::memcpy(key.data(), key_return.pseudorandom_bits.data(), KeySize / 8);
   }
 
   if (parsed_args.count("input") == 0) {
-    std::cerr << "An input shall always be specified." << std::endl;
+    if (verbose)
+      std::cerr << "An input shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
   std::string input_filename = parsed_args["input"].as<std::string>();
@@ -216,7 +219,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
 template <std::uint32_t KeySize>
 int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
-                bool overwrite) {
+                bool overwrite, bool verbose) {
   std::shared_ptr<std::istream> input;
   std::shared_ptr<std::istream> key_input;
   std::shared_ptr<std::ostream> output;
@@ -234,7 +237,8 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
 
   if (parsed_args.count("input") == 0) {
-    std::cerr << "An input shall always be specified." << std::endl;
+    if (verbose)
+      std::cerr << "An input shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
   std::string input_filename = parsed_args["input"].as<std::string>();
@@ -264,14 +268,14 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     // Nothing to do
   } else {
     // Invalid
-    std::cerr << "Unknown file format." << std::endl;
+    if (verbose) std::cerr << "Unknown file format." << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
   if ((magic_number == util::PasswordCombinedKey ||
        magic_number == util::NoPasswordKey) &&
       parsed_args.count("key") == 0) {
-    std::cerr << "A key shall be specified." << std::endl;
+    if (verbose) std::cerr << "A key shall be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
   if (parsed_args.count("key") > 0) {
@@ -325,88 +329,138 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::exit(EXIT_SUCCESS);
 }
 
-template <std::uint32_t KeySize>
+template <std::uint32_t DigestSize>
 int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
-             bool overwrite) {
-  std::istream* input = &std::cin;
-  std::ostream* output = &std::cout;
+             bool overwrite, bool verbose) {
+  std::shared_ptr<std::istream> input;
+  std::shared_ptr<std::ostream> output;
 
-  std::ifstream input_file;
-  std::ofstream output_file;
+  std::shared_ptr<std::istream> file_a;
+  std::shared_ptr<std::istream> file_b;
 
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
+  std::unique_ptr<algorithm::HashAlgorithm<DigestSize>> hash =
+      algorithm::HashFactory<DigestSize>(algorithm_name);
+
+  if (parsed_args.count("diff") > 0) {
+    std::vector<std::string> diff_files =
+        parsed_args["diff"].as<std::vector<std::string>>();
+    if (diff_files.size() != 2) {
+      if (verbose)
+        std::cerr << "Diff mode expects exactly two files. Received"
+                  << diff_files.size() << "." << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+
+    file_a = util::OpenIStream(diff_files[0]);
+    file_b = util::OpenIStream(diff_files[1]);
+
+    std::array<std::byte, DigestSize / 8> a_digest;
+    std::array<std::byte, DigestSize / 8> b_digest;
+    while (file_a->good()) {
+      algorithm::HashAlgorithmInputData hash_input;
+      hash_input.message.resize(READ_CHUNK_SIZE);
+      file_a->read(reinterpret_cast<char*>(hash_input.message.data()),
+                   READ_CHUNK_SIZE);
+      std::streamsize read_bytes = file_a->gcount();
+      if (read_bytes == 0) break;
+      hash_input.bit_length = read_bytes * 8;
+
+      hash->Update(hash_input);
+
+      if (input->peek() == EOF) a_digest = hash->Digest();
+    }
+    hash->Reset();
+    while (file_b->good()) {
+      algorithm::HashAlgorithmInputData hash_input;
+      hash_input.message.resize(READ_CHUNK_SIZE);
+      file_b->read(reinterpret_cast<char*>(hash_input.message.data()),
+                   READ_CHUNK_SIZE);
+      std::streamsize read_bytes = file_b->gcount();
+      if (read_bytes == 0) break;
+      hash_input.bit_length = read_bytes * 8;
+
+      hash->Update(hash_input);
+
+      if (input->peek() == EOF) b_digest = hash->Digest();
+    }
+    hash->Reset();
+
+    if (a_digest != b_digest) {
+      if (verbose) std::cout << "Files do not match." << std::endl;
+      std::exit(EXIT_FAILURE);
+    } else {
+      if (verbose) std::cout << "Files match." << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+  }
 
   return 0;
 }
 
 template <std::uint32_t KeySize>
 int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string,
-               bool overwrite) {
-  std::istream* input = &std::cin;
-  std::istream* password = &std::cin;
-  std::ostream* output = &std::cout;
-
-  std::ifstream input_file;
-  std::ifstream password_file;
-  std::ofstream output_file;
-
+               bool overwrite, bool verbose) {
   return 0;
 }
 
 int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
                  std::string help_string, std::uint32_t key_bits,
-                 bool overwrite) {
+                 bool overwrite, bool verbose) {
   switch (key_bits) {
     case 256:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<256>(parsed_args, help_string, overwrite);
+          return EncryptMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<256>(parsed_args, help_string, overwrite);
+          return DecryptMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string, overwrite);
+          return HashMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite);
+          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          std::cerr << "An unknown error occurred during mode selection."
-                    << std::endl;
+          if (verbose)
+            std::cerr << "An unknown error occurred during mode selection."
+                      << std::endl;
           std::exit(EXIT_FAILURE);
       }
       break;
     case 192:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<192>(parsed_args, help_string, overwrite);
+          return EncryptMain<192>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<192>(parsed_args, help_string, overwrite);
+          return DecryptMain<192>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string, overwrite);
+          return HashMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite);
+          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          std::cerr << "An unknown error occurred during mode selection."
-                    << std::endl;
+          if (verbose)
+            std::cerr << "An unknown error occurred during mode selection."
+                      << std::endl;
           std::exit(EXIT_FAILURE);
       }
       break;
     case 128:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<128>(parsed_args, help_string, overwrite);
+          return EncryptMain<128>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<128>(parsed_args, help_string, overwrite);
+          return DecryptMain<128>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
-          return HashMain<256>(parsed_args, help_string, overwrite);
+          return HashMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite);
+          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          std::cerr << "An unknown error occurred during mode selection."
-                    << std::endl;
+          if (verbose)
+            std::cerr << "An unknown error occurred during mode selection."
+                      << std::endl;
           std::exit(EXIT_FAILURE);
       }
       break;
     default:
-      std::cerr << "Unsupported keysize.\n";
+      if (verbose) std::cerr << "Unsupported keysize.\n";
       std::exit(EXIT_FAILURE);
       break;
   }
@@ -415,6 +469,7 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
 int main(int argc, char* argv[]) {
   ProgramOperationMode mode = ProgramOperationMode::kError;
   bool overwrite = false;
+  bool verbose = false;
 
   std::string help_string;
   auto parsed_args = util::ToplevelArgParse(argc, argv, help_string);
@@ -432,12 +487,15 @@ int main(int argc, char* argv[]) {
       std::exit(EXIT_FAILURE);
     }
   } else {
-    std::cerr << "A mode shall always be specified." << std::endl;
+    if (verbose) std::cerr << "A mode shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
   if (parsed_args.count("overwrite") != 0) {
     overwrite = true;
+  }
+  if (parsed_args.count("verbose") != 0) {
+    verbose = true;
   }
 
   if (parsed_args["Mode"].as<std::string>() == "encrypt") {
@@ -468,7 +526,8 @@ int main(int argc, char* argv[]) {
   }
 
   if (parsed_args.count("output") == 0) {
-    std::cerr << "An output shall always be specified." << std::endl;
+    if (verbose)
+      std::cerr << "An output shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
@@ -476,11 +535,12 @@ int main(int argc, char* argv[]) {
 
   auto it = algorithm::kAlgoBits.find(algorithm_name);
   if (it == algorithm::kAlgoBits.end()) {
-    std::cerr << "Unknown algorithm\n";
+    if (verbose) std::cerr << "Unknown algorithm\n";
     std::exit(EXIT_FAILURE);
   }
 
-  return CallModeMain(mode, parsed_args, help_string, it->second, overwrite);
+  return CallModeMain(mode, parsed_args, help_string, it->second, overwrite,
+                      verbose);
 }
 
 }  // namespace file_encrypt

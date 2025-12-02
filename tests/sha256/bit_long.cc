@@ -31,17 +31,18 @@ int main() {
     input_data.bit_length = item.integer["Len"];
     input_data.message = item.binary["Msg"];
 
-    file_encrypt::algorithm::HashAlgorithmReturnData result =
-        sha256.Digest(input_data);
+    auto digest = sha256.Digest(input_data);
 
     std::cout << "MD: 0x";
     for (int i = 0; i < 32; i++) {
-      std::cout << std::hex << std::to_integer<int>(result.digest[i]);
+      std::cout << std::hex << std::to_integer<int>(digest[i]);
     }
     std::cout << "\n";
 
     std::cout << "Match: ";
-    if (result.digest == item.binary["MD"]) {
+    std::array<std::byte, 32> md = {};
+    std::copy(item.binary["MD"].begin(), item.binary["MD"].end(), md.begin());
+    if (digest == md) {
       std::cout << "True" << std::endl;
     } else {
       std::cout << "False" << std::endl;

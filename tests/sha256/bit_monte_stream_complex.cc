@@ -74,10 +74,10 @@ int main() {
       // SHA<256> 업데이트
       sha256.Update(part1);
       sha256.Update(part2);
-      file_encrypt::algorithm::HashAlgorithmReturnData result = sha256.Digest();
+      auto digest = sha256.Digest();
       sha256.Reset();
 
-      MD[i] = result.digest;
+      MD[i] = std::vector<std::byte>(digest.begin(), digest.end());
 
       if (!item.samples.empty() &&
           item.samples.front().variable.integer["i"] == i) {

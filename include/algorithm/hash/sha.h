@@ -12,11 +12,11 @@ template <std::uint32_t DigestLen>
 class SHA : public HashAlgorithm<DigestLen> {
  public:
   SHA();
-  HashAlgorithmReturnData Digest(
+  std::array<std::byte, DigestLen / 8> Digest(
       const HashAlgorithmInputData& data) const final override;
 
   void Update(const HashAlgorithmInputData& data) final override;
-  HashAlgorithmReturnData Digest() final override;
+  std::array<std::byte, DigestLen / 8> Digest() final override;
   void Reset() final override;
 
  private:

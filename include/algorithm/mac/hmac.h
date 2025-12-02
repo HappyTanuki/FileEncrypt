@@ -21,8 +21,10 @@ class HMAC : public MacAlgorithm {
         outer_padding(
             std::vector<std::byte>(this->algorithm->inner_block_size / 8,
                                    static_cast<std::byte>(0x5C))) {
-    if (key.size() > this->algorithm->inner_block_size / 8)
-      key = this->algorithm->Digest({key, key.size() * 8}).digest;
+    if (key.size() > this->algorithm->inner_block_size / 8) {
+      auto temp = this->algorithm->Digest({key, key.size() * 8});
+      key = std::vector<std::byte>(temp.begin(), temp.end());
+    }
     key.resize(this->algorithm->inner_block_size / 8,
                static_cast<std::byte>(0x00));
     this->key = key;

@@ -17,9 +17,6 @@ struct HashAlgorithmInputData {
   std::vector<std::byte> message = {};
   std::uint64_t bit_length = 0;
 };
-struct HashAlgorithmReturnData {
-  std::vector<std::byte> digest = {};
-};
 
 struct CipherAlgorithmOnetimeInputData {
   std::vector<std::byte> data = {};
@@ -57,13 +54,13 @@ class HashAlgorithm {
   virtual ~HashAlgorithm() = default;
   // 짧거나 한 번에 처리할 필요가 있는 데이터를 처리할 때 사용. 내부 상태를
   // 업데이트하거나 내부 상태에 이어서 해시를 계산하지 않음.
-  virtual HashAlgorithmReturnData Digest(
+  virtual std::array<std::byte, DigestLen / 8> Digest(
       const HashAlgorithmInputData& data) const = 0;
 
   // 내부적으로 버퍼링 하여 임의 길이로 해시를 계산할 때 사용.
   virtual void Update(const HashAlgorithmInputData& data) = 0;
   // 내부 버퍼를 비우고 패딩하여 해시를 계산하여 반환하고 내부 상태를 초기화함.
-  virtual HashAlgorithmReturnData Digest() = 0;
+  virtual std::array<std::byte, DigestLen / 8> Digest() = 0;
   // 인스턴스 리셋
   virtual void Reset() = 0;
 

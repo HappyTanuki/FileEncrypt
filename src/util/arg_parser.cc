@@ -19,6 +19,8 @@ cxxopts::ParseResult ToplevelArgParse(int argc, char* argv[],
       "Overwrite output file if exists (prompts when not specified)\n\n"
       "If the '-' option is specified multiple times, stdin inputs are parsed "
       "in the order in which the options are listed above.");
+  options.add_options("General")("v,verbose",
+                                 "Print status and error messages");
 
   options.show_positional_help();
 
@@ -36,8 +38,9 @@ cxxopts::ParseResult EncryptArgParse(int argc, char* argv[],
                                      std::string& help_string) {
   cxxopts::Options options(argv[0], PROGRAM_DESCRIPTION);
   std::string default_algorithm(file_encrypt::algorithm::AlgorithmTraits<
-      file_encrypt::algorithm::AES_CBC<256>>::name);
-  options.add_options()("a,algorithm", "Algorithm to use (default:AES-256-CBC)",
+                                file_encrypt::algorithm::AES_CBC<256>>::name);
+  options.add_options()(
+      "a,algorithm", "Algorithm to use (default:AES-256-CBC)",
       cxxopts::value<std::string>()->default_value(default_algorithm));
   options.add_options()("p,password",
                         "[text|-] password text, or '-' for prompt",
@@ -61,6 +64,8 @@ cxxopts::ParseResult EncryptArgParse(int argc, char* argv[],
       "Overwrite output file if exists (prompts when not specified)\n\n"
       "If the '-' option is specified multiple times, stdin inputs are parsed "
       "in the order in which the options are listed above.");
+  options.add_options("General")("v,verbose",
+                                 "Print status and error messages");
 
   options.allow_unrecognised_options();
   options.custom_help("encrypt [OPTION...]");
@@ -94,6 +99,8 @@ cxxopts::ParseResult DecryptArgParse(int argc, char* argv[],
       "Overwrite output file if exists (prompts when not specified)\n\n"
       "If the '-' option is specified multiple times, stdin inputs are parsed "
       "in the order in which the options are listed above.");
+  options.add_options("General")("v,verbose",
+                                 "Print status and error messages");
 
   options.allow_unrecognised_options();
   options.custom_help("decrypt [OPTION...]");
@@ -119,13 +126,14 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
       cxxopts::value<std::string>());
   options.add_options()("o,output", "<file|-> Output file or '-' for stdout",
                         cxxopts::value<std::string>());
-  options.add_options()("m,merkle", "Generate the hash using a Merkle tree.");
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",
       "Overwrite output file if exists (prompts when not specified)\n\n"
       "If the '-' option is specified multiple times, stdin inputs are parsed "
       "in the order in which the options are listed above.");
+  options.add_options("General")("v,verbose",
+                                 "Print status and error messages");
 
   options.allow_unrecognised_options();
   options.custom_help("hash [OPTION...]");
@@ -155,6 +163,8 @@ cxxopts::ParseResult KeygenArgParse(int argc, char* argv[],
       "Overwrite output file if exists (prompts when not specified)\n\n"
       "If the '-' option is specified multiple times, stdin inputs are parsed "
       "in the order in which the options are listed above.");
+  options.add_options("General")("v,verbose",
+                                 "Print status and error messages");
 
   options.allow_unrecognised_options();
   options.custom_help("keygen [OPTION...]");

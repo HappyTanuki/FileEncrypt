@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdint>
+#include <span>
 #include <sstream>
 #include <vector>
 
@@ -91,18 +92,14 @@ inline std::vector<std::byte> MaskSeedlen(const std::vector<std::byte>& v,
 }
 
 template <typename... Vectors>
-std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
-                                      const Vectors&... rest) {
-  static_assert((std::is_same_v<Vectors, std::vector<std::byte>> && ...),
-                "All arguments must be std::vector<std::byte>");
-
-  // 포인터 배열로 가리켜 읽기 전용으로 사용
-  std::array<const std::vector<std::byte>*, sizeof...(rest) + 1> all = {
-      &first, &rest...};
+std::vector<std::byte> AddByteVectors(const Vectors&... vecs) {
+  // span 배열로 가리켜 읽기 전용으로 사용
+  std::array<std::span<const std::byte>, sizeof...(vecs)> all = {
+      std::span(vecs)...};
 
   // 결과 바이트 길이 = 가장 긴 입력 길이 (MSB-first 표현을 가정)
   size_t byteLen = 0;
-  for (auto v : all) byteLen = (std::max)(byteLen, v->size());
+  for (auto v : all) byteLen = (std::max)(byteLen, v.size());
 
   std::vector<std::byte> result(byteLen);
   unsigned int carry = 0;
@@ -111,11 +108,11 @@ std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
   for (size_t i = 0; i < byteLen; ++i) {
     unsigned int sum = carry;
     for (auto v : all) {
-      if (i < v->size()) {
+      if (i < v.size()) {
         // 입력 벡터들은 MSB-first로 저장되어 있다고 가정.
         // LSB 쪽 바이트를 읽으려면 (size-1 - i) 인덱스를 사용.
         sum += static_cast<unsigned int>(
-            std::to_integer<unsigned char>((*v)[v->size() - 1 - i]));
+            std::to_integer<unsigned char>(v[v.size() - 1 - i]));
       }
     }
     // 결과는 MSB-first로 유지해야 하므로, LSB부터 채우되

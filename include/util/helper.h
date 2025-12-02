@@ -35,8 +35,7 @@ std::vector<std::byte> UInt8ToBytesVector(uint64_t value);
 std::vector<std::byte> UInt32ToBytesVector(uint64_t value);
 
 template <typename... Vectors>
-std::vector<std::byte> AddByteVectors(const std::vector<std::byte>& first,
-                                      const Vectors&... rest);
+std::vector<std::byte> AddByteVectors(const Vectors&... vecs);
 
 template <typename... Vectors>
 std::vector<std::byte> ConcatByteVectors(const Vectors&... vecs);

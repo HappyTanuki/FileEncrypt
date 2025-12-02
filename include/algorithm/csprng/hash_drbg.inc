@@ -69,7 +69,7 @@ HASH_DRBG<HashDigestLen>::GenerateReturnValue
 HASH_DRBG<HashDigestLen>::GenerateAlgorithm(
     const std::uint64_t& requested_number_of_bits,
     const std::vector<std::byte>& additional_input) {
-  std::vector<std::byte> w = {};
+  std::array<std::byte, HashDigestLen / 8> w = {};
 
   if (reseed_counter > reseed_interval)
     return {ReturnStatus::kRESEED_REQUIRED, {}};
@@ -77,9 +77,8 @@ HASH_DRBG<HashDigestLen>::GenerateAlgorithm(
     std::vector<std::byte> temp = ConcatByteVectors(
         file_encrypt::util::UInt8ToBytesVector(0x02), V, additional_input);
 
-    HashAlgorithmReturnData hash_algorithm_return_data;
-    hash_algorithm_return_data = hash->Digest({temp, temp.size() * 8});
-    w = hash_algorithm_return_data.digest;
+    auto digest = hash->Digest({temp, temp.size() * 8});
+    w = digest;
 
     V = file_encrypt::util::MaskSeedlen(
         file_encrypt::util::AddByteVectors(V, w), seedlen);
@@ -90,7 +89,7 @@ HASH_DRBG<HashDigestLen>::GenerateAlgorithm(
 
   std::vector<std::byte> temp =
       ConcatByteVectors(file_encrypt::util::UInt8ToBytesVector(0x03), V);
-  std::vector<std::byte> H = hash->Digest({temp, temp.size() * 8}).digest;
+  auto H = hash->Digest({temp, temp.size() * 8});
 
   V = file_encrypt::util::MaskSeedlen(
       file_encrypt::util::AddByteVectors(
@@ -112,9 +111,9 @@ HASH_DRBG<HashDigestLen>::HashDFReturnValue HASH_DRBG<HashDigestLen>::Hash_df(
         file_encrypt::util::UInt8ToBytesVector(counter),
         file_encrypt::util::UInt32ToBytesVector(no_of_bits_to_return),
         input_string);
-    std::vector<std::byte> digest =
-        hash->Digest({concat, concat.size() * 8}).digest;
-    temp = ConcatByteVectors(temp, digest);
+    auto temp_digest = hash->Digest({concat, concat.size() * 8});
+    // std::vector<std::byte> digest(temp_digest.begin(), temp_digest.end());
+    temp = ConcatByteVectors(temp, temp_digest);
     counter++;
   }
 
@@ -129,7 +128,7 @@ HASH_DRBG<HashDigestLen>::HashgenReturnValue HASH_DRBG<HashDigestLen>::Hashgen(
   std::vector<std::byte> data = V;
   std::vector<std::byte> W = {};
   for (std::uint64_t i = 1; i <= m; ++i) {
-    auto w = hash->Digest({data, data.size() * 8}).digest;
+    auto w = hash->Digest({data, data.size() * 8});
     W = ConcatByteVectors(W, w);
     data = file_encrypt::util::MaskSeedlen(
         file_encrypt::util::AddByteVectors(

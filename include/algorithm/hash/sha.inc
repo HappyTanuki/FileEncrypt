@@ -123,7 +123,7 @@ constexpr std::array<std::uint32_t, 8> SHA<256>::ProcessMessageBlock(
 }
 
 template <>
-inline HashAlgorithmReturnData SHA<256>::Digest(
+inline std::array<std::byte, 32> SHA<256>::Digest(
     const HashAlgorithmInputData& data) const {
   std::vector<std::array<std::uint32_t, 16>> M = Padding(data);
 
@@ -133,11 +133,10 @@ inline HashAlgorithmReturnData SHA<256>::Digest(
   for (int i = 0; i < M.size(); i++) {
     H = ProcessMessageBlock(M[i], H);
   }
-  HashAlgorithmReturnData ret;
-  ret.digest.resize(32);
+  std::array<std::byte, 32> ret;
   for (int i = 0; i < 8; i++) {
     std::uint32_t v = ::htonl(H[i]);
-    std::memcpy(ret.digest.data() + i * 4, &v, 4);
+    std::memcpy(ret.data() + i * 4, &v, 4);
   }
   return ret;
 }
@@ -184,7 +183,7 @@ inline void SHA<256>::Update(const HashAlgorithmInputData& data) {
 }
 
 template <>
-inline HashAlgorithmReturnData SHA<256>::Digest() {
+inline std::array<std::byte, 32> SHA<256>::Digest() {
   std::array<std::uint32_t, 16> M = {};
 
   M = MakeMessage(data_buffer, data_buffer_bit_length);
@@ -200,11 +199,10 @@ inline HashAlgorithmReturnData SHA<256>::Digest() {
   H = ProcessMessageBlock(M, H);
   data_buffer_bit_length = 0;
 
-  HashAlgorithmReturnData ret;
-  ret.digest.resize(32);
+  std::array<std::byte, 32> ret;
   for (int i = 0; i < 8; i++) {
     std::uint32_t v = ::htonl(H[i]);
-    std::memcpy(ret.digest.data() + i * 4, &v, 4);
+    std::memcpy(ret.data() + i * 4, &v, 4);
   }
 
   Reset();
