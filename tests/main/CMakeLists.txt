@@ -6,7 +6,7 @@ if(NOT WIN32)
     target_compile_options(encrypt PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
 endif()
 add_test(NAME ${full_test_name}
-    COMMAND encrypt encrypt -a AES-256-CTR -i compile_commands.json -p asdf -o encrypted.aes -k key.pem --overwrite
+    COMMAND encrypt encrypt -a AES-256-CTR -i compile_commands.json -p asdf -o encrypted.aes -k key.pem --overwrite --verbose
 )
 set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_tests_properties(${full_test_name} PROPERTIES LABELS main)
@@ -20,10 +20,26 @@ if(NOT WIN32)
     target_compile_options(decrypt PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
 endif()
 add_test(NAME ${full_test_name}
-    COMMAND decrypt decrypt -a AES-256-CTR -o output.txt -i encrypted.aes -p asdf -k key.pem --overwrite
+    COMMAND decrypt decrypt -a AES-256-CTR -o output.txt -i encrypted.aes -p asdf -k key.pem --overwrite --verbose
 )
 set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_tests_properties(${full_test_name} PROPERTIES LABELS main)
 add_dependencies(decrypt copy_test_vectors)
 
 set_tests_properties(main/decrypt PROPERTIES DEPENDS main/encrypt)
+
+set(test_name "hash_match")
+set(full_test_name "main/hash_match")
+add_executable(hash_match "main.cc")
+target_link_libraries(hash_match PRIVATE ${PROJECT_NAME}_lib)
+if(NOT WIN32)
+    target_compile_options(hash_match PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
+endif()
+add_test(NAME ${full_test_name}
+    COMMAND hash_match hash -a SHA-256 --diff output.txt,compile_commands.json --overwrite --verbose
+)
+set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+set_tests_properties(${full_test_name} PROPERTIES LABELS main)
+add_dependencies(hash_match copy_test_vectors)
+
+set_tests_properties(main/hash_match PROPERTIES DEPENDS main/decrypt)

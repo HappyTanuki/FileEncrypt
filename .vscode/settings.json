@@ -22,18 +22,27 @@
         //     "-k",
         //     "key.pem"
         // ]
+        // "args": [
+        //     "decrypt",
+        //     "-a",
+        //     "AES-256-CTR",
+        //     "-o",
+        //     "output.txt",
+        //     "-i",
+        //     "encrypted.aes",
+        //     "-p",
+        //     "asdf",
+        //     "-k",
+        //     "key.pem"
+        // ]
         "args": [
-            "decrypt",
+            "hash",
             "-a",
-            "AES-256-CTR",
-            "-o",
-            "output.txt",
-            "-i",
-            "encrypted.aes",
-            "-p",
-            "asdf",
-            "-k",
-            "key.pem"
+            "SHA-256",
+            "--diff",
+            "output.txt,compile_commands.json",
+            "--overwrite",
+            "--verbose"
         ]
     },
     "files.associations": {

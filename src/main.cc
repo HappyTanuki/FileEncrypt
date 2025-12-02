@@ -156,6 +156,11 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::string input_filename = parsed_args["input"].as<std::string>();
   input = util::OpenIStream(input_filename);
 
+  if (parsed_args.count("output") == 0) {
+    if (verbose)
+      std::cerr << "An output shall always be specified." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
   std::string output_filename = parsed_args["output"].as<std::string>();
   output = util::OpenOStream(output_filename, overwrite, !overwrite);
 
@@ -286,6 +291,12 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     else if (magic_number == util::NoPasswordKey)
       key = util::KeyLoad<KeySize>(key_input, algorithm_name);
   }
+
+  if (parsed_args.count("output") == 0) {
+    if (verbose)
+      std::cerr << "An output shall always be specified." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
   std::string output_filename = parsed_args["output"].as<std::string>();
   output = util::OpenOStream(output_filename, overwrite, !overwrite);
 
@@ -368,7 +379,7 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
       hash->Update(hash_input);
 
-      if (input->peek() == EOF) a_digest = hash->Digest();
+      if (file_a->peek() == EOF) a_digest = hash->Digest();
     }
     hash->Reset();
     while (file_b->good()) {
@@ -382,7 +393,7 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
       hash->Update(hash_input);
 
-      if (input->peek() == EOF) b_digest = hash->Digest();
+      if (file_b->peek() == EOF) b_digest = hash->Digest();
     }
     hash->Reset();
 
@@ -523,12 +534,6 @@ int main(int argc, char* argv[]) {
   } else if (parsed_args.count("help")) {
     std::cout << help_string << std::endl;
     std::exit(EXIT_SUCCESS);
-  }
-
-  if (parsed_args.count("output") == 0) {
-    if (verbose)
-      std::cerr << "An output shall always be specified." << std::endl;
-    std::exit(EXIT_FAILURE);
   }
 
   std::string algorithm_name = parsed_args["algorithm"].as<std::string>();
