@@ -188,9 +188,12 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   }
   // 비밀번호 전용모드는 키를 저장할 필요가 없음
 
+  std::array<std::byte, KeySize / 8> used_key =
+      util::XorArrays<KeySize / 8>(key, second_key);
+
   std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
       encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
-          algorithm_name, util::XorArrays<KeySize / 8>(key, second_key), iv);
+          algorithm_name, used_key, iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Encrypt;
 
   while (input->good()) {
@@ -305,9 +308,12 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   drbg.Instantiate(KeySize, false);
   algorithm::Pkcs_7<128> pkcs_7;
 
+  std::array<std::byte, KeySize / 8> used_key =
+      util::XorArrays<KeySize / 8>(key, second_key);
+
   std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
       encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
-          algorithm_name, util::XorArrays<KeySize / 8>(key, second_key), iv);
+          algorithm_name, used_key, iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Decrypt;
 
   while (input->good()) {
@@ -328,6 +334,10 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     if (input->peek() == EOF) {
       auto un_padded = pkcs_7.RemovePadding(
           {output_data.data.begin(), output_data.data.end()});
+      if (un_padded.real_length == 0) {
+        if (verbose) std::cerr << "Invalid padding detected." << std::endl;
+        std::exit(EXIT_FAILURE);
+      }
       std::memcpy(output_data.data.data(), un_padded.data.data(),
                   un_padded.data.size());
       write_size = un_padded.real_length;
@@ -368,13 +378,14 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
     std::array<std::byte, DigestSize / 8> a_digest;
     std::array<std::byte, DigestSize / 8> b_digest;
+    std::array<std::byte, READ_CHUNK_SIZE> buffer;
+
     while (file_a->good()) {
       algorithm::HashAlgorithmInputData hash_input;
-      hash_input.message.resize(READ_CHUNK_SIZE);
-      file_a->read(reinterpret_cast<char*>(hash_input.message.data()),
-                   READ_CHUNK_SIZE);
+      file_a->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
       std::streamsize read_bytes = file_a->gcount();
       if (read_bytes == 0) break;
+      hash_input.message = buffer;
       hash_input.bit_length = read_bytes * 8;
 
       hash->Update(hash_input);
@@ -384,11 +395,10 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
     hash->Reset();
     while (file_b->good()) {
       algorithm::HashAlgorithmInputData hash_input;
-      hash_input.message.resize(READ_CHUNK_SIZE);
-      file_b->read(reinterpret_cast<char*>(hash_input.message.data()),
-                   READ_CHUNK_SIZE);
+      file_b->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
       std::streamsize read_bytes = file_b->gcount();
       if (read_bytes == 0) break;
+      hash_input.message = buffer;
       hash_input.bit_length = read_bytes * 8;
 
       hash->Update(hash_input);
@@ -406,6 +416,43 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
     }
   }
 
+  if (parsed_args.count("input") == 0) {
+    if (verbose) std::cerr << "An input shall be specified." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  std::string input_filename = parsed_args["input"].as<std::string>();
+  input = util::OpenIStream(input_filename);
+
+  std::string output_filename;
+  if (parsed_args.count("output") == 0)
+    output_filename =
+        util::GetBasenameBeforeFirstDot(input_filename) + ".hash.txt";
+  else
+    output_filename = parsed_args["output"].as<std::string>();
+  output = util::OpenOStream(output_filename, overwrite, !overwrite);
+
+  std::array<std::byte, DigestSize / 8> digest;
+  std::array<std::byte, READ_CHUNK_SIZE> buffer;
+
+  while (input->good()) {
+    algorithm::HashAlgorithmInputData hash_input;
+    input->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
+    std::streamsize read_bytes = input->gcount();
+    if (read_bytes == 0) break;
+    hash_input.message = buffer;
+    hash_input.bit_length = read_bytes * 8;
+
+    hash->Update(hash_input);
+
+    if (input->peek() == EOF) digest = hash->Digest();
+  }
+
+  std::string digest_string = util::BytesToHexStr(digest);
+
+  output->write(reinterpret_cast<const char*>(digest_string.data()),
+                digest_string.size());
+  output->flush();
+
   return 0;
 }
 
@@ -419,22 +466,33 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
                  std::string help_string, std::uint32_t key_bits,
                  bool overwrite, bool verbose) {
   switch (key_bits) {
-    case 256:
+    case 128:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<256>(parsed_args, help_string, overwrite, verbose);
+          return EncryptMain<128>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<256>(parsed_args, help_string, overwrite, verbose);
+          return DecryptMain<128>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
           return HashMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kKeygen:
           return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          if (verbose)
-            std::cerr << "An unknown error occurred during mode selection."
-                      << std::endl;
-          std::exit(EXIT_FAILURE);
+          break;
       }
+      break;
+    case 160:
+      // switch (mode) {
+      //   case ProgramOperationMode::kEncrypt:
+      //   case ProgramOperationMode::kDecrypt:
+      //     std::exit(EXIT_FAILURE);
+      //   // 이 이외엔 전부 UB임.
+      //   case ProgramOperationMode::kHash:
+      //     return HashMain<160>(parsed_args, help_string, overwrite, verbose);
+      //   case ProgramOperationMode::kKeygen:
+      //     std::exit(EXIT_FAILURE);
+      //   default:
+      //     break;
+      // }
       break;
     case 192:
       switch (mode) {
@@ -447,27 +505,35 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
         case ProgramOperationMode::kKeygen:
           return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          if (verbose)
-            std::cerr << "An unknown error occurred during mode selection."
-                      << std::endl;
-          std::exit(EXIT_FAILURE);
+          break;
       }
       break;
-    case 128:
+    case 224:
+      // switch (mode) {
+      //   case ProgramOperationMode::kEncrypt:
+      //   case ProgramOperationMode::kDecrypt:
+      //     std::exit(EXIT_FAILURE);
+      //   // 이 이외엔 전부 UB임.
+      //   case ProgramOperationMode::kHash:
+      //     return HashMain<224>(parsed_args, help_string, overwrite, verbose);
+      //   case ProgramOperationMode::kKeygen:
+      //     std::exit(EXIT_FAILURE);
+      //   default:
+      //     break;
+      // }
+      break;
+    case 256:
       switch (mode) {
         case ProgramOperationMode::kEncrypt:
-          return EncryptMain<128>(parsed_args, help_string, overwrite, verbose);
+          return EncryptMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kDecrypt:
-          return DecryptMain<128>(parsed_args, help_string, overwrite, verbose);
+          return DecryptMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
           return HashMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kKeygen:
           return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
-          if (verbose)
-            std::cerr << "An unknown error occurred during mode selection."
-                      << std::endl;
-          std::exit(EXIT_FAILURE);
+          break;
       }
       break;
     default:
@@ -475,6 +541,11 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
       std::exit(EXIT_FAILURE);
       break;
   }
+
+  if (verbose)
+    std::cerr << "An unknown error occurred during mode selection."
+              << std::endl;
+  std::exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[]) {
@@ -484,14 +555,9 @@ int main(int argc, char* argv[]) {
 
   std::string help_string;
   auto parsed_args = util::ToplevelArgParse(argc, argv, help_string);
-
-  if (parsed_args.count("help")) {
-    std::cout << help_string << std::endl;
-    std::exit(EXIT_SUCCESS);
-  }
-
+  std::string mode_name;
   if (parsed_args.count("Mode") != 0) {
-    std::string mode_name = parsed_args["Mode"].as<std::string>();
+    mode_name = parsed_args["Mode"].as<std::string>();
     if (mode_name != "encrypt" && mode_name != "decrypt" &&
         mode_name != "hash" && mode_name != "keygen") {
       std::cerr << help_string << std::endl;
@@ -500,6 +566,12 @@ int main(int argc, char* argv[]) {
   } else {
     if (verbose) std::cerr << "A mode shall always be specified." << std::endl;
     std::exit(EXIT_FAILURE);
+  }
+
+  if (parsed_args.count("help") && mode_name != "encrypt" &&
+      mode_name != "decrypt" && mode_name != "hash" && mode_name != "keygen") {
+    std::cout << help_string << std::endl;
+    std::exit(EXIT_SUCCESS);
   }
 
   if (parsed_args.count("overwrite") != 0) {
@@ -531,7 +603,8 @@ int main(int argc, char* argv[]) {
         std::exit(EXIT_FAILURE);
       }
     }
-  } else if (parsed_args.count("help")) {
+  }
+  if (parsed_args.count("help") > 0) {
     std::cout << help_string << std::endl;
     std::exit(EXIT_SUCCESS);
   }

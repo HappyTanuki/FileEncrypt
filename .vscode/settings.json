@@ -9,19 +9,19 @@
     "cmake.generator": "Ninja",
     "cmake.debugConfig": {
         "cwd": "${command:cmake.buildDirectory}",
-        // "args": [
-        //     "encrypt",
-        //     "-a",
-        //     "AES-256-CTR",
-        //     "-i",
-        //     "compile_commands.json",
-        //     "-p",
-        //     "asdf",
-        //     "-o",
-        //     "encrypted.aes",
-        //     "-k",
-        //     "key.pem"
-        // ]
+        "args": [
+            "encrypt",
+            "-a",
+            "AES-256-CTR",
+            "-i",
+            "compile_commands.json",
+            "-p",
+            "asdf",
+            "-o",
+            "encrypted.aes",
+            "-k",
+            "key.pem"
+        ]
         // "args": [
         //     "decrypt",
         //     "-a",
@@ -35,15 +35,27 @@
         //     "-k",
         //     "key.pem"
         // ]
-        "args": [
-            "hash",
-            "-a",
-            "SHA-256",
-            "--diff",
-            "output.txt,compile_commands.json",
-            "--overwrite",
-            "--verbose"
-        ]
+        // "args": [
+        //     "hash", "-a", "SHA-256", "-i", "compile_commands.json", "--overwrite", "--verbose"
+        // ]
+        // "args": [
+        //     "hash",
+        //     "-a",
+        //     "SHA-256",
+        //     "--diff",
+        //     "output.txt,compile_commands.json",
+        //     "--overwrite",
+        //     "--verbose"
+        // ]
+        // "args": [
+        //     "hash",
+        //     "-a",
+        //     "SHA-256",
+        //     "-i",
+        //     "compile_commands.json",
+        //     "--overwrite",
+        //     "--verbose"
+        // ]
     },
     "files.associations": {
         "cctype": "cpp",

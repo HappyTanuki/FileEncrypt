@@ -11,7 +11,7 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
  public:
   using OperationMode<BlockSizeBits, KeyBits, BufferSize>::OperationMode;
   CTR(std::unique_ptr<BlockCipherAlgorithm<KeyBits, BlockSizeBits>> algorithm,
-      std::array<std::byte, BlockSizeBits / 8> initial_vector =
+      std::span<const std::byte> initial_vector =
           GetRandomArray<BlockSizeBits / 8>(),
       std::uint32_t m_bits = 64)
       : OperationMode<BlockSizeBits, KeyBits, BufferSize>(std::move(algorithm),
@@ -30,7 +30,7 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
 
   using OperationMode<BlockSizeBits, KeyBits, BufferSize>::operator<<;
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
-      const std::vector<std::byte>& data) override;
+      std::span<const std::byte> data) override;
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
       OperationModeOutputData<BlockSizeBits>& data) override;
 

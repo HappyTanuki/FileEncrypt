@@ -9,7 +9,7 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
-    const std::vector<std::byte>& data) {
+    std::span<const std::byte> data) {
   if (this->output_buffer_full) {
     return *this;
   }

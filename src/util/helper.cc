@@ -107,19 +107,20 @@ std::string GetEnglishNumberSufix(std::uint64_t number) {
   return result;
 }
 
+std::string GetBasenameBeforeFirstDot(std::string filename) {
+  size_t pos = filename.find('.');
+  return filename.substr(0, pos);
+}
+std::string GetExtensionAfterFirstDot(std::string filename) {
+  size_t pos = filename.find('.');
+  return filename.substr(pos);
+}
+
 std::string GetCandidateName(std::string name_with_extention) {
   std::uint64_t avoid_number = 1;
-  std::uint64_t split_index = 0;
 
-  for (char c : name_with_extention) {
-    if (c != '.')
-      split_index++;
-    else
-      break;
-  }
-
-  std::string name = name_with_extention.substr(0, split_index);
-  std::string ext = name_with_extention.substr(split_index);
+  std::string name = GetBasenameBeforeFirstDot(name_with_extention);
+  std::string ext = GetExtensionAfterFirstDot(name_with_extention);
 
   while (std::filesystem::exists(name + " (" + std::to_string(avoid_number++) +
                                  ")" + ext));

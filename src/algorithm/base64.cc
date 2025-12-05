@@ -6,8 +6,7 @@
 
 namespace file_encrypt::algorithm {
 
-std::vector<std::byte> BASE64::Encoding(
-    const std::vector<std::byte>& data) const {
+std::vector<std::byte> BASE64::Encoding(std::span<const std::byte> data) const {
   if (data.size() == 0) return {};
 
   std::vector<std::byte> encoded((data.size() + 2) / 3 * 4);
@@ -38,8 +37,7 @@ std::vector<std::byte> BASE64::Encoding(
   return encoded;
 }
 
-std::vector<std::byte> BASE64::Decoding(
-    const std::vector<std::byte>& data) const {
+std::vector<std::byte> BASE64::Decoding(std::span<const std::byte> data) const {
   std::vector<std::byte> decoded((data.size() + 3) / 4 * 3);
 
   size_t i = 0, j = 0;

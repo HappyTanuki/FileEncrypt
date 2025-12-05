@@ -22,15 +22,15 @@ class OperationMode {
  public:
   OperationMode(
       std::unique_ptr<BlockCipherAlgorithm<KeyBits, BlockSizeBits>> algorithm,
-      std::array<std::byte, BlockSizeBits / 8> initial_vector =
+      std::span<const std::byte> initial_vector =
           GetRandomArray<BlockSizeBits / 8>())
-      : cipher(std::move(algorithm)),
-        IV(initial_vector),
-        prev_vector(initial_vector) {}
+      : cipher(std::move(algorithm)) {
+    SetIV(initial_vector);
+  }
   virtual ~OperationMode() = default;
 
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
-      const std::vector<std::byte>& data) {
+      std::span<const std::byte> data) {
     return *this;
   };
   OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
@@ -53,10 +53,10 @@ class OperationMode {
     }
   }
 
-  constexpr void SetIV(
-      std::array<std::byte, BlockSizeBits / 8> initial_vector) {
-    this->prev_vector = initial_vector;
-    this->IV = initial_vector;
+  constexpr void SetIV(std::span<const std::byte> initial_vector) {
+    std::copy(initial_vector.begin(), initial_vector.end(),
+              this->prev_vector.begin());
+    this->IV = this->prev_vector;
   }
 
   std::array<std::byte, BlockSizeBits / 8> IV;

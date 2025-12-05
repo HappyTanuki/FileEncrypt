@@ -124,8 +124,12 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
   options.add_options()(
       "i,input", "<file|text|-> Input source: file, text, or '-' for stdin",
       cxxopts::value<std::string>());
-  options.add_options()("o,output", "<file|-> Output file or '-' for stdout",
-                        cxxopts::value<std::string>());
+  options.add_options()(
+      "o,output",
+      "<file|-> Output file or '-' for stdout."
+      "If this option is omitted, the program will automatically generate a "
+      "hash file named \"<input filename>.hash.txt\".",
+      cxxopts::value<std::string>());
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",

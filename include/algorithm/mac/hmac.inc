@@ -5,7 +5,9 @@ namespace file_encrypt::algorithm {
 
 template <std::uint32_t HashDigestLen>
 std::vector<std::byte> HMAC<HashDigestLen>::Compute(
-    std::vector<std::byte> key, const std::vector<std::byte>& data) const {
+    std::span<const std::byte> read_only_key,
+    std::span<const std::byte> data) const {
+  std::vector<std::byte> key(read_only_key.begin(), read_only_key.end());
   if (key.size() > this->algorithm->inner_block_size / 8) {
     auto temp = this->algorithm->Digest({key, key.size() * 8});
     key = std::vector<std::byte>(temp.begin(), temp.end());
@@ -30,7 +32,7 @@ std::vector<std::byte> HMAC<HashDigestLen>::Compute(
 }
 
 template <std::uint32_t HashDigestLen>
-void HMAC<HashDigestLen>::Compute(const std::vector<std::byte>& data) {
+void HMAC<HashDigestLen>::Compute(std::span<const std::byte> data) {
   algorithm->Update({data, data.size() * 8});
 }
 

@@ -13,7 +13,7 @@ template <std::uint32_t HashDigestLen>
 class HMAC : public MacAlgorithm {
  public:
   HMAC<HashDigestLen>(std::unique_ptr<HashAlgorithm<HashDigestLen>> algorithm,
-                      std::vector<std::byte> key = {})
+                      std::span<const std::byte> key = {})
       : algorithm(std::move(algorithm)),
         inner_padding(
             std::vector<std::byte>(this->algorithm->inner_block_size / 8,
@@ -21,14 +21,14 @@ class HMAC : public MacAlgorithm {
         outer_padding(
             std::vector<std::byte>(this->algorithm->inner_block_size / 8,
                                    static_cast<std::byte>(0x5C))) {
-    if (key.size() > this->algorithm->inner_block_size / 8) {
-      auto temp = this->algorithm->Digest({key, key.size() * 8});
-      key = std::vector<std::byte>(temp.begin(), temp.end());
+    this->key = std::vector<std::byte>(key.begin(), key.end());
+    if (this->key.size() > this->algorithm->inner_block_size / 8) {
+      auto temp = this->algorithm->Digest({this->key, this->key.size() * 8});
+      this->key = std::vector<std::byte>(temp.begin(), temp.end());
     }
-    key.resize(this->algorithm->inner_block_size / 8,
-               static_cast<std::byte>(0x00));
-    this->key = key;
-    this->xored_key = file_encrypt::util::XorVectors(key, inner_padding);
+    this->key.resize(this->algorithm->inner_block_size / 8,
+                     static_cast<std::byte>(0x00));
+    this->xored_key = file_encrypt::util::XorVectors(this->key, inner_padding);
     this->digest_size = this->algorithm->digest_size;
     Reset();
   }
@@ -39,12 +39,11 @@ class HMAC : public MacAlgorithm {
   }
 
   // 짧거나 한 번에 처리할 필요가 있는 데이터를 처리할 때 사용.
-  std::vector<std::byte> Compute(
-      std::vector<std::byte> key,
-      const std::vector<std::byte>& data) const final;
+  std::vector<std::byte> Compute(std::span<const std::byte> key,
+                                 std::span<const std::byte> data) const final;
 
   // 내부적으로 버퍼링 하여 임의 길이로 계산할 때 사용.
-  void Compute(const std::vector<std::byte>& data) final;
+  void Compute(std::span<const std::byte> data) final;
   // 내부 버퍼를 비우고 패딩하여 계산하여 반환.
   std::vector<std::byte> Finalize() final;
 
