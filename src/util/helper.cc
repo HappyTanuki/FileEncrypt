@@ -149,7 +149,7 @@ std::shared_ptr<std::istream> OpenIStream(std::string name) {
   } else if (std::filesystem::exists(name)) {
     return std::make_shared<std::ifstream>(name, std::ios::binary);
   } else {
-    return std::make_shared<std::istringstream>(name);
+    return std::make_shared<std::istringstream>(name, std::ios::binary);
   }
 }
 

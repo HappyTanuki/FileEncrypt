@@ -12,11 +12,9 @@
         "args": [
             "encrypt",
             "-a",
-            "AES-256-CTR",
+            "AES-256-CBC",
             "-i",
             "compile_commands.json",
-            "-p",
-            "asdf",
             "-o",
             "encrypted.aes",
             "-k",
@@ -27,17 +25,15 @@
         // "args": [
         //     "decrypt",
         //     "-a",
-        //     "AES-256-CTR",
+        //     "AES-256-CBC",
         //     "-o",
         //     "output.txt",
         //     "-i",
         //     "encrypted.aes",
-        //     "-p",
-        //     "asdf",
         //     "-k",
         //     "key.pem",
-            // "--overwrite",
-            // "--verbose"
+        //     "--overwrite",
+        //     "--verbose"
         // ]
         // "args": [
         //     "hash", "-a", "SHA-256", "-i", "compile_commands.json", "--overwrite", "--verbose"

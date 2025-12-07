@@ -158,9 +158,8 @@ cxxopts::ParseResult KeygenArgParse(int argc, char* argv[],
   options.add_options()("p,password",
                         "[file|text|-] password file, text, or '-' for prompt",
                         cxxopts::value<std::string>());
-  options.add_options()("use-non-password-key",
-                        "When this flag is set, program will generate "
-                        "non-password-key file");
+  options.add_options()("gen-non-password-key",
+                        "Generate non-password-key file");
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
       "overwrite",

@@ -86,8 +86,6 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     use_password = true;
     password = parsed_args["password"].as<std::string>();
     if (password == "-") password = PromptPasswordCreateInput();
-  } else if (use_password && !use_key) {
-    password = PromptPasswordCreateInput();
   }
 
   // 최종적으로 사용할 키
