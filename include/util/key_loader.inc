@@ -97,6 +97,8 @@ std::array<std::byte, KeySize / 8> KeyLoad(std::shared_ptr<std::istream> stream,
     buffer.clear();
   }
 
+  if (!found_begin) return key;
+
   // Base64 공백/개행 제거
   base64_data.erase(
       std::remove_if(base64_data.begin(), base64_data.end(),

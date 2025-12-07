@@ -97,18 +97,18 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   // 있음.
   std::array<std::byte, KeySize / 8> second_key = {};
   std::array<std::byte, 16> iv = {};
-  std::vector<std::byte> salt = {};
+  std::vector<std::byte> salt(16);
 
   std::shared_ptr<file_encrypt::algorithm::HMAC<256>> hmac =
       std::make_shared<file_encrypt::algorithm::HMAC<256>>(
           std::make_unique<file_encrypt::algorithm::SHA<256>>());
 
-  auto salt_return = drbg.Generate(KeySize, KeySize, false, {});
+  auto salt_return = drbg.Generate(128, KeySize, false, {});
   if (salt_return.status != algorithm::ReturnStatus::kSUCCESS) {
     if (verbose) std::cerr << "CSPRNG error.\n";
     std::exit(EXIT_FAILURE);
   }
-  salt = std::move(salt_return.pseudorandom_bits);
+  std::memcpy(salt.data(), salt_return.pseudorandom_bits.data(), 16);
 
   auto iv_return = drbg.Generate(128, KeySize, false, {});
   if (iv_return.status != algorithm::ReturnStatus::kSUCCESS) {
@@ -136,8 +136,11 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     }
     std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(),
                 KeySize / 8);
-  } else {
-    // 키 입력이 없고 엔트로피 전용모드일 때
+  }
+  if (key.empty() || std::all_of(key.begin(), key.end(), [](std::byte b) {
+        return b == std::byte{0x00};
+      })) {
+    // 키 입력이 없고 엔트로피 전용모드일 때 또는 키 입력이 불량일 때
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
       if (verbose) std::cerr << "CSPRNG error.\n";
@@ -173,8 +176,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   else
     output->write(reinterpret_cast<const char*>(util::NoPasswordKey.data()), 4);
   output->write(reinterpret_cast<char*>(iv.data()), 16);
-  if (use_password)
-    output->write(reinterpret_cast<char*>(salt.data()), KeySize / 8);
+  if (use_password) output->write(reinterpret_cast<char*>(salt.data()), 16);
 
   std::filesystem::path keyname = "key.pem";
   if (use_key && !use_password) {

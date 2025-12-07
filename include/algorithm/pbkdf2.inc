@@ -16,6 +16,8 @@ std::array<std::byte, Keylen / 8> PBKDF2(
   std::uint32_t len =
       ((Keylen + hmac_instance->digest_size - 1) / hmac_instance->digest_size);
   std::uint32_t r = Keylen - (len - 1) * hmac_instance->digest_size;
+
+  std::vector<std::byte> key_vec = file_encrypt::util::StrToBytes(password);
   std::vector<std::vector<std::byte>> T(len);
   std::vector<std::byte> U;
   for (std::uint32_t i = 1; i <= len; i++) {
@@ -23,7 +25,7 @@ std::array<std::byte, Keylen / 8> PBKDF2(
     U = file_encrypt::util::ConcatByteVectors(
         salt, file_encrypt::util::UInt32ToBytesVector(i));
     for (std::uint32_t j = 1; j <= IterationCount; j++) {
-      U = hmac_instance->Compute(file_encrypt::util::StrToBytes(password), U);
+      U = hmac_instance->Compute(key_vec, U);
       T[i - 1] = file_encrypt::util::XorVectors(T[i - 1], U);
     }
   }
