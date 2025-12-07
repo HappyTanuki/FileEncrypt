@@ -119,7 +119,6 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
   if (!use_password && use_key && parsed_args.count("key") > 0) {
     // 키 입력이 있고 엔트로피 전용모드일 때
-    use_key = true;
     std::string key_filename = parsed_args["key"].as<std::string>();
     key_input = util::OpenIStream(key_filename);
     key = util::KeyLoad<KeySize>(key_input, algorithm_name);
@@ -137,9 +136,8 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     std::memcpy(second_key.data(), key_return.pseudorandom_bits.data(),
                 KeySize / 8);
   }
-  if (key.empty() || std::all_of(key.begin(), key.end(), [](std::byte b) {
-        return b == std::byte{0x00};
-      })) {
+  if (std::all_of(key.begin(), key.end(),
+                  [](std::byte b) { return b == std::byte{0x00}; })) {
     // 키 입력이 없고 엔트로피 전용모드일 때 또는 키 입력이 불량일 때
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
@@ -232,7 +230,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::array<std::byte, KeySize / 8> key;
   std::array<std::byte, KeySize / 8> second_key = {};
   std::array<std::byte, 16> iv;
-  std::vector<std::byte> salt(KeySize / 8);
+  std::vector<std::byte> salt(16);
 
   std::shared_ptr<file_encrypt::algorithm::HMAC<256>> hmac =
       std::make_shared<file_encrypt::algorithm::HMAC<256>>(
@@ -252,7 +250,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   input->read(reinterpret_cast<char*>(magic_number.data()), 4);
   input->read(reinterpret_cast<char*>(iv.data()), 16);
   if (magic_number != util::NoPasswordKey)
-    input->read(reinterpret_cast<char*>(salt.data()), KeySize / 8);
+    input->read(reinterpret_cast<char*>(salt.data()), 16);
 
   std::string password = "";
   bool use_password = false;

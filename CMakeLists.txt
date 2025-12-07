@@ -24,6 +24,7 @@ file(DOWNLOAD
     TLS_VERIFY ON
 )
 
+include(CTest)
 enable_testing()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cxx" "src/*.cc")

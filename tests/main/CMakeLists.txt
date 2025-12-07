@@ -6,7 +6,7 @@ if(NOT WIN32)
     target_compile_options(encrypt PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
 endif()
 add_test(NAME ${full_test_name}
-    COMMAND encrypt encrypt -a AES-256-CBC -i compile_commands.json -o encrypted.aes -k key.pem --overwrite --verbose
+    COMMAND encrypt encrypt -a AES-256-CBC -i compile_commands.json -o encrypted.aes -p asdf -k key.pem --overwrite --verbose
 )
 set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_tests_properties(${full_test_name} PROPERTIES LABELS main)
@@ -20,7 +20,7 @@ if(NOT WIN32)
     target_compile_options(decrypt PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
 endif()
 add_test(NAME ${full_test_name}
-    COMMAND decrypt decrypt -a AES-256-CBC -o output.txt -i encrypted.aes -k key.pem --overwrite --verbose
+    COMMAND decrypt decrypt -a AES-256-CBC -o output.txt -i encrypted.aes -p asdf -k key.pem --overwrite --verbose
 )
 set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_tests_properties(${full_test_name} PROPERTIES LABELS main)
@@ -43,6 +43,19 @@ set_tests_properties(${full_test_name} PROPERTIES LABELS main)
 add_dependencies(hash_match copy_test_vectors)
 
 set_tests_properties(main/hash_match PROPERTIES DEPENDS main/decrypt)
+
+set(LOOP_TESTS "main/encrypt" "main/decrypt" "main/hash_match")
+
+configure_file(
+    "${CMAKE_SOURCE_DIR}/tests/main/loop_tests.cmake.in"
+    "${CMAKE_BINARY_DIR}/tests/main/loop_tests.cmake"
+    @ONLY
+)
+
+add_test(
+    NAME LoopRunner
+    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/tests/main/loop_tests.cmake"
+)
 
 set(test_name "hash_do_not_match")
 set(full_test_name "main/hash_do_not_match")

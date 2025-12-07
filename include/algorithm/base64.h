@@ -11,9 +11,6 @@ class BASE64 : public EncodingAlgorithm {
       const std::vector<std::byte>& data) const override final;
   std::vector<std::byte> Decoding(const std::string& data) const;
 
-  std::vector<std::byte> ReplaceChar(std::vector<std::byte> data) const;
-  std::vector<std::byte> ReplaceChar(const std::string& data) const;
-
  private:
   static constexpr char kBase64Chars[] =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

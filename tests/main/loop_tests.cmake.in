@@ -1,0 +1,40 @@
+set(TEST_LIST @LOOP_TESTS@)
+set(MAX_ITER 100)
+set(iter 0)
+
+while(iter LESS MAX_ITER)
+    math(EXPR iter "${iter} + 1")
+    message("=== Iteration ${iter} start ===")
+
+    set(step 0)
+
+    foreach(t IN LISTS TEST_LIST)
+        math(EXPR step "${step} + 1")
+        message("Running step ${step}: ${t}")
+
+        set(out "")
+        set(err "")
+        set(res -1)
+
+        execute_process(
+            COMMAND ${CMAKE_CTEST_COMMAND} -C Debug -R "^${t}$" --output-on-failure
+            WORKING_DIRECTORY "@CMAKE_BINARY_DIR@"
+            RESULT_VARIABLE res
+            OUTPUT_VARIABLE out
+            ERROR_VARIABLE err
+        )
+
+        message("Step ${step} '${t}' finished (res=${res})")
+        message("Output:\n${out}\n${err}")
+
+        if(NOT res EQUAL 0)
+            message(FATAL_ERROR
+                "\n[FAIL] iteration=${iter} step=${step} test=${t}\n"
+            )
+        endif()
+    endforeach()
+
+    message("Iteration ${iter} success → repeating...\n")
+endwhile()
+
+message("All iterations finished successfully (MAX_ITER=${MAX_ITER})")

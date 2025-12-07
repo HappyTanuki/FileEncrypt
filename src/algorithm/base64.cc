@@ -45,38 +45,42 @@ std::vector<std::byte> BASE64::Decoding(
   size_t i = 0, j = 0;
   while (i < data.size()) {
     std::uint32_t word_bytes[4];
-    word_bytes[0] = i < data.size() ? static_cast<std::uint8_t>(data[i++]) : 0;
-    word_bytes[1] = i < data.size() ? static_cast<std::uint8_t>(data[i++]) : 0;
-    word_bytes[2] = i < data.size() ? static_cast<std::uint8_t>(data[i++]) : 0;
-    word_bytes[3] = i < data.size() ? static_cast<std::uint8_t>(data[i++]) : 0;
+    word_bytes[0] = i < data.size()
+                        ? static_cast<std::uint8_t>(
+                              kIBase64[static_cast<std::uint8_t>(data[i++])])
+                        : 0;
+    word_bytes[1] = i < data.size()
+                        ? static_cast<std::uint8_t>(
+                              kIBase64[static_cast<std::uint8_t>(data[i++])])
+                        : 0;
+    word_bytes[2] = i < data.size()
+                        ? static_cast<std::uint8_t>(
+                              kIBase64[static_cast<std::uint8_t>(data[i++])])
+                        : 0;
+    word_bytes[3] = i < data.size()
+                        ? static_cast<std::uint8_t>(
+                              kIBase64[static_cast<std::uint8_t>(data[i++])])
+                        : 0;
 
     std::uint32_t word = (word_bytes[0] & 0x3F) << 18 |
                          (word_bytes[1] & 0x3F) << 12 |
                          (word_bytes[2] & 0x3F) << 6 | (word_bytes[3] & 0x3F);
 
-    if (data[i - 2] != static_cast<std::byte>('='))
+    if (data[i - 2] !=
+        kIBase64[static_cast<std::uint8_t>(static_cast<std::byte>('='))])
       decoded[j++] = static_cast<std::byte>((word >> 16) & 0xFF);
-    if (data[i - 1] != static_cast<std::byte>('='))
+    if (data[i - 1] !=
+        kIBase64[static_cast<std::uint8_t>(static_cast<std::byte>('='))])
       decoded[j++] = static_cast<std::byte>((word >> 8) & 0xFF);
-    if (data[i] != static_cast<std::byte>('='))
+    if (data[i] !=
+        kIBase64[static_cast<std::uint8_t>(static_cast<std::byte>('='))])
       decoded[j++] = static_cast<std::byte>(word & 0xFF);
   }
   return decoded;
 }
 
 std::vector<std::byte> BASE64::Decoding(const std::string& data) const {
-  return Decoding(ReplaceChar(data));
-}
-
-std::vector<std::byte> BASE64::ReplaceChar(std::vector<std::byte> data) const {
-  std::transform(data.begin(), data.end(), data.begin(), [this](std::byte c) {
-    return kIBase64[static_cast<std::uint8_t>(c)];
-  });
-  return data;
-}
-
-std::vector<std::byte> BASE64::ReplaceChar(const std::string& data) const {
-  return ReplaceChar(file_encrypt::util::StrToBytes(data));
+  return Decoding(file_encrypt::util::StrToBytes(data));
 }
 
 }  // namespace file_encrypt::algorithm
