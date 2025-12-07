@@ -200,7 +200,6 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     std::array<std::byte, 16> buffer = {};
     input->read(reinterpret_cast<char*>(buffer.data()), 16);
     std::streamsize read_bytes = input->gcount();
-    size_t write_size = 0;
     if (read_bytes == 0) break;
 
     std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
@@ -211,14 +210,11 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
       std::memcpy(data.data(), padded.data(), padded.size());
     }
 
-    *encrypt_algorithm << data;
-
     algorithm::op_mode::OperationModeOutputData<128> output_data;
-    *encrypt_algorithm >> output_data;
+    *encrypt_algorithm << data >> output_data;
 
-    write_size = output_data.data.size();
-
-    output->write(reinterpret_cast<char*>(output_data.data.data()), write_size);
+    output->write(reinterpret_cast<char*>(output_data.data.data()),
+                  output_data.data.size());
   }
   output->flush();
 
@@ -378,14 +374,14 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
     std::array<std::byte, DigestSize / 8> a_digest;
     std::array<std::byte, DigestSize / 8> b_digest;
-    std::array<std::byte, READ_CHUNK_SIZE> buffer;
+    std::vector<std::byte> buffer(READ_CHUNK_SIZE);
 
     while (file_a->good()) {
       algorithm::HashAlgorithmInputData hash_input;
       file_a->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
       std::streamsize read_bytes = file_a->gcount();
       if (read_bytes == 0) break;
-      hash_input.message = buffer;
+      hash_input.message = std::vector<std::byte>(buffer.begin(), buffer.end());
       hash_input.bit_length = read_bytes * 8;
 
       hash->Update(hash_input);
@@ -398,7 +394,7 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
       file_b->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
       std::streamsize read_bytes = file_b->gcount();
       if (read_bytes == 0) break;
-      hash_input.message = buffer;
+      hash_input.message = std::vector<std::byte>(buffer.begin(), buffer.end());
       hash_input.bit_length = read_bytes * 8;
 
       hash->Update(hash_input);
@@ -439,7 +435,7 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
     input->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
     std::streamsize read_bytes = input->gcount();
     if (read_bytes == 0) break;
-    hash_input.message = buffer;
+    hash_input.message = std::vector<std::byte>(buffer.begin(), buffer.end());
     hash_input.bit_length = read_bytes * 8;
 
     hash->Update(hash_input);

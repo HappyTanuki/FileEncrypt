@@ -16,17 +16,12 @@ std::vector<std::byte> HexStringToBytes(const std::string& hex) {
 }
 
 int main() {
-  std::vector<std::byte> data;
-  std::vector<std::byte> key;
-
   file_encrypt::algorithm::AES<256> aes;
+  file_encrypt::algorithm::CipherAlgorithmOnetimeInputData input;
+  input.data = HexStringToBytes("014730f80ac625fe84f026c60bfd547d");
+  input.key.resize(32);
 
-  data.clear();
-  key.clear();
-  data = HexStringToBytes("014730f80ac625fe84f026c60bfd547d");
-  key.resize(32);
-
-  auto result = aes.Encrypt({data, key});
+  auto result = aes.Encrypt(input);
 
   auto expected_result = HexStringToBytes("5c9d844ed46f9885085e5d6a4f94c7d7");
 
@@ -34,13 +29,12 @@ int main() {
     return -1;
   }
 
-  data.clear();
-  key.clear();
-  data.resize(16);
-  key = HexStringToBytes(
+  input.data.clear();
+  input.data.resize(16);
+  input.key = HexStringToBytes(
       "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
 
-  result = aes.Encrypt({data, key});
+  result = aes.Encrypt(input);
 
   expected_result = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
 
@@ -48,13 +42,13 @@ int main() {
     return -1;
   }
 
-  data.clear();
-  key.clear();
-  data = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
-  key = HexStringToBytes(
+  input.data.clear();
+  input.data = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
+  input.key.clear();
+  input.key = HexStringToBytes(
       "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
 
-  result = aes.Decrypt({data, key});
+  result = aes.Decrypt(input);
 
   expected_result = HexStringToBytes("00000000000000000000000000000000");
 

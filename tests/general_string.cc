@@ -7,8 +7,8 @@ int main() {
   file_encrypt::algorithm::SHA<256> hash;
 
   file_encrypt::algorithm::HashAlgorithmInputData input_data;
-  auto message = file_encrypt::util::StrToBytes("https://namu.wiki/w/SHA");
-  input_data.message = message;
+  input_data.message =
+      file_encrypt::util::StrToBytes("https://namu.wiki/w/SHA");
   input_data.bit_length = input_data.message.size() * 8;
 
   hash.Update(input_data);

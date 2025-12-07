@@ -41,13 +41,11 @@ RemovePaddingReturnData<BlockSize> Pkcs_7<BlockSize>::RemovePadding(
   std::array<std::byte, BlockSize / 8> result = {};
   std::uint32_t bytes_to_copy =
       BlockSize / 8 - std::to_integer<int>(data[data.size() - 1]);
-  if (bytes_to_copy > BlockSize / 8 || bytes_to_copy < 0) {
-    return {{}, 0};
-  }
 
   data.resize(bytes_to_copy);
   std::memcpy(result.data(), data.data(), data.size());
 
   return {result, bytes_to_copy};
 }
+
 };  // namespace file_encrypt::algorithm

@@ -153,7 +153,7 @@ AES<KeyBits>::AES() {
 }
 
 template <std::uint32_t KeyBits>
-AES<KeyBits>::AES(std::span<const std::byte> key) {
+AES<KeyBits>::AES(std::array<std::byte, KeyBits / 8> key) {
   Init();
   std::array<AESByte, KeyBits / 8> aes_key;
   std::memcpy(aes_key.data(), key.data(), key.size());
@@ -186,7 +186,9 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
 
   KeyExpansion(key, expanded_key);
 
-  _AESEssentialData essential_data = {expanded_key, data_array};
+  _AESEssentialData essential_data = {};
+  essential_data.expanded_key = expanded_key;
+  essential_data.data = data_array;
   return _Encrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
@@ -208,19 +210,26 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
 
   KeyExpansion(key, expanded_key);
 
-  _AESEssentialData essential_data = {expanded_key, data_array};
+  _AESEssentialData essential_data = {};
+  essential_data.expanded_key = expanded_key;
+  essential_data.data = data_array;
   return _Decrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
 CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
-    std::span<const std::byte> data) {
-  _AESEssentialData essential_data = {expanded_key, data};
+    const std::array<std::byte, 16>& data) {
+  _AESEssentialData essential_data = {};
+
+  essential_data.data = data;
+  essential_data.expanded_key = expanded_key;
   return _Encrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
 CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
-    std::span<const std::byte> data) {
-  _AESEssentialData essential_data = {expanded_key, data};
+    const std::array<std::byte, 16>& data) {
+  _AESEssentialData essential_data = {};
+  essential_data.data = data;
+  essential_data.expanded_key = expanded_key;
   return _Decrypt(essential_data);
 }
 

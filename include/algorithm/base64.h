@@ -6,9 +6,9 @@ namespace file_encrypt::algorithm {
 class BASE64 : public EncodingAlgorithm {
  public:
   std::vector<std::byte> Encoding(
-      std::span<const std::byte> data) const override final;
+      const std::vector<std::byte>& data) const override final;
   std::vector<std::byte> Decoding(
-      std::span<const std::byte> data) const override final;
+      const std::vector<std::byte>& data) const override final;
   std::vector<std::byte> Decoding(const std::string& data) const;
 
   std::vector<std::byte> ReplaceChar(std::vector<std::byte> data) const;

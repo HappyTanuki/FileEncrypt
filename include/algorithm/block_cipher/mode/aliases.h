@@ -33,10 +33,16 @@ class AES_ECB : public file_encrypt::algorithm::op_mode::ECB<128, KeySize, 1> {
 template <std::uint32_t KeySize>
 class AES_CTR : public file_encrypt::algorithm::op_mode::CTR<128, KeySize, 1> {
  public:
-  AES_CTR(const std::array<std::byte, KeySize / 8>& key = {},
-          const std::array<std::byte, 16>& iv = GetRandomArray<16>())
+  // IV를 명시적으로 지정하는 버전
+  AES_CTR(const std::array<std::byte, KeySize / 8>& key,
+          const std::array<std::byte, 16>& iv)
       : file_encrypt::algorithm::op_mode::CTR<128, KeySize, 1>(
             std::make_unique<file_encrypt::algorithm::AES<KeySize>>(key), iv) {}
+
+  // 랜덤 IV 사용 버전
+  explicit AES_CTR(const std::array<std::byte, KeySize / 8>& key = {})
+      : file_encrypt::algorithm::op_mode::CTR<128, KeySize, 1>(
+            std::make_unique<file_encrypt::algorithm::AES<KeySize>>(key)) {}
 };
 
 }  // namespace file_encrypt::algorithm

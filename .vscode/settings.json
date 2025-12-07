@@ -20,7 +20,9 @@
             "-o",
             "encrypted.aes",
             "-k",
-            "key.pem"
+            "key.pem",
+            "--overwrite",
+            "--verbose"
         ]
         // "args": [
         //     "decrypt",
@@ -33,7 +35,9 @@
         //     "-p",
         //     "asdf",
         //     "-k",
-        //     "key.pem"
+        //     "key.pem",
+            // "--overwrite",
+            // "--verbose"
         // ]
         // "args": [
         //     "hash", "-a", "SHA-256", "-i", "compile_commands.json", "--overwrite", "--verbose"

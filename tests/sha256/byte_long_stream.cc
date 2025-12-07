@@ -36,15 +36,13 @@ int main() {
 
     file_encrypt::algorithm::HashAlgorithmInputData part1;
     part1.bit_length = mid_bytes * 8;
-    std::vector<std::byte> upper_half = std::vector<std::byte>(
+    part1.message = std::vector<std::byte>(
         input_data.message.begin(), input_data.message.begin() + mid_bytes);
-    part1.message = upper_half;
 
     file_encrypt::algorithm::HashAlgorithmInputData part2;
     part2.bit_length = input_data.bit_length - part1.bit_length;
-    std::vector<std::byte> lower_half = std::vector<std::byte>(
+    part2.message = std::vector<std::byte>(
         input_data.message.begin() + mid_bytes, input_data.message.end());
-    part2.message = lower_half;
 
     // SHA<256> 업데이트
     sha256.Update(part1);

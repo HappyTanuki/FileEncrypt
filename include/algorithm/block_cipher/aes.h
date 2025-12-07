@@ -95,7 +95,7 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   static_assert(KeyBits == 128 || KeyBits == 192 || KeyBits == 256,
                 "AES key size must be 128, 192, or 256 bits");
   AES();
-  AES(const std::span<const std::byte> key);
+  AES(std::array<std::byte, KeyBits / 8> key);
 
   void Init();
 
@@ -104,17 +104,17 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   CipherAlgorithmReturnData Decrypt(
       const CipherAlgorithmOnetimeInputData& data) const final override;
   CipherAlgorithmReturnData Encrypt(
-      std::span<const std::byte> data) final override;
+      const std::array<std::byte, 16>& data) final override;
   CipherAlgorithmReturnData Decrypt(
-      std::span<const std::byte> data) final override;
+      const std::array<std::byte, 16>& data) final override;
 
  private:
   static constexpr std::uint32_t Nk = KeyBits / 32;
   static constexpr std::uint32_t Nr = Nk + 6;
 
   struct _AESEssentialData {
-    const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key;
-    std::span<const std::byte> data;
+    std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
+    std::array<std::byte, 16> data;
   };
 
   constexpr CipherAlgorithmReturnData _Encrypt(_AESEssentialData data) const;
