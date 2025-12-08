@@ -15,11 +15,10 @@ std::unique_ptr<HashAlgorithm<DigestLen>> HashFactory(std::string name);
 
 namespace file_encrypt::algorithm::op_mode {
 
-template <std::uint32_t KeyBits>
-std::unique_ptr<OperationMode<128, KeyBits, 1>> OPModeFactory(
+template <std::uint32_t KeyBits, std::uint32_t BufferSize = 1>
+std::unique_ptr<OperationMode<128, KeyBits, BufferSize>> OPModeFactory(
     std::string name, const std::array<std::byte, KeyBits / 8>& key = {},
     const std::array<std::byte, 16>& iv = GetRandomArray<16>());
-
 }
 
 #include "block_cipher_modes_factory.inc"

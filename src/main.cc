@@ -189,30 +189,40 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::array<std::byte, KeySize / 8> used_key =
       util::XorArrays<KeySize / 8>(key, second_key);
 
-  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
-      encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
-          algorithm_name, used_key, iv);
+  constexpr std::uint32_t buffer_size = (READ_CHUNK_SIZE + 15) / 16;
+  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, buffer_size>>
+      encrypt_algorithm =
+          algorithm::op_mode::OPModeFactory<KeySize, buffer_size>(
+              algorithm_name, used_key, iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Encrypt;
 
   while (input->good()) {
-    std::array<std::byte, 16> buffer = {};
-    input->read(reinterpret_cast<char*>(buffer.data()), 16);
+    std::array<std::byte, READ_CHUNK_SIZE> buffer = {};
+    input->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
     std::streamsize read_bytes = input->gcount();
     if (read_bytes == 0) break;
 
     std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
 
     if (input->peek() == EOF) {
-      auto padded = pkcs_7.MakePaddingBlock(data).back();
-      data.resize(16);
-      std::memcpy(data.data(), padded.data(), padded.size());
+      auto padded = pkcs_7.MakePaddingBlock(data);
+      data.clear();
+      data.reserve(16 * padded.size());
+
+      for (auto block : padded) {
+        data.insert(data.end(), block.begin(), block.end());
+      }
     }
 
     algorithm::op_mode::OperationModeOutputData<128> output_data;
-    *encrypt_algorithm << data >> output_data;
+    *encrypt_algorithm << data;
 
-    output->write(reinterpret_cast<char*>(output_data.data.data()),
-                  output_data.data.size());
+    while (encrypt_algorithm->GetBufferCount() > 0) {
+      *encrypt_algorithm >> output_data;
+
+      output->write(reinterpret_cast<char*>(output_data.data.data()),
+                    output_data.data.size());
+    }
   }
   output->flush();
 
@@ -305,14 +315,16 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   std::array<std::byte, KeySize / 8> used_key =
       util::XorArrays<KeySize / 8>(key, second_key);
 
-  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, 1>>
-      encrypt_algorithm = algorithm::op_mode::OPModeFactory<KeySize>(
-          algorithm_name, used_key, iv);
+  constexpr std::uint32_t buffer_size = (READ_CHUNK_SIZE + 15) / 16;
+  std::unique_ptr<algorithm::op_mode::OperationMode<128, KeySize, buffer_size>>
+      encrypt_algorithm =
+          algorithm::op_mode::OPModeFactory<KeySize, buffer_size>(
+              algorithm_name, used_key, iv);
   *encrypt_algorithm << algorithm::op_mode::CipherMode::Decrypt;
 
   while (input->good()) {
-    std::array<std::byte, 16> buffer = {};
-    input->read(reinterpret_cast<char*>(buffer.data()), 16);
+    std::array<std::byte, READ_CHUNK_SIZE> buffer = {};
+    input->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
     std::streamsize read_bytes = input->gcount();
     size_t write_size = 0;
     if (read_bytes == 0) break;
@@ -321,23 +333,26 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
 
     *encrypt_algorithm << data;
 
-    algorithm::op_mode::OperationModeOutputData<128> output_data;
-    *encrypt_algorithm >> output_data;
+    while (encrypt_algorithm->GetBufferCount() > 0) {
+      algorithm::op_mode::OperationModeOutputData<128> output_data;
+      *encrypt_algorithm >> output_data;
 
-    write_size = output_data.data.size();
-    if (input->peek() == EOF) {
-      auto un_padded = pkcs_7.RemovePadding(
-          {output_data.data.begin(), output_data.data.end()});
-      if (un_padded.real_length == 0) {
-        if (verbose) std::cerr << "Invalid padding detected." << std::endl;
-        std::exit(EXIT_FAILURE);
+      write_size = output_data.data.size();
+      if (input->peek() == EOF && encrypt_algorithm->GetBufferCount() == 0) {
+        auto un_padded = pkcs_7.RemovePadding(
+            {output_data.data.begin(), output_data.data.end()});
+        if (un_padded.real_length == 0) {
+          if (verbose) std::cerr << "Invalid padding detected." << std::endl;
+          std::exit(EXIT_FAILURE);
+        }
+        std::memcpy(output_data.data.data(), un_padded.data.data(),
+                    un_padded.data.size());
+        write_size = un_padded.real_length;
       }
-      std::memcpy(output_data.data.data(), un_padded.data.data(),
-                  un_padded.data.size());
-      write_size = un_padded.real_length;
-    }
 
-    output->write(reinterpret_cast<char*>(output_data.data.data()), write_size);
+      output->write(reinterpret_cast<char*>(output_data.data.data()),
+                    write_size);
+    }
   }
   output->flush();
 
