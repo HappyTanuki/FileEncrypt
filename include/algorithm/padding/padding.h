@@ -18,7 +18,7 @@ template <std::uint32_t BlockSize>
 class Padding {
  public:
   virtual std::vector<std::array<std::byte, BlockSize / 8>> MakePaddingBlock(
-      std::vector<std::byte> data) = 0;
+      std::span<std::byte> data) = 0;
   virtual RemovePaddingReturnData<BlockSize> RemovePadding(
       std::vector<std::byte> data) = 0;
 

@@ -10,7 +10,7 @@ template <std::uint32_t BlockSize>
 class Pkcs_7 : public Padding<BlockSize> {
  public:
   std::vector<std::array<std::byte, BlockSize / 8>> MakePaddingBlock(
-      std::vector<std::byte> data) final override;
+      std::span<std::byte> data) final override;
   RemovePaddingReturnData<BlockSize> RemovePadding(
       std::vector<std::byte> data) final override;
 };

@@ -202,20 +202,21 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     std::streamsize read_bytes = input->gcount();
     if (read_bytes == 0) break;
 
-    std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
-
     if (input->peek() == EOF) {
-      auto padded = pkcs_7.MakePaddingBlock(data);
-      data.clear();
-      data.reserve(16 * padded.size());
+      auto padded = pkcs_7.MakePaddingBlock(
+          std::span<std::byte>(buffer.data(), read_bytes));
 
+      buffer = {};
+      std::uint32_t offset = 0;
       for (auto block : padded) {
-        data.insert(data.end(), block.begin(), block.end());
+        std::memcpy(buffer.data() + offset, block.data(), block.size());
+        offset += block.size();
       }
+      read_bytes = offset;
     }
 
     algorithm::op_mode::OperationModeOutputData<128> output_data;
-    *encrypt_algorithm << data;
+    *encrypt_algorithm << std::span<std::byte>(buffer.data(), read_bytes);
 
     while (encrypt_algorithm->GetBufferCount() > 0) {
       *encrypt_algorithm >> output_data;
@@ -329,9 +330,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     size_t write_size = 0;
     if (read_bytes == 0) break;
 
-    std::vector<std::byte> data(buffer.begin(), buffer.begin() + read_bytes);
-
-    *encrypt_algorithm << data;
+    *encrypt_algorithm << std::span<std::byte>(buffer.data(), read_bytes);
 
     while (encrypt_algorithm->GetBufferCount() > 0) {
       algorithm::op_mode::OperationModeOutputData<128> output_data;
