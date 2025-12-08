@@ -138,7 +138,7 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   }
   if (std::all_of(key.begin(), key.end(),
                   [](std::byte b) { return b == std::byte{0x00}; })) {
-    // 키 입력이 없고 엔트로피 전용모드일 때 또는 키 입력이 불량일 때
+    // 키 입력이 없고 엔트로피 전용모드일 때 또는 키 입력이 불량할 때
     auto key_return = drbg.Generate(KeySize, KeySize, false, {});
     if (key_return.status != algorithm::ReturnStatus::kSUCCESS) {
       if (verbose) std::cerr << "CSPRNG error.\n";
@@ -450,12 +450,6 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
   return 0;
 }
 
-template <std::uint32_t KeySize>
-int KeygenMain(cxxopts::ParseResult parsed_args, std::string help_string,
-               bool overwrite, bool verbose) {
-  return 0;
-}
-
 int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
                  std::string help_string, std::uint32_t key_bits,
                  bool overwrite, bool verbose) {
@@ -468,8 +462,6 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
           return DecryptMain<128>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
           return HashMain<256>(parsed_args, help_string, overwrite, verbose);
-        case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
           break;
       }
@@ -496,8 +488,6 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
           return DecryptMain<192>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
           return HashMain<256>(parsed_args, help_string, overwrite, verbose);
-        case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
           break;
       }
@@ -524,8 +514,6 @@ int CallModeMain(ProgramOperationMode mode, cxxopts::ParseResult parsed_args,
           return DecryptMain<256>(parsed_args, help_string, overwrite, verbose);
         case ProgramOperationMode::kHash:
           return HashMain<256>(parsed_args, help_string, overwrite, verbose);
-        case ProgramOperationMode::kKeygen:
-          return KeygenMain<256>(parsed_args, help_string, overwrite, verbose);
         default:
           break;
       }
@@ -584,9 +572,6 @@ int main(int argc, char* argv[]) {
   } else if (parsed_args["Mode"].as<std::string>() == "hash") {
     parsed_args = util::HashArgParse(argc, argv, help_string);
     mode = ProgramOperationMode::kHash;
-  } else if (parsed_args["Mode"].as<std::string>() == "keygen") {
-    parsed_args = util::KeygenArgParse(argc, argv, help_string);
-    mode = ProgramOperationMode::kKeygen;
   }
 
   if (!parsed_args.unmatched().empty()) {

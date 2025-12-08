@@ -10,8 +10,7 @@ cxxopts::ParseResult ToplevelArgParse(int argc, char* argv[],
   options.add_options("Mode")("Mode",
                               "\"encrypt\"\tEncryption mode.\n"
                               "\"decrypt\"\tDecryption mode.\n"
-                              "\"hash\"\tHashing digest or compare mode.\n"
-                              "\"keygen\"\tKeygen mode.",
+                              "\"hash\"\tHashing digest or compare mode.",
                               cxxopts::value<std::string>());
   options.add_options("General")("H,help", "Show this help message");
   options.add_options("General")(
@@ -25,7 +24,7 @@ cxxopts::ParseResult ToplevelArgParse(int argc, char* argv[],
   options.show_positional_help();
 
   options.parse_positional({"Mode"});
-  options.custom_help("(encrypt|decrypt|hash|keygen)");
+  options.custom_help("(encrypt|decrypt|hash)");
   options.positional_help("[OPTION...]");
   options.allow_unrecognised_options();
 
@@ -141,36 +140,6 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
 
   options.allow_unrecognised_options();
   options.custom_help("hash [OPTION...]");
-
-  help_string = options.help();
-
-  return options.parse(argc, argv);
-}
-
-cxxopts::ParseResult KeygenArgParse(int argc, char* argv[],
-                                    std::string& help_string) {
-  cxxopts::Options options(argv[0], PROGRAM_DESCRIPTION);
-  options.add_options()(
-      "a,algorithm", "Algorithm to use (default:HASH-DRBG)",
-      cxxopts::value<std::string>()->default_value("HASH-DRBG"));
-  options.add_options()("o,output", "<file|-> Output file or '-' for stdout",
-                        cxxopts::value<std::string>());
-  options.add_options()("p,password",
-                        "[file|text|-] password file, text, or '-' for prompt",
-                        cxxopts::value<std::string>());
-  options.add_options()("gen-non-password-key",
-                        "Generate non-password-key file");
-  options.add_options("General")("H,help", "Show this help message");
-  options.add_options("General")(
-      "overwrite",
-      "Overwrite output file if exists (prompts when not specified)\n\n"
-      "If the '-' option is specified multiple times, stdin inputs are parsed "
-      "in the order in which the options are listed above.");
-  options.add_options("General")("v,verbose",
-                                 "Print status and error messages");
-
-  options.allow_unrecognised_options();
-  options.custom_help("keygen [OPTION...]");
 
   help_string = options.help();
 

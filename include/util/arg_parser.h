@@ -20,9 +20,6 @@ cxxopts::ParseResult DecryptArgParse(int argc, char* argv[],
 cxxopts::ParseResult HashArgParse(int argc, char* argv[],
                                   std::string& help_string);
 
-cxxopts::ParseResult KeygenArgParse(int argc, char* argv[],
-                                    std::string& help_string);
-
 }  // namespace file_encrypt::util
 
 #endif
