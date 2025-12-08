@@ -25,7 +25,7 @@ int main() {
 
   auto expected_result = HexStringToBytes("5c9d844ed46f9885085e5d6a4f94c7d7");
 
-  if (result.data != expected_result) {
+  if (result != expected_result) {
     return -1;
   }
 
@@ -38,7 +38,7 @@ int main() {
 
   expected_result = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
 
-  if (result.data != expected_result) {
+  if (result != expected_result) {
     return -1;
   }
 
@@ -52,7 +52,7 @@ int main() {
 
   expected_result = HexStringToBytes("00000000000000000000000000000000");
 
-  if (result.data != expected_result) {
+  if (result != expected_result) {
     return -1;
   }
 

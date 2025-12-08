@@ -33,27 +33,26 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
       std::array<std::byte, BlockSizeBits / 8> cipher_input_data;
       std::memcpy(cipher_input_data.data(), this->input_buffer.data(),
                   this->input_buffer.size());
-      CipherAlgorithmReturnData result;
+      std::vector<std::byte> result;
       if (this->mode == CipherMode::Encrypt) {
         cipher_input_data = file_encrypt::util::XorArrays<BlockSizeBits / 8>(
             cipher_input_data, this->prev_vector);
         result = this->cipher->Encrypt(cipher_input_data);
-        std::memcpy(this->prev_vector.data(), result.data.data(),
+        std::memcpy(this->prev_vector.data(), result.data(),
                     this->prev_vector.size());
       } else {
         result = this->cipher->Decrypt(cipher_input_data);
-        result.data = file_encrypt::util::XorVectors(
+        result = file_encrypt::util::XorVectors(
             std::vector<std::byte>(this->prev_vector.begin(),
                                    this->prev_vector.end()),
-            result.data);
+            result);
         std::memcpy(this->prev_vector.data(), cipher_input_data.data(),
                     this->prev_vector.size());
       }
       this->input_buffer_size = 0;
 
       OperationModeOutputData<BlockSizeBits> temp_result;
-      std::memcpy(temp_result.data.data(), result.data.data(),
-                  result.data.size());
+      std::memcpy(temp_result.data.data(), result.data(), result.size());
 
       this->output_buffer[this->output_buffer_tail++] = temp_result;
       this->output_buffer_tail %= BufferSize;

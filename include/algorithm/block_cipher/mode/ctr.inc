@@ -31,13 +31,12 @@ CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
 
     // A block is complete at this point
     if (this->input_buffer_size == BlockSizeBits / 8) {
-      CipherAlgorithmReturnData result =
-          this->cipher->Encrypt(this->prev_vector);
+      std::vector<std::byte> result = this->cipher->Encrypt(this->prev_vector);
       this->prev_vector =
           file_encrypt::util::StandardIncrement<16>(this->prev_vector, m);
       auto processed = file_encrypt::util::XorVectors(
-          result.data, std::vector<std::byte>(this->input_buffer.begin(),
-                                              this->input_buffer.end()));
+          result, std::vector<std::byte>(this->input_buffer.begin(),
+                                         this->input_buffer.end()));
 
       this->input_buffer_size = 0;
 

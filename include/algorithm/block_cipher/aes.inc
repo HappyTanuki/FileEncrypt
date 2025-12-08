@@ -168,10 +168,10 @@ void AES<KeyBits>::Init() {
 }
 
 template <std::uint32_t KeyBits>
-CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
+std::vector<std::byte> AES<KeyBits>::Encrypt(
     const CipherAlgorithmOnetimeInputData& data) const {
   if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
-    return CipherAlgorithmReturnData();
+    return std::vector<std::byte>();
   }
 
   auto key_iter = data.key.begin();
@@ -192,10 +192,10 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   return _Encrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
-CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
+std::vector<std::byte> AES<KeyBits>::Decrypt(
     const CipherAlgorithmOnetimeInputData& data) const {
   if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
-    return CipherAlgorithmReturnData();
+    return std::vector<std::byte>();
   }
 
   auto key_iter = data.key.begin();
@@ -216,7 +216,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
   return _Decrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
-CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
+std::vector<std::byte> AES<KeyBits>::Encrypt(
     const std::array<std::byte, 16>& data) {
   _AESEssentialData essential_data = {};
 
@@ -225,7 +225,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Encrypt(
   return _Encrypt(essential_data);
 }
 template <std::uint32_t KeyBits>
-CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
+std::vector<std::byte> AES<KeyBits>::Decrypt(
     const std::array<std::byte, 16>& data) {
   _AESEssentialData essential_data = {};
   essential_data.data = data;
@@ -234,7 +234,7 @@ CipherAlgorithmReturnData AES<KeyBits>::Decrypt(
 }
 
 template <std::uint32_t KeyBits>
-constexpr CipherAlgorithmReturnData AES<KeyBits>::_Encrypt(
+constexpr std::vector<std::byte> AES<KeyBits>::_Encrypt(
     _AESEssentialData data) const {
   auto data_iter = data.data.begin();
   AESMatrix state;
@@ -289,9 +289,9 @@ constexpr CipherAlgorithmReturnData AES<KeyBits>::_Encrypt(
   AddRoundKey(state, expanded_key, Nr);
 #endif
 
-  CipherAlgorithmReturnData return_data;
-  return_data.data.resize(16);
-  auto return_data_iter = return_data.data.begin();
+  std::vector<std::byte> return_data;
+  return_data.resize(16);
+  auto return_data_iter = return_data.begin();
 
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
@@ -302,7 +302,7 @@ constexpr CipherAlgorithmReturnData AES<KeyBits>::_Encrypt(
   return return_data;
 }
 template <std::uint32_t KeyBits>
-constexpr CipherAlgorithmReturnData AES<KeyBits>::_Decrypt(
+constexpr std::vector<std::byte> AES<KeyBits>::_Decrypt(
     _AESEssentialData data) const {
   auto data_iter = data.data.begin();
   AESMatrix state;
@@ -364,9 +364,9 @@ constexpr CipherAlgorithmReturnData AES<KeyBits>::_Decrypt(
   AddRoundKey(state, expanded_key, 0);
 #endif
 
-  CipherAlgorithmReturnData return_data;
-  return_data.data.resize(16);
-  auto return_data_iter = return_data.data.begin();
+  std::vector<std::byte> return_data;
+  return_data.resize(16);
+  auto return_data_iter = return_data.begin();
 
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {

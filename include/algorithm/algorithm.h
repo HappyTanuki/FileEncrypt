@@ -22,9 +22,6 @@ struct CipherAlgorithmOnetimeInputData {
   std::vector<std::byte> data = {};
   std::vector<std::byte> key = {};
 };
-struct CipherAlgorithmReturnData {
-  std::vector<std::byte> data = {};
-};
 
 // 블록 암호 알고리즘의 기본 인터페이스
 template <std::uint32_t KeyBits, std::uint32_t BlockSizeBits>
@@ -33,16 +30,16 @@ class BlockCipherAlgorithm {
   BlockCipherAlgorithm() = default;
   virtual ~BlockCipherAlgorithm() = default;
   // 키를 내부에 유지하지 않는 단발성 암호화에 사용.
-  virtual CipherAlgorithmReturnData Encrypt(
+  virtual std::vector<std::byte> Encrypt(
       const CipherAlgorithmOnetimeInputData& data) const = 0;
   // 키를 내부에 유지하지 않는 단발성 복호화에 사용.
-  virtual CipherAlgorithmReturnData Decrypt(
+  virtual std::vector<std::byte> Decrypt(
       const CipherAlgorithmOnetimeInputData& data) const = 0;
   // 키를 내부에 유지하는 암호화에 사용.
-  virtual CipherAlgorithmReturnData Encrypt(
+  virtual std::vector<std::byte> Encrypt(
       const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
   // 키를 내부에 유지하는 복호화에 사용.
-  virtual CipherAlgorithmReturnData Decrypt(
+  virtual std::vector<std::byte> Decrypt(
       const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
 };
 

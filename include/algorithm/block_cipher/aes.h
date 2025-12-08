@@ -99,13 +99,13 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
 
   void Init();
 
-  CipherAlgorithmReturnData Encrypt(
+  std::vector<std::byte> Encrypt(
       const CipherAlgorithmOnetimeInputData& data) const final override;
-  CipherAlgorithmReturnData Decrypt(
+  std::vector<std::byte> Decrypt(
       const CipherAlgorithmOnetimeInputData& data) const final override;
-  CipherAlgorithmReturnData Encrypt(
+  std::vector<std::byte> Encrypt(
       const std::array<std::byte, 16>& data) final override;
-  CipherAlgorithmReturnData Decrypt(
+  std::vector<std::byte> Decrypt(
       const std::array<std::byte, 16>& data) final override;
 
  private:
@@ -117,8 +117,8 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
     std::array<std::byte, 16> data;
   };
 
-  constexpr CipherAlgorithmReturnData _Encrypt(_AESEssentialData data) const;
-  constexpr CipherAlgorithmReturnData _Decrypt(_AESEssentialData data) const;
+  constexpr std::vector<std::byte> _Encrypt(_AESEssentialData data) const;
+  constexpr std::vector<std::byte> _Decrypt(_AESEssentialData data) const;
 
   constexpr void KeyExpansion(
       const typename std::array<AESByte, 4 * Nk>& key,
