@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 
 #include "cbc.h"
@@ -9,7 +10,7 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
-    const std::vector<std::byte>& data) {
+    const std::span<const std::byte> data) {
   if (this->output_buffer_full) {
     return *this;
   }
@@ -19,9 +20,8 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
 
   while (remaining_input_bytes > 0) {
     std::uint32_t bytes_to_copy =
-        ((BlockSizeBits / 8) - this->input_buffer_size) < remaining_input_bytes
-            ? (BlockSizeBits / 8) - this->input_buffer_size
-            : remaining_input_bytes;
+        (std::min)((BlockSizeBits / 8) - this->input_buffer_size,
+                   remaining_input_bytes);
 
     std::memcpy(this->input_buffer.data() + this->input_buffer_size,
                 data.data() + input_data_offset, bytes_to_copy);
@@ -30,10 +30,10 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
     input_data_offset += bytes_to_copy;
 
     if (this->input_buffer_size == BlockSizeBits / 8) {
-      std::array<std::byte, BlockSizeBits / 8> cipher_input_data;
+      std::array<std::byte, BlockSizeBits / 8> cipher_input_data = {};
       std::memcpy(cipher_input_data.data(), this->input_buffer.data(),
                   this->input_buffer.size());
-      std::vector<std::byte> result;
+      std::array<std::byte, BlockSizeBits / 8> result;
       if (this->mode == CipherMode::Encrypt) {
         cipher_input_data = file_encrypt::util::XorArrays<BlockSizeBits / 8>(
             cipher_input_data, this->prev_vector);
@@ -42,10 +42,8 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
                     this->prev_vector.size());
       } else {
         result = this->cipher->Decrypt(cipher_input_data);
-        result = file_encrypt::util::XorVectors(
-            std::vector<std::byte>(this->prev_vector.begin(),
-                                   this->prev_vector.end()),
-            result);
+        result = file_encrypt::util::XorArrays<BlockSizeBits / 8>(
+            this->prev_vector, result);
         std::memcpy(this->prev_vector.data(), cipher_input_data.data(),
                     this->prev_vector.size());
       }

@@ -65,9 +65,7 @@ int main() {
     std::cout << "EXPECTED: "
               << file_encrypt::util::BytesToHexStr(item.binary["CIPHERTEXT"])
               << "\n";
-    std::cout << "RESULT: "
-              << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
-                     result.data)
+    std::cout << "RESULT: " << file_encrypt::util::BytesToHexStr(result.data)
               << "\n";
 
     if (result.data != expected) {
@@ -98,9 +96,7 @@ int main() {
     std::cout << "EXPECTED: "
               << file_encrypt::util::BytesToHexStr(item.binary["PLAINTEXT"])
               << "\n";
-    std::cout << "RESULT: "
-              << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
-                     result.data)
+    std::cout << "RESULT: " << file_encrypt::util::BytesToHexStr(result.data)
               << "\n";
 
     if (result.data != expected) {

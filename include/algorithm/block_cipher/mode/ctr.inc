@@ -9,7 +9,7 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
-    const std::vector<std::byte>& data) {
+    const std::span<const std::byte> data) {
   if (this->output_buffer_full) {
     return *this;
   }
@@ -31,12 +31,12 @@ CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
 
     // A block is complete at this point
     if (this->input_buffer_size == BlockSizeBits / 8) {
-      std::vector<std::byte> result = this->cipher->Encrypt(this->prev_vector);
+      std::array<std::byte, BlockSizeBits / 8> result =
+          this->cipher->Encrypt(this->prev_vector);
       this->prev_vector =
           file_encrypt::util::StandardIncrement<16>(this->prev_vector, m);
-      auto processed = file_encrypt::util::XorVectors(
-          result, std::vector<std::byte>(this->input_buffer.begin(),
-                                         this->input_buffer.end()));
+      auto processed = file_encrypt::util::XorArrays<BlockSizeBits / 8>(
+          result, this->input_buffer);
 
       this->input_buffer_size = 0;
 

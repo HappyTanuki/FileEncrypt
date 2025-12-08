@@ -1,4 +1,5 @@
 #include <cstring>
+#include <span>
 
 #include "aes.h"
 #include "precomp.h"
@@ -168,114 +169,84 @@ void AES<KeyBits>::Init() {
 }
 
 template <std::uint32_t KeyBits>
-std::vector<std::byte> AES<KeyBits>::Encrypt(
-    const CipherAlgorithmOnetimeInputData& data) const {
-  if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
-    return std::vector<std::byte>();
-  }
+std::array<std::byte, 16> AES<KeyBits>::Encrypt(
+    const std::span<const std::byte> data,
+    const std::span<const std::byte, KeyBits / 8> key) const {
+  if (data.size() != 16) return std::array<std::byte, 16>();
 
-  auto key_iter = data.key.begin();
-  std::array<AESByte, 4 * Nk> key;
-  std::array<std::byte, 16> data_array;
+  std::array<AESByte, 4 * Nk> aesbyte_key;
   std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
 
-  for (int i = 0; i < 4 * Nk; i++) {
-    key[i] = *key_iter++;
-  }
-  std::memcpy(data_array.data(), data.data.data(), 16);
+  auto key_iter = key.begin();
+  for (int i = 0; i < 4 * Nk; i++) aesbyte_key[i] = *key_iter++;
 
-  KeyExpansion(key, expanded_key);
+  KeyExpansion(aesbyte_key, expanded_key);
 
-  _AESEssentialData essential_data = {};
-  essential_data.expanded_key = expanded_key;
-  essential_data.data = data_array;
-  return _Encrypt(essential_data);
+  return _Encrypt(expanded_key, data);
 }
 template <std::uint32_t KeyBits>
-std::vector<std::byte> AES<KeyBits>::Decrypt(
-    const CipherAlgorithmOnetimeInputData& data) const {
-  if (data.data.size() != 16 || data.key.size() != KeyBits / 8) {
-    return std::vector<std::byte>();
-  }
+std::array<std::byte, 16> AES<KeyBits>::Decrypt(
+    const std::span<const std::byte> data,
+    const std::span<const std::byte, KeyBits / 8> key) const {
+  if (data.size() != 16) return std::array<std::byte, 16>();
 
-  auto key_iter = data.key.begin();
-  std::array<AESByte, 4 * Nk> key;
-  std::array<std::byte, 16> data_array;
+  std::array<AESByte, 4 * Nk> aesbyte_key;
   std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
 
-  for (int i = 0; i < 4 * Nk; i++) {
-    key[i] = *key_iter++;
-  }
-  std::memcpy(data_array.data(), data.data.data(), 16);
+  auto key_iter = key.begin();
+  for (int i = 0; i < 4 * Nk; i++) aesbyte_key[i] = *key_iter++;
 
-  KeyExpansion(key, expanded_key);
+  KeyExpansion(aesbyte_key, expanded_key);
 
-  _AESEssentialData essential_data = {};
-  essential_data.expanded_key = expanded_key;
-  essential_data.data = data_array;
-  return _Decrypt(essential_data);
+  return _Decrypt(expanded_key, data);
 }
 template <std::uint32_t KeyBits>
-std::vector<std::byte> AES<KeyBits>::Encrypt(
-    const std::array<std::byte, 16>& data) {
-  _AESEssentialData essential_data = {};
-
-  essential_data.data = data;
-  essential_data.expanded_key = expanded_key;
-  return _Encrypt(essential_data);
+std::array<std::byte, 16> AES<KeyBits>::Encrypt(
+    const std::span<const std::byte> data) {
+  return _Encrypt(this->expanded_key, data);
 }
 template <std::uint32_t KeyBits>
-std::vector<std::byte> AES<KeyBits>::Decrypt(
-    const std::array<std::byte, 16>& data) {
-  _AESEssentialData essential_data = {};
-  essential_data.data = data;
-  essential_data.expanded_key = expanded_key;
-  return _Decrypt(essential_data);
+std::array<std::byte, 16> AES<KeyBits>::Decrypt(
+    const std::span<const std::byte> data) {
+  return _Decrypt(this->expanded_key, data);
 }
 
 template <std::uint32_t KeyBits>
-constexpr std::vector<std::byte> AES<KeyBits>::_Encrypt(
-    _AESEssentialData data) const {
-  auto data_iter = data.data.begin();
+constexpr std::array<std::byte, 16> AES<KeyBits>::_Encrypt(
+    const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key,
+    const std::span<const std::byte> data) const {
+  auto data_iter = data.begin();
   AESMatrix state;
-  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key =
-      data.expanded_key;
 
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      state[i][j] = *data_iter++;
-    }
-  }
+  for (int j = 0; j < 4; j++)
+    for (int i = 0; i < 4; i++) state[i][j] = *data_iter++;
 
   AddRoundKey(state, expanded_key, 0);
 
 #if (_USE_SIMD_INTRINSIC)
   std::uint8_t buffer[16];
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j)
       buffer[i * 4 + j] = static_cast<std::uint8_t>(state[j][i]);
-    }
-  }
+
   __m128i state_128i =
       _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
   __m128i round_keys[Nr + 1];
+
   for (int j = 0; j < Nr + 1; j++) {
     for (int i = 0; i < 4; ++i) {
       std::memcpy(buffer + i * 4, expanded_key[j * 4 + i].data(), 4);
     }
     round_keys[j] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
   }
-  for (int round = 1; round < Nr; round++) {
+
+  for (int round = 1; round < Nr; round++)
     state_128i = _mm_aesenc_si128(state_128i, round_keys[round]);
-  }
   state_128i = _mm_aesenclast_si128(state_128i, round_keys[Nr]);
 
   _mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), state_128i);
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      state[j][i] = buffer[i * 4 + j];
-    }
-  }
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j) state[j][i] = buffer[i * 4 + j];
 #else
   // equivalent fallback
   for (int round = 1; round < Nr; round++) {
@@ -289,41 +260,32 @@ constexpr std::vector<std::byte> AES<KeyBits>::_Encrypt(
   AddRoundKey(state, expanded_key, Nr);
 #endif
 
-  std::vector<std::byte> return_data;
-  return_data.resize(16);
+  std::array<std::byte, 16> return_data = {};
   auto return_data_iter = return_data.begin();
 
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      *return_data_iter++ = state[i][j];
-    }
-  }
+  for (int j = 0; j < 4; j++)
+    for (int i = 0; i < 4; i++) *return_data_iter++ = state[i][j];
 
   return return_data;
 }
 template <std::uint32_t KeyBits>
-constexpr std::vector<std::byte> AES<KeyBits>::_Decrypt(
-    _AESEssentialData data) const {
-  auto data_iter = data.data.begin();
+constexpr std::array<std::byte, 16> AES<KeyBits>::_Decrypt(
+    const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key,
+    const std::span<const std::byte> data) const {
+  auto data_iter = data.begin();
   AESMatrix state;
-  std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key =
-      data.expanded_key;
 
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      state[i][j] = *data_iter++;
-    }
-  }
+  for (int j = 0; j < 4; j++)
+    for (int i = 0; i < 4; i++) state[i][j] = *data_iter++;
 
   AddRoundKey(state, expanded_key, Nr);
 
 #if (_USE_SIMD_INTRINSIC)
   std::uint8_t buffer[16];
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j)
       buffer[i * 4 + j] = static_cast<std::uint8_t>(state[j][i]);
-    }
-  }
+
   __m128i state_128i =
       _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
 
@@ -335,22 +297,18 @@ constexpr std::vector<std::byte> AES<KeyBits>::_Decrypt(
     round_keys[r] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
     round_keys[r] = _mm_aesimc_si128(round_keys[r]);
   }
-  for (int w = 0; w < 4; ++w) {
+  for (int w = 0; w < 4; ++w)
     std::memcpy(buffer + w * 4, expanded_key[w].data(), 4);
-  }
+
   round_keys[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>(buffer));
 
-  for (int round = Nr - 1; round > 0; --round) {
+  for (int round = Nr - 1; round > 0; --round)
     state_128i = _mm_aesdec_si128(state_128i, round_keys[round]);
-  }
   state_128i = _mm_aesdeclast_si128(state_128i, round_keys[0]);
 
   _mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), state_128i);
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      state[j][i] = buffer[i * 4 + j];
-    }
-  }
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j) state[j][i] = buffer[i * 4 + j];
 #else
   // equivalent fallback
   for (int round = Nr - 1; round > 0; round--) {
@@ -364,15 +322,11 @@ constexpr std::vector<std::byte> AES<KeyBits>::_Decrypt(
   AddRoundKey(state, expanded_key, 0);
 #endif
 
-  std::vector<std::byte> return_data;
-  return_data.resize(16);
+  std::array<std::byte, 16> return_data = {};
   auto return_data_iter = return_data.begin();
 
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      *return_data_iter++ = state[i][j];
-    }
-  }
+  for (int j = 0; j < 4; j++)
+    for (int i = 0; i < 4; i++) *return_data_iter++ = state[i][j];
 
   return return_data;
 }
@@ -538,9 +492,8 @@ constexpr void AES<KeyBits>::KeyExpansion(
         std::uint32_t temp[4];
         _mm_storeu_si128(reinterpret_cast<__m128i*>(temp), round_keys[j]);
 
-        for (int k = 0; k < 4; ++k) {
+        for (int k = 0; k < 4; ++k)
           std::memcpy(expanded_key[j * 4 + k].data(), &temp[k], 4);
-        }
       }
       return;
     }
@@ -550,9 +503,8 @@ constexpr void AES<KeyBits>::KeyExpansion(
   std::array<AESByte, 4> temp;
 
   int i = 0;
-  for (i = 0; i < Nk; i++) {
+  for (i = 0; i < Nk; i++)
     std::memcpy(expanded_key[i].data(), key.data() + (i * 4), 4);
-  }
 
   while (i < 4 * (Nr + 1)) {
     std::memcpy(temp.data(), expanded_key.data() + (i - 1), 4);
@@ -600,12 +552,10 @@ template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::AddRoundKey(
     AESMatrix& state,
     const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& round_key,
-    const int& round) const {
-  for (int col = 0; col < 4; col++) {
-    for (int row = 0; row < 4; row++) {
+    const int round) const {
+  for (int col = 0; col < 4; col++)
+    for (int row = 0; row < 4; row++)
       state[row][col] += round_key[round * 4 + col][row];
-    }
-  }
 }
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::InvMixColumns(AESMatrix& state) const {
@@ -617,26 +567,20 @@ constexpr void AES<KeyBits>::InvMixColumns(AESMatrix& state) const {
   column.cols = 1;
 
   for (int col = 0; col < 4; col++) {
-    for (int row = 0; row < 4; row++) {
-      column[row][0] = state[row][col];
-    }
+    for (int row = 0; row < 4; row++) column[row][0] = state[row][col];
 
     column = a * column;
 
-    for (int row = 0; row < 4; row++) {
-      state[row][col] = column[row][0];
-    }
+    for (int row = 0; row < 4; row++) state[row][col] = column[row][0];
   }
 }
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::InvShiftRows(AESMatrix& state) const {
   AESMatrix shifted;
 
-  for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
+  for (int row = 0; row < 4; row++)
+    for (int col = 0; col < 4; col++)
       shifted[row][(col + row) % 4] = state[row][col];
-    }
-  }
 
   state = shifted;
 }
@@ -644,11 +588,8 @@ constexpr void AES<KeyBits>::InvShiftRows(AESMatrix& state) const {
 // 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::InvSubBytes(AESMatrix& state) const {
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      state[i][j] = Inv_S_box[state[i][j]];
-    }
-  }
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 4; j++) state[i][j] = Inv_S_box[state[i][j]];
 }
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::MixColumns(AESMatrix& state) const {
@@ -660,15 +601,11 @@ constexpr void AES<KeyBits>::MixColumns(AESMatrix& state) const {
   column.cols = 1;
 
   for (int col = 0; col < 4; col++) {
-    for (int row = 0; row < 4; row++) {
-      column[row][0] = state[row][col];
-    }
+    for (int row = 0; row < 4; row++) column[row][0] = state[row][col];
 
     column = a * column;
 
-    for (int row = 0; row < 4; row++) {
-      state[row][col] = column[row][0];
-    }
+    for (int row = 0; row < 4; row++) state[row][col] = column[row][0];
   }
 }
 template <std::uint32_t KeyBits>
@@ -687,11 +624,9 @@ template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::ShiftRows(AESMatrix& state) const {
   AESMatrix shifted;
 
-  for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
+  for (int row = 0; row < 4; row++)
+    for (int col = 0; col < 4; col++)
       shifted[row][col] = state[row][(col + row) % 4];
-    }
-  }
 
   state = shifted;
 }
@@ -699,11 +634,8 @@ constexpr void AES<KeyBits>::ShiftRows(AESMatrix& state) const {
 // 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
 template <std::uint32_t KeyBits>
 constexpr void AES<KeyBits>::SubBytes(AESMatrix& state) const {
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      state[i][j] = S_box[state[i][j]];
-    }
-  }
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 4; j++) state[i][j] = S_box[state[i][j]];
 }
 // 캐시 타이밍 공격에 취약함
 // 하지만 해결 방법을 이해할 수 없기에 적용하지 않았음
@@ -712,21 +644,19 @@ constexpr std::array<AESByte, 4> AES<KeyBits>::SubWord(
     const std::array<AESByte, 4>& bytes) const {
   std::array<AESByte, 4> result;
 
-  for (int i = 0; i < 4; i++) {
-    result[i] = S_box[bytes[i]];
-  }
+  result[0] = S_box[bytes[0]];
+  result[1] = S_box[bytes[1]];
+  result[2] = S_box[bytes[2]];
+  result[3] = S_box[bytes[3]];
 
   return result;
 }
 template <std::uint32_t KeyBits>
 constexpr AESByte AES<KeyBits>::Rcon(const std::uint32_t& i) const {
-  if (Rcon_memo[i] != 0x00) {
-    return Rcon_memo[i];
-  }
+  if (Rcon_memo[i] != 0x00) return Rcon_memo[i];
 
-  for (int j = Rcon_memo_index + 1; j <= i; j++) {
+  for (int j = Rcon_memo_index + 1; j <= i; j++)
     Rcon_memo[j] = Rcon_memo[j - 1] * 0x02;
-  }
   Rcon_memo_index = i;
 
   return Rcon_memo[i];
@@ -790,6 +720,4 @@ std::array<AESByte, 14> AES<KeyBits>::Rcon_memo = {
 template <std::uint32_t KeyBits>
 int AES<KeyBits>::Rcon_memo_index = 1;
 
-// const std::array<std::array<std::uint8_t, 256>, 256> AESByte::mul_table =
-//     AESByte::generate_LUT();
 };  // namespace file_encrypt::algorithm

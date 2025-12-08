@@ -8,7 +8,7 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
           std::uint32_t BufferSize>
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 ECB<BlockSizeBits, KeyBits, BufferSize>::operator<<(
-    const std::vector<std::byte>& data) {
+    const std::span<const std::byte> data) {
   if (this->output_buffer_full) {
     return *this;
   }
@@ -32,7 +32,7 @@ ECB<BlockSizeBits, KeyBits, BufferSize>::operator<<(
       std::array<std::byte, BlockSizeBits / 8> cipher_input_data;
       std::memcpy(cipher_input_data.data(), this->input_buffer.data(),
                   this->input_buffer.size());
-      std::vector<std::byte> result;
+      std::array<std::byte, BlockSizeBits / 8> result;
       if (this->mode == CipherMode::Encrypt) {
         result = this->cipher->Encrypt(cipher_input_data);
       } else {
@@ -41,8 +41,7 @@ ECB<BlockSizeBits, KeyBits, BufferSize>::operator<<(
       this->input_buffer_size = 0;
 
       OperationModeOutputData<BlockSizeBits> temp_result;
-      std::memcpy(temp_result.data.data(), result.data(),
-                  result.size());
+      std::memcpy(temp_result.data.data(), result.data(), result.size());
 
       this->output_buffer[this->output_buffer_tail++] = temp_result;
       this->output_buffer_tail %= BufferSize;

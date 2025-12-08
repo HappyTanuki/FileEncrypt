@@ -9,7 +9,7 @@
 
 namespace file_encrypt::algorithm {
 
-// AES 모드 별 별칭
+// AES-CBC 모드 별칭
 template <std::uint32_t KeySize>
 class AES_CBC : public file_encrypt::algorithm::op_mode::CBC<128, KeySize, 1> {
  public:
@@ -19,7 +19,7 @@ class AES_CBC : public file_encrypt::algorithm::op_mode::CBC<128, KeySize, 1> {
             std::make_unique<file_encrypt::algorithm::AES<KeySize>>(key), iv) {}
 };
 
-// AES 모드 별 별칭
+// AES-ECB 모드 별칭
 template <std::uint32_t KeySize>
 class AES_ECB : public file_encrypt::algorithm::op_mode::ECB<128, KeySize, 1> {
  public:
@@ -29,7 +29,7 @@ class AES_ECB : public file_encrypt::algorithm::op_mode::ECB<128, KeySize, 1> {
             std::make_unique<file_encrypt::algorithm::AES<KeySize>>(key), iv) {}
 };
 
-// AES 모드 별 별칭
+// AES-CTR 모드 별칭
 template <std::uint32_t KeySize>
 class AES_CTR : public file_encrypt::algorithm::op_mode::CTR<128, KeySize, 1> {
  public:

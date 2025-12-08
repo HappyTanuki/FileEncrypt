@@ -14,17 +14,14 @@ int main() {
     file_encrypt::algorithm::op_mode::OperationModeOutputData<128> result;
     cipher >> result;
 
-    std::cout << file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
-                     result.data)
-              << std::endl;
+    std::cout << file_encrypt::util::BytesToHexStr(result.data) << std::endl;
 
     cipher << file_encrypt::algorithm::op_mode::CipherMode::Decrypt;
 
     cipher.SetIV(IV);
 
     cipher << file_encrypt::util::HexStrToBytes(
-        file_encrypt::util::BytesToHexStr<std::array<std::byte, 16>>(
-            result.data));
+        file_encrypt::util::BytesToHexStr(result.data));
     expected_result = file_encrypt::util::HexStrToBytes<16>(
         "014730f80ac625fe84f026c60bfd547d");
     cipher >> result;

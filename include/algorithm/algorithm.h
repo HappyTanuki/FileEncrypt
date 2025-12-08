@@ -2,6 +2,7 @@
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_ALGORITHM_H_
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace file_encrypt::algorithm {
@@ -18,29 +19,27 @@ struct HashAlgorithmInputData {
   std::uint64_t bit_length = 0;
 };
 
-struct CipherAlgorithmOnetimeInputData {
-  std::vector<std::byte> data = {};
-  std::vector<std::byte> key = {};
-};
-
 // 블록 암호 알고리즘의 기본 인터페이스
+// data는 항상 BlockSizeBits / 8 바이트 길이여야 함.
 template <std::uint32_t KeyBits, std::uint32_t BlockSizeBits>
 class BlockCipherAlgorithm {
  public:
   BlockCipherAlgorithm() = default;
   virtual ~BlockCipherAlgorithm() = default;
   // 키를 내부에 유지하지 않는 단발성 암호화에 사용.
-  virtual std::vector<std::byte> Encrypt(
-      const CipherAlgorithmOnetimeInputData& data) const = 0;
+  virtual std::array<std::byte, BlockSizeBits / 8> Encrypt(
+      const std::span<const std::byte> data,
+      const std::span<const std::byte, KeyBits / 8> key) const = 0;
   // 키를 내부에 유지하지 않는 단발성 복호화에 사용.
-  virtual std::vector<std::byte> Decrypt(
-      const CipherAlgorithmOnetimeInputData& data) const = 0;
+  virtual std::array<std::byte, BlockSizeBits / 8> Decrypt(
+      const std::span<const std::byte> data,
+      const std::span<const std::byte, KeyBits / 8> key) const = 0;
   // 키를 내부에 유지하는 암호화에 사용.
-  virtual std::vector<std::byte> Encrypt(
-      const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
+  virtual std::array<std::byte, BlockSizeBits / 8> Encrypt(
+      const std::span<const std::byte> data) = 0;
   // 키를 내부에 유지하는 복호화에 사용.
-  virtual std::vector<std::byte> Decrypt(
-      const std::array<std::byte, BlockSizeBits / 8>& data) = 0;
+  virtual std::array<std::byte, BlockSizeBits / 8> Decrypt(
+      const std::span<const std::byte> data) = 0;
 };
 
 // 해시 알고리즘의 기본 인터페이스

@@ -2,6 +2,7 @@
 #define FILE_ENCRYPT_UTIL_INCLUDE_ALGORITHM_BLOCK_CIPHER_MODE_OPERATION_H_
 
 #include <memory>
+#include <span>
 
 #include "algorithm/algorithm.h"
 #include "algorithm/csprng/csprng.h"
@@ -30,7 +31,7 @@ class OperationMode {
   virtual ~OperationMode() = default;
 
   virtual OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
-      const std::vector<std::byte>& data) {
+      const std::span<const std::byte> data) {
     return *this;
   };
   OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(

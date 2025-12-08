@@ -99,26 +99,27 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
 
   void Init();
 
-  std::vector<std::byte> Encrypt(
-      const CipherAlgorithmOnetimeInputData& data) const final override;
-  std::vector<std::byte> Decrypt(
-      const CipherAlgorithmOnetimeInputData& data) const final override;
-  std::vector<std::byte> Encrypt(
-      const std::array<std::byte, 16>& data) final override;
-  std::vector<std::byte> Decrypt(
-      const std::array<std::byte, 16>& data) final override;
+  std::array<std::byte, 16> Encrypt(
+      const std::span<const std::byte> data,
+      const std::span<const std::byte, KeyBits / 8> key) const final override;
+  std::array<std::byte, 16> Decrypt(
+      const std::span<const std::byte> data,
+      const std::span<const std::byte, KeyBits / 8> key) const final override;
+  std::array<std::byte, 16> Encrypt(
+      const std::span<const std::byte> data) final override;
+  std::array<std::byte, 16> Decrypt(
+      const std::span<const std::byte> data) final override;
 
  private:
   static constexpr std::uint32_t Nk = KeyBits / 32;
   static constexpr std::uint32_t Nr = Nk + 6;
 
-  struct _AESEssentialData {
-    std::array<std::array<AESByte, 4>, 4 * (Nr + 1)> expanded_key;
-    std::array<std::byte, 16> data;
-  };
-
-  constexpr std::vector<std::byte> _Encrypt(_AESEssentialData data) const;
-  constexpr std::vector<std::byte> _Decrypt(_AESEssentialData data) const;
+  constexpr std::array<std::byte, 16> _Encrypt(
+      const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key,
+      const std::span<const std::byte> data) const;
+  constexpr std::array<std::byte, 16> _Decrypt(
+      const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& expanded_key,
+      const std::span<const std::byte> data) const;
 
   constexpr void KeyExpansion(
       const typename std::array<AESByte, 4 * Nk>& key,
@@ -128,7 +129,7 @@ class AES : public BlockCipherAlgorithm<KeyBits, 128> {
   constexpr void AddRoundKey(
       AESMatrix& state,
       const std::array<std::array<AESByte, 4>, 4 * (Nr + 1)>& round_key,
-      const int& round) const;
+      const int round) const;
   constexpr void InvMixColumns(AESMatrix& state) const;
   constexpr void InvShiftRows(AESMatrix& state) const;
   constexpr void InvSubBytes(AESMatrix& state) const;

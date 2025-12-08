@@ -1,56 +1,48 @@
 #include <string>
 
 #include "algorithm/block_cipher/aes.h"
-
-std::vector<std::byte> HexStringToBytes(const std::string& hex) {
-  std::vector<std::byte> bytes;
-  bytes.reserve(hex.size() / 2);
-
-  for (size_t i = 0; i < hex.size(); i += 2) {
-    std::byte byte =
-        static_cast<std::byte>(std::stoul(hex.substr(i, 2), nullptr, 16));
-    bytes.push_back(byte);
-  }
-
-  return bytes;
-}
+#include "util/helper.h"
 
 int main() {
   file_encrypt::algorithm::AES<256> aes;
-  file_encrypt::algorithm::CipherAlgorithmOnetimeInputData input;
-  input.data = HexStringToBytes("014730f80ac625fe84f026c60bfd547d");
-  input.key.resize(32);
+  std::array<std::byte, 16> data = {};
+  std::array<std::byte, 32> key = {};
+  data =
+      file_encrypt::util::HexStrToBytes<16>("014730f80ac625fe84f026c60bfd547d");
+  key = file_encrypt::util::HexStrToBytes<32>(
+      "0000000000000000000000000000000000000000000000000000000000000000");
 
-  auto result = aes.Encrypt(input);
+  auto result = aes.Encrypt(data, key);
 
-  auto expected_result = HexStringToBytes("5c9d844ed46f9885085e5d6a4f94c7d7");
-
-  if (result != expected_result) {
-    return -1;
-  }
-
-  input.data.clear();
-  input.data.resize(16);
-  input.key = HexStringToBytes(
-      "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
-
-  result = aes.Encrypt(input);
-
-  expected_result = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
+  auto expected_result =
+      file_encrypt::util::HexStrToBytes<16>("5c9d844ed46f9885085e5d6a4f94c7d7");
 
   if (result != expected_result) {
     return -1;
   }
 
-  input.data.clear();
-  input.data = HexStringToBytes("46f2fb342d6f0ab477476fc501242c5f");
-  input.key.clear();
-  input.key = HexStringToBytes(
+  data = {};
+  key = file_encrypt::util::HexStrToBytes<32>(
       "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
 
-  result = aes.Decrypt(input);
+  result = aes.Encrypt(data, key);
 
-  expected_result = HexStringToBytes("00000000000000000000000000000000");
+  expected_result =
+      file_encrypt::util::HexStrToBytes<16>("46f2fb342d6f0ab477476fc501242c5f");
+
+  if (result != expected_result) {
+    return -1;
+  }
+
+  data =
+      file_encrypt::util::HexStrToBytes<16>("46f2fb342d6f0ab477476fc501242c5f");
+  key = file_encrypt::util::HexStrToBytes<32>(
+      "c47b0294dbbbee0fec4757f22ffeee3587ca4730c3d33b691df38bab076bc558");
+
+  result = aes.Decrypt(data, key);
+
+  expected_result =
+      file_encrypt::util::HexStrToBytes<16>("00000000000000000000000000000000");
 
   if (result != expected_result) {
     return -1;

@@ -30,7 +30,7 @@ class CTR : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
 
   using OperationMode<BlockSizeBits, KeyBits, BufferSize>::operator<<;
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
-      const std::vector<std::byte>& data) override;
+      const std::span<const std::byte> data) override;
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
       OperationModeOutputData<BlockSizeBits>& data) override;
 
