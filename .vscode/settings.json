@@ -47,6 +47,13 @@
         //     "--overwrite",
         //     "--verbose"
         // ]
+        // "args": [
+        //     "hash",
+        //     "-a", "SHA-256",
+        //     "--hash-verify", "compile_commands.hash.txt,compile_commands.json",
+        //     "--overwrite",
+        //     "--verbose"
+        // ]
     },
     "files.associations": {
         "*.inc": "cpp"

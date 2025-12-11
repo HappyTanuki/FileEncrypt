@@ -8,13 +8,13 @@ namespace file_encrypt::algorithm {
 template <std::uint32_t BlockSize>
 std::vector<std::array<std::byte, BlockSize / 8>>
 Pkcs_7<BlockSize>::MakePaddingBlock(std::span<std::byte> data) {
-  std::uint32_t bytes_left = data.size() + this->buffer_index;
-  std::uint32_t last_block_len = bytes_left % (BlockSize / 8);
+  std::int32_t bytes_left = data.size() + this->buffer_index;
+  std::int32_t last_block_len = bytes_left % (BlockSize / 8);
   std::uint8_t padding_number = BlockSize / 8 - last_block_len;
   std::vector<std::array<std::byte, BlockSize / 8>> result = {};
   std::array<std::byte, BlockSize / 8> padding_bytes = {};
 
-  for (int i = BlockSize / 8 - 1; i >= last_block_len; i--) {
+  for (std::int32_t i = BlockSize / 8 - 1; i >= last_block_len; i--) {
     padding_bytes[i] = static_cast<std::byte>(padding_number);
   }
 

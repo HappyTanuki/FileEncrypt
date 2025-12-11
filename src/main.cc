@@ -340,7 +340,7 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
       if (input->peek() == EOF && encrypt_algorithm->GetBufferCount() == 0) {
         auto un_padded = pkcs_7.RemovePadding(
             {output_data.data.begin(), output_data.data.end()});
-        if (un_padded.real_length == 0) {
+        if (un_padded.real_length == 0 && un_padded.data.empty()) {
           if (verbose) std::cerr << "Invalid padding detected." << std::endl;
           std::exit(EXIT_FAILURE);
         }
@@ -439,23 +439,23 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
     std::shared_ptr<std::istream> message = util::OpenIStream(hash_args[1]);
 
     std::array<std::byte, DigestSize / 8> message_digest;
-    std::array<std::byte, (DigestSize / 8 + 2) / 3 * 4> input_digest_buffer;
+    std::array<char, DigestSize / 4> input_digest_buffer;
     std::array<std::byte, DigestSize / 8> input_digest_array;
     std::vector<std::byte> buffer(READ_CHUNK_SIZE);
 
     while (input_digest->good()) {
-      input_digest->read(reinterpret_cast<char*>(input_digest_buffer.data()),
-                         (DigestSize / 8 + 2) / 3 * 4);
+      input_digest->read(input_digest_buffer.data(), DigestSize / 4);
       std::streamsize read_bytes = input_digest->gcount();
       if (read_bytes == 0) break;
-      if (read_bytes <
-          static_cast<std::streamsize>((DigestSize / 8 + 2) / 3 * 4)) {
+      if (read_bytes < static_cast<std::streamsize>(DigestSize / 4)) {
         if (verbose) std::cerr << "Invalid digest input size." << std::endl;
         std::exit(EXIT_FAILURE);
       }
     }
-    input_digest_array = algorithm::BASE64::Decoding<DigestSize>(
-        {input_digest_buffer.begin(), input_digest_buffer.end()});
+    auto input_digest_vector = util::HexStrToBytes(
+        std::string(input_digest_buffer.begin(), input_digest_buffer.end()));
+    std::memcpy(input_digest_array.data(), input_digest_vector.data(),
+                DigestSize / 8);
 
     while (message->good()) {
       algorithm::HashAlgorithmInputData hash_input;

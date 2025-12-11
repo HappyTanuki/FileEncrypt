@@ -124,3 +124,19 @@ set_tests_properties(main/hash_validate PROPERTIES DEPENDS main/decrypt)
 set_tests_properties(main/hash_validate PROPERTIES DEPENDS main/hash_do_not_match)
 set_tests_properties(main/hash_validate PROPERTIES DEPENDS main/hash1)
 set_tests_properties(main/hash_validate PROPERTIES DEPENDS main/hash2)
+
+set(test_name "file_hash_validate")
+set(full_test_name "main/file_hash_validate")
+add_executable(file_hash_validate "main.cc")
+target_link_libraries(file_hash_validate PRIVATE ${PROJECT_NAME}_lib)
+if(NOT WIN32)
+    target_compile_options(file_hash_validate PRIVATE -march=native -maes -msse2 -msse3 -mssse3 -msse4.1 -msse4.2)
+endif()
+add_test(NAME ${full_test_name}
+    COMMAND file_hash_validate hash -a SHA-256 --hash-verify compile_commands.hash.txt,compile_commands.json --overwrite --verbose
+)
+set_tests_properties(${full_test_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+set_tests_properties(${full_test_name} PROPERTIES LABELS main)
+add_dependencies(file_hash_validate copy_test_vectors)
+
+set_tests_properties(main/file_hash_validate PROPERTIES DEPENDS main/hash_validate)
