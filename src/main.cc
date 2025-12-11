@@ -227,6 +227,10 @@ int EncryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
   }
   output->flush();
 
+  if (verbose) {
+    std::cout << "Success." << std::endl;
+  }
+
   std::exit(EXIT_SUCCESS);
 }
 
@@ -354,6 +358,10 @@ int DecryptMain(cxxopts::ParseResult parsed_args, std::string help_string,
     }
   }
   output->flush();
+
+  if (verbose) {
+    std::cout << "Success." << std::endl;
+  }
 
   std::exit(EXIT_SUCCESS);
 }
@@ -516,6 +524,10 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
                 digest_string.size());
   output->flush();
 
+  if (verbose) {
+    std::cout << "Success." << std::endl;
+  }
+
   return 0;
 }
 
@@ -606,6 +618,14 @@ int main(int argc, char* argv[]) {
 
   std::string help_string;
   auto parsed_args = util::ToplevelArgParse(argc, argv, help_string);
+
+  if (parsed_args.count("overwrite") != 0) {
+    overwrite = true;
+  }
+  if (parsed_args.count("verbose") != 0) {
+    verbose = true;
+  }
+
   std::string mode_name;
   if (parsed_args.count("Mode") != 0) {
     mode_name = parsed_args["Mode"].as<std::string>();
@@ -614,22 +634,17 @@ int main(int argc, char* argv[]) {
       std::cerr << help_string << std::endl;
       std::exit(EXIT_FAILURE);
     }
-  } else {
-    if (verbose) std::cerr << "A mode shall always be specified." << std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-
-  if (parsed_args.count("help") && mode_name != "encrypt" &&
-      mode_name != "decrypt" && mode_name != "hash" && mode_name != "keygen") {
+  } else if (parsed_args.count("help") && mode_name != "encrypt" &&
+             mode_name != "decrypt" && mode_name != "hash" &&
+             mode_name != "keygen") {
     std::cout << help_string << std::endl;
     std::exit(EXIT_SUCCESS);
-  }
-
-  if (parsed_args.count("overwrite") != 0) {
-    overwrite = true;
-  }
-  if (parsed_args.count("verbose") != 0) {
-    verbose = true;
+  } else {
+    if (verbose) {
+      std::cerr << "A mode shall always be specified." << std::endl;
+    }
+    std::cout << help_string << std::endl;
+    std::exit(EXIT_FAILURE);
   }
 
   if (parsed_args["Mode"].as<std::string>() == "encrypt") {

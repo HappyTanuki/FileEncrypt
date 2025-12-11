@@ -19,16 +19,16 @@
         //     "--overwrite",
         //     "--verbose"
         // ]
-        "args": [
-            "decrypt",
-            "-a", "AES-256-CBC",
-            "-o", "output.txt",
-            "-i", "encrypted.aes",
-            "-k", "key.pem",
-            "-p", "asdf",
-            "--overwrite",
-            "--verbose"
-        ]
+        // "args": [
+        //     "decrypt",
+        //     "-a", "AES-256-CBC",
+        //     "-o", "output.txt",
+        //     "-i", "encrypted.aes",
+        //     "-k", "key.pem",
+        //     "-p", "asdf",
+        //     "--overwrite",
+        //     "--verbose"
+        // ]
         // "args": [
         //     "hash", "-a", "SHA-256", "-i", "compile_commands.json", "--overwrite", "--verbose"
         // ]
@@ -53,6 +53,9 @@
         //     "--hash-verify", "compile_commands.hash.txt,compile_commands.json",
         //     "--overwrite",
         //     "--verbose"
+        // ]
+        // "args": [
+        //     "--help"
         // ]
     },
     "files.associations": {
