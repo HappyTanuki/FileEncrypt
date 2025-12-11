@@ -424,6 +424,61 @@ int HashMain(cxxopts::ParseResult parsed_args, std::string help_string,
     }
   }
 
+  if (parsed_args.count("hash-verify") > 0) {
+    std::vector<std::string> hash_args =
+        parsed_args["hash-verify"].as<std::vector<std::string>>();
+    if (hash_args.size() != 2) {
+      if (verbose)
+        std::cerr << "hash-verify mode expects exactly two arguments. Received"
+                  << hash_args.size() << "." << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+
+    std::shared_ptr<std::istream> input_digest =
+        util::OpenIStream(hash_args[0]);
+    std::shared_ptr<std::istream> message = util::OpenIStream(hash_args[1]);
+
+    std::array<std::byte, DigestSize / 8> message_digest;
+    std::array<std::byte, (DigestSize / 8 + 2) / 3 * 4> input_digest_buffer;
+    std::array<std::byte, DigestSize / 8> input_digest_array;
+    std::vector<std::byte> buffer(READ_CHUNK_SIZE);
+
+    while (input_digest->good()) {
+      input_digest->read(reinterpret_cast<char*>(input_digest_buffer.data()),
+                         (DigestSize / 8 + 2) / 3 * 4);
+      std::streamsize read_bytes = input_digest->gcount();
+      if (read_bytes == 0) break;
+      if (read_bytes <
+          static_cast<std::streamsize>((DigestSize / 8 + 2) / 3 * 4)) {
+        if (verbose) std::cerr << "Invalid digest input size." << std::endl;
+        std::exit(EXIT_FAILURE);
+      }
+    }
+    input_digest_array = algorithm::BASE64::Decoding<DigestSize>(
+        {input_digest_buffer.begin(), input_digest_buffer.end()});
+
+    while (message->good()) {
+      algorithm::HashAlgorithmInputData hash_input;
+      message->read(reinterpret_cast<char*>(buffer.data()), READ_CHUNK_SIZE);
+      std::streamsize read_bytes = message->gcount();
+      if (read_bytes == 0) break;
+      hash_input.message = std::vector<std::byte>(buffer.begin(), buffer.end());
+      hash_input.bit_length = read_bytes * 8;
+
+      hash->Update(hash_input);
+
+      if (message->peek() == EOF) message_digest = hash->Digest();
+    }
+
+    if (message_digest != input_digest_array) {
+      if (verbose) std::cout << "Verify failed." << std::endl;
+      std::exit(EXIT_FAILURE);
+    } else {
+      if (verbose) std::cout << "Verified." << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+  }
+
   if (parsed_args.count("input") == 0) {
     if (verbose) std::cerr << "An input shall be specified." << std::endl;
     std::exit(EXIT_FAILURE);

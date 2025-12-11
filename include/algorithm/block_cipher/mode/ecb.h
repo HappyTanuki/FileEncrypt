@@ -14,6 +14,8 @@ class ECB : public OperationMode<BlockSizeBits, KeyBits, BufferSize> {
   using OperationMode<BlockSizeBits, KeyBits, BufferSize>::operator<<;
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
       const std::span<const std::byte> data) override;
+  constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator<<(
+      const std::array<std::byte, BlockSizeBits / 8>& data);
   constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>& operator>>(
       OperationModeOutputData<BlockSizeBits>& data) override;
 };

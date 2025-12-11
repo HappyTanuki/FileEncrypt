@@ -121,6 +121,13 @@ cxxopts::ParseResult HashArgParse(int argc, char* argv[],
       "specified, the -i, -o options do not need to specified).",
       cxxopts::value<std::vector<std::string>>());
   options.add_options()(
+      "hash-verify",
+      "<hash>,<message> Use the first argument (file, stdin, or raw string) as "
+      "the hash to verify the second argument (file, stdin, or raw string) "
+      "(when this option is specified, the -i, -o options do not need to "
+      "specified).",
+      cxxopts::value<std::vector<std::string>>());
+  options.add_options()(
       "i,input", "<file|text|-> Input source: file, text, or '-' for stdin",
       cxxopts::value<std::string>());
   options.add_options()(

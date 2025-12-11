@@ -10,9 +10,9 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 CTR<BlockSizeBits, KeyBits, BufferSize>::operator<<(
     const std::span<const std::byte> data) {
-  if (this->output_buffer_full) {
-    return *this;
-  }
+  // if (this->output_buffer_full) {
+  //   return *this;
+  // }
 
   std::uint32_t remaining_input_bytes = data.size();
   std::uint32_t input_data_offset = 0;

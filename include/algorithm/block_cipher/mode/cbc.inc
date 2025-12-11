@@ -11,9 +11,9 @@ template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
 constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
 CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
     const std::span<const std::byte> data) {
-  if (this->output_buffer_full) {
-    return *this;
-  }
+  // if (this->output_buffer_full) {
+  //   return *this;
+  // }
 
   std::uint32_t remaining_input_bytes = data.size();
   std::uint32_t input_data_offset = 0;
@@ -59,6 +59,50 @@ CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
           (this->output_buffer_tail == this->output_buffer_head);
     }
   }
+
+  return *this;
+}
+
+// for no-buffering encryption
+template <std::uint32_t BlockSizeBits, std::uint32_t KeyBits,
+          std::uint32_t BufferSize>
+constexpr OperationMode<BlockSizeBits, KeyBits, BufferSize>&
+CBC<BlockSizeBits, KeyBits, BufferSize>::operator<<(
+    const std::array<std::byte, BlockSizeBits / 8>& data) {
+  constexpr std::size_t BlockSize = BlockSizeBits / 8;
+
+  // CBC 블록 입력 준비
+  std::array<std::byte, BlockSize> block{};
+  std::memcpy(block.data(), data.data(), BlockSize);
+
+  std::array<std::byte, BlockSize> result{};
+
+  if (this->mode == CipherMode::Encrypt) {
+    // CBC 암호화: XOR(prev) → Encrypt
+    block = file_encrypt::util::XorArrays<BlockSize>(block, this->prev_vector);
+    result = this->cipher->Encrypt(block);
+
+    // prev_vector = ciphertext
+    std::memcpy(this->prev_vector.data(), result.data(), BlockSize);
+  } else {
+    // CBC 복호화: Decrypt → XOR(prev)
+    auto decrypted = this->cipher->Decrypt(block);
+    result =
+        file_encrypt::util::XorArrays<BlockSize>(this->prev_vector, decrypted);
+
+    // prev_vector = ciphertext(= input block)
+    std::memcpy(this->prev_vector.data(), block.data(), BlockSize);
+  }
+
+  // 출력 버퍼에 넣기
+  OperationModeOutputData<BlockSizeBits> temp_result;
+  std::memcpy(temp_result.data.data(), result.data(), BlockSize);
+
+  this->output_buffer[this->output_buffer_tail++] = temp_result;
+  this->output_buffer_tail %= BufferSize;
+
+  this->output_buffer_full =
+      (this->output_buffer_tail == this->output_buffer_head);
 
   return *this;
 }
